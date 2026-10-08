@@ -11691,7 +11691,7 @@ const JGP = (() => {
       g.position.set(...pos), o.rot && g.rotation.set(...o.rot), parent.add(g);
       R(T.sphere(r, 14, 10), x.clay(o.white || "#fbf8ee", { shininess: 80 }), g);
       R(T.circle(r * 0.6, 16), x.clay(o.iris || "#7a4a1a", { shininess: 80 }), g, [0, 0, r * 1.0]);
-      R(T.circle(r * 0.3, 12), x.basic("#0c0c10"), g, [0, 0, r * 1.006], null, "slit" === o.pupil ? [0.35, 1.15, 1] : 1);
+      R(T.circle(r * 0.3, 12), x.basic("#0c0c10"), g, [0, 0, r * 1.006], null, "slit" === o.pupil ? [0.35, 1.15, 1] : o.pupilScale || 1);
       R(T.sphere(r * 0.14, 6, 4), x.basic("#ffffff"), g, [-r * 0.28, r * 0.32, r * 1.0]);
       let lid = null;
       if (!1 !== o.lid) {
@@ -12025,33 +12025,41 @@ const JGP = (() => {
     R(sph(1), skin, head, [0, 0, hl * 0.55], null, [hw, hh, hl]);
     const snoutZ = hl * (0.6 + 0.65 * P.snout);
     R(sph(1), P.beak ? acc : skin, head, [0, -hh * 0.2, snoutZ], null, [hw * 0.72, hh * 0.58, hl * 0.6 * P.snout]);
-    // nostrils on the snout tip, ear openings behind the eyes, a dark mouth line along each side
-    const tipZ = snoutZ + hl * 0.55 * P.snout;
+    // nostrils on the snout tip, ear openings behind the eyes, and a smile: the mouth line curls up
+    // at the back into a dimple, with a soft blush on each cheek
+    const tipZ = snoutZ + hl * 0.55 * P.snout,
+      blush = x.clay("#" + tint(col, 0).lerp(new THREE.Color("#ff7a8a"), 0.55).getHexString(), { shininess: 10 });
     [-1, 1].forEach((sx) => {
       R(T.sphere(hw * 0.08, 6, 4), mouthM, head, [sx * hw * 0.24, -hh * 0.02, tipZ - hl * 0.05], null, [1, 0.6, 1]);
       R(T.circle(hw * 0.12, 10), mouthM, head, [sx * hw * 0.98, hh * 0.05, hl * 0.18], [0, (sx * Math.PI) / 2, 0]);
-      KIT.seam(head, [sx * hw * 0.6, -hh * 0.42, hl * 0.45], [sx * hw * 0.42, -hh * 0.45, tipZ - hl * 0.08], hh * 0.05, mouthM);
+      KIT.seam(head, [sx * hw * 0.5, -hh * 0.44, hl * 0.62], [sx * hw * 0.42, -hh * 0.46, tipZ - hl * 0.08], hh * 0.05, mouthM);
+      KIT.seam(head, [sx * hw * 0.66, -hh * 0.26, hl * 0.44], [sx * hw * 0.5, -hh * 0.44, hl * 0.62], hh * 0.05, mouthM);
+      R(T.sphere(hw * 0.07, 6, 4), mouthM, head, [sx * hw * 0.68, -hh * 0.22, hl * 0.42]);
+      R(sph(1), blush, head, [sx * hw * 0.8, -hh * 0.12, hl * 0.62], [0, sx * 0.5, 0], [hw * 0.2, hh * 0.13, hl * 0.06]);
     });
-    // eyes: iris, pupil (slit for predators), highlight, blinking lid and a brow ridge
-    [-1, 1].forEach((sx) => {
-      const ey = KIT.eye(head, [sx * hw * 0.74, hh * 0.32, hl * 0.72], hw * 0.34, {
-        iris: predator ? "#f2c22e" : "#8a5a2a",
-        pupil: predator ? "slit" : "round",
+    // eyes: big, round and wide open with warm irises, big pupils and a highlight; every dino is friendly.
+    // Light brows sit high and lift while the dino chats.
+    const brows = [-1, 1].map((sx) => {
+      const ey = KIT.eye(head, [sx * hw * 0.72, hh * 0.34, hl * 0.74], hw * 0.42, {
+        iris: predator ? "#b8782a" : "#7a4a1a",
+        pupil: "round",
+        pupilScale: 1.35,
         lidMat: skin,
-        rot: [0, sx * 0.55, 0],
+        open: -1.3,
+        rot: [0, sx * 0.45, 0],
       });
       blink.add(ey.lid);
-      R(sph(1), skin, head, [sx * hw * 0.7, hh * 0.62, hl * 0.72], [0.2, 0, 0], [hw * 0.36, hh * 0.16, hl * 0.3]);
+      const br = new THREE.Group();
+      br.position.set(sx * hw * 0.62, hh * 0.7, hl * 0.82), (br.rotation.z = sx * 0.06), head.add(br);
+      R(sph(1), dark, br, null, null, [hw * 0.3, hh * 0.07, hl * 0.12]);
+      return (br.userData.y = br.position.y), (br.userData.sx = sx), br;
     });
     const jaw = new THREE.Group();
     jaw.position.set(0, -hh * 0.45, hl * 0.25), head.add(jaw);
     R(sph(1), belly, jaw, [0, -hh * 0.08, hl * (0.35 + 0.6 * P.snout)], null, [hw * 0.62, hh * 0.3, hl * 0.62 * P.snout]);
     R(sph(1), x.clay("#d86a7a"), jaw, [0, hh * 0.08, hl * (0.4 + 0.5 * P.snout)], null, [hw * 0.36, hh * 0.08, hl * 0.4 * P.snout]); // tongue
-    if (predator)
-      [-1, 1].forEach((sx) => {
-        for (let k = 0; k < 4; k++) R(T.cone(0.022, 0.07, 4), ivory, head, [sx * hw * 0.5, -hh * 0.56, hl * (0.55 + 0.22 * k) * P.snout + hl * 0.2], [Math.PI, 0, 0]);
-        for (let k = 0; k < 3; k++) R(T.cone(0.018, 0.05, 4), ivory, jaw, [sx * hw * 0.42, hh * 0.08, hl * (0.5 + 0.22 * k) * P.snout]);
-      });
+    // a few small rounded teeth near the front (no fangs: these dinos are friendly)
+    if (predator) [-1, 1].forEach((sx) => [0, 1].forEach((k) => R(T.sphere(0.022, 6, 4), ivory, head, [sx * hw * (0.16 + 0.14 * k), -hh * 0.5, tipZ - hl * (0.12 + 0.12 * k)], null, [1, 1.3, 1])));
     if (P.frill) {
       const f = P.frill;
       R(T.cyl(hw * 2 * f, hw * 2 * f, 0.05, 20), acc, head, [0, hh * 0.55, -hl * 0.05], [-1.0, 0, 0], [1, 1, 0.85]);
@@ -12121,10 +12129,14 @@ const JGP = (() => {
       ph = Math.random() * l,
       tph = Math.random() * l,
       talkT = 0,
-      singT = 0;
+      singT = 0,
+      chatT = 0,
+      chatNext = 2 + 6 * Math.random();
     const seed = Math.random() * 10,
       neckBase = neck.map((g) => g.rotation.x),
       armBase = arms.map((a) => a.sh.rotation.x),
+      armBaseZ = arms.map((a) => a.sh.rotation.z),
+      headBase = head.rotation.x,
       bodyBase = body.position.y;
     const api = {
       height,
@@ -12143,28 +12155,41 @@ const JGP = (() => {
         const mv = o && o.moving ? 1 : 0;
         (wk += (mv - wk) * Math.min(1, 6 * e)), (ph += e * (2.5 + 7 * wk));
         legs.forEach((lg) => KIT.stride(lg, ph + lg.off, (P.biped ? 0.7 : 0.45) * wk, (P.biped ? 0.9 : 0.6) * wk));
+        // chatter: every few seconds an idle dino natters away to itself; talking to the player is
+        // the same, only livelier. ch is 0..1 and fades in/out so nothing snaps.
+        (talkT = Math.max(0, talkT - e)), (singT = Math.max(0, singT - e)), (chatT = Math.max(0, chatT - e));
+        t > chatNext && ((chatT = 1.2 + 1.3 * Math.random()), (chatNext = t + chatT + 3 + 6 * Math.random()));
+        const ch = Math.min(1, 3 * Math.max(talkT, 0.7 * chatT * (1 - wk))),
+          talking = talkT > 0 ? 1 : 0;
         arms.forEach((a, k) => {
-          (a.sh.rotation.x = armBase[k] + 0.25 * Math.sin(ph + k * Math.PI) * wk + 0.06 * Math.sin(2 * t + seed)), (a.el.rotation.x = -0.5 - 0.2 * Math.sin(1.7 * t + k));
+          const gest = ch * (0.35 + 0.25 * talking) * Math.sin(5.5 * t + 2.1 * k + seed);
+          (a.sh.rotation.x = armBase[k] + 0.25 * Math.sin(ph + k * Math.PI) * wk + 0.06 * Math.sin(2 * t + seed) - 0.35 * ch + 0.5 * gest),
+            (a.sh.rotation.z = armBaseZ[k] + (k ? 1 : -1) * ch * (0.25 + 0.2 * Math.abs(Math.sin(3.7 * t + k)))),
+            (a.el.rotation.x = -0.5 - 0.2 * Math.sin(1.7 * t + k) - 0.5 * ch);
         });
+        head.rotation.x = headBase + ch * (0.07 * Math.sin(6 * t + seed) - 0.04);
+        head.rotation.z = ch * 0.14 * Math.sin(1.9 * t + seed) + (1 - ch) * 0.05 * Math.sin(0.6 * t + seed);
+        brows.forEach((br) => ((br.position.y = br.userData.y + hh * 0.1 * ch * Math.abs(Math.sin(4.5 * t + br.userData.sx))), (br.rotation.z = br.userData.sx * (0.06 + 0.1 * ch))));
         (body.position.y = bodyBase + 0.06 * wk * Math.abs(Math.sin(ph)) + 0.015 * Math.sin(1.7 * t + seed)),
           (body.rotation.z = 0.05 * wk * Math.sin(ph));
         // Accumulate the sway phase per frame. Using sin(t * speed(wk)) with absolute time made the
         // phase jump by t * dSpeed whenever walking started/stopped, so tails shook wildly in long sessions.
-        tph += e * (1.3 + 1.8 * wk);
-        tail.forEach((g, k) => (g.rotation.y = Math.sin(tph - 0.6 * k) * (0.08 + 0.06 * wk)));
+        tph += e * (1.3 + 1.8 * wk + 2.5 * ch);
+        tail.forEach((g, k) => (g.rotation.y = Math.sin(tph - 0.6 * k) * (0.08 + 0.06 * wk + 0.08 * ch)));
         neck.forEach((g, k) => {
           (g.rotation.y = 0.12 * Math.sin(0.45 * t + seed + 0.3 * k) * (1 - wk)),
             (g.rotation.x = neckBase[k] + 0.04 * Math.sin(1.3 * t + seed + k) + 0.05 * wk * Math.sin(2 * ph));
         });
-        (talkT = Math.max(0, talkT - e)), (singT = Math.max(0, singT - e));
-        jaw.rotation.x = (talkT > 0 ? 0.28 * Math.abs(Math.sin(13 * t)) : 0) + (singT > 0 ? 0.45 * Math.abs(Math.sin(7 * t)) : 0);
-        wings.forEach((g) => (g.rotation.z = g.userData.sx * (0.12 + (talkT > 0 || singT > 0 ? 0.6 * Math.abs(Math.sin(9 * t)) : 0.03 * Math.sin(2 * t)))));
+        // the mouth rests slightly open in a smile; chatter flaps it in syllable-like bursts
+        const syl = Math.abs(Math.sin(12 * t)) * (0.6 + 0.4 * Math.sin(3.1 * t + seed));
+        jaw.rotation.x = 0.07 + ch * (0.12 + 0.12 * talking) * syl + (singT > 0 ? 0.45 * Math.abs(Math.sin(7 * t)) : 0);
+        wings.forEach((g) => (g.rotation.z = g.userData.sx * (0.12 + (ch > 0 || singT > 0 ? 0.6 * Math.max(ch, singT > 0 ? 1 : 0) * Math.abs(Math.sin(9 * t)) : 0.03 * Math.sin(2 * t)))));
         blink.update(t, e);
       },
     };
     // bake everything the animation leaves still (see KIT.compact), then reset the sampled state
     KIT.compact(rig, KIT.animated(rig, (tt, tk, w) => (tk && api.onTalk(), api.anim(tt, 0.05, { moving: !!w }))));
-    (talkT = 0), (singT = 0), (wk = 0);
+    (talkT = 0), (singT = 0), (chatT = 0), (wk = 0), (chatNext = 2 + 6 * Math.random());
     return api;
   }
   so.dino = buildDino;
@@ -13407,8 +13432,12 @@ const JGP = (() => {
       R(T.box(0.2, 0.05, 0.08), skin, head, [sx * 0.25, 0.32, 0.28], [0.3, 0, -sx * 0.25]);
       KIT.seam(head, [sx * 0.235, -0.15, 0.2], [sx * 0.235, -0.15, 0.62], 0.02, ink);
     });
-    R(T.box(0.42, 0.02, 0.02), ink, head, [0, -0.15, 0.628]);
-    for (let k = 0; k < 5; k++) R(T.cone(0.018, 0.05, 4), ivory, head, [-0.16 + 0.08 * k, -0.17, 0.635], [Math.PI, 0, 0]);
+    R(T.torus(0.17, 0.02, 6, 18, Math.PI), ink, head, [0, -0.02, 0.628], [0, 0, Math.PI]); // friendly smile
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(0.1, 10, 8), cm("#0c0c10", { shininess: 160 }), head, [sx * 0.31, 0.15, 0.32]);
+      R(T.sphere(0.03, 6, 4), cb("#ffffff"), head, [sx * 0.31 - 0.03, 0.19, 0.415]);
+      R(T.circle(0.06, 10), cm("#ff8a7a"), head, [sx * 0.21, -0.1, 0.629]);
+    });
     for (let k = 0; k < 5; k++) patch(body, [0, 1.15, 0], [0.72, 0.62, 0.8], [0, -1, -0.5 + 0.25 * k], [0.32, 0.1, 0.03], cm("#f0806a"));
     legs.forEach((lg) => [-1, 0, 1].forEach((j) => R(T.cone(0.04, 0.1, 5), ivory, lg, [j * 0.12, -0.68, 0.2], [Math.PI / 2, 0, 0])));
     R(T.cone(0.03, 0.25, 5), cm("#3a8a4a"), hat, [0.24, 0.12, 0.05], [0, 0, -0.6]);

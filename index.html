@@ -11490,12 +11490,12 @@ const JGP = (() => {
   const V15 = [
     ["v15_mont", "MISTERGUMMERY", "g15_mistergummery", "#3ae0f0", 0.8], // merge: Mistergummery + Montgummery
     ["v15_montbak", "MISSGUMMERY", "g15_missgummery", "#ff8ac8", 0.8], // merge: Missgummery + Mont.bak
-    ["v15_gorbo", "GORBO", "g15_gorbo", "#3ad8e8", 1.1],
+    ["v15_gorbo", "GORBO", "w_gorboMerge", "#3ad8e8", 1.1], // merge: GORBO (v15) + GORBO (Woods)
     ["v15_mama", "MAMA GORBO", "g15_mamagorbo", "#f2b06a", 1.1],
     ["v15_spark", "SPARKAKUS", "g15_sparkakus", "#2f6fd8", 0.9],
     ["v15_bobert", "BOBERT", "g15_bobert", "#c08050", 0.6],
     ["v15_somnux", "SOMNUX", "g15_somnux", "#c9b96a", 0.6],
-    ["v15_kingdino", "KING DINO", "g15_kingdino", "#d8c41a", 0.8],
+    ["v15_kingdino", "KING DINO", "w_kingdinoMerge", "#d8c41a", 0.8], // merge: KING DINO (v15) + King Dino (Woods)
     ["v15_immuto", "IMMUTO", "g15_immuto", "#f0a02a", 1.2],
     ["v15_sealio", "SEALIO", "g15_sealio", "#5ac898", 1],
     ["v15_decibelle", "DECIBELLE", "g15_decibelle", "#8a5ae8", 0.8],
@@ -12720,6 +12720,501 @@ const JGP = (() => {
       hat.rotation.z = 0.04 * Math.sin(1.3 * t);
     });
   };
+  // ---- creatures from GREEBLIS WOODS -----------------------------------------
+  // New models (row 4) and merges with same-named creatures already in the game.
+  const WD = {};
+  const quadLegs = (p, pts, len, r, mat) =>
+    pts.map(([px, pz], k) => {
+      const lg = new THREE.Group();
+      lg.position.set(px, len, pz), p.add(lg), R(T.cyl(r, r * 0.85, len, 8), mat, lg, [0, -len / 2, 0]), (lg.userData.ph = k === 0 || k === 3 ? 0 : Math.PI);
+      return lg;
+    });
+  const walk4 = (legs, t, wk) => legs.forEach((lg) => (lg.rotation.x = 0.5 * Math.sin(7 * t + lg.userData.ph) * wk));
+  const flower = (p, pos, col, r) => {
+    const f = new THREE.Group();
+    f.position.set(...pos), p.add(f);
+    for (let k = 0; k < 5; k++) R(T.sphere(r, 8, 6), cm(col), f, [r * 1.2 * Math.cos((k / 5) * l), r * 1.2 * Math.sin((k / 5) * l), 0], null, [1, 1, 0.4]);
+    R(T.sphere(r * 0.7, 8, 6), cm("#e8702a"), f, [0, 0, 0.03]);
+    return f;
+  };
+  const owlBody = (g, col, hatCol) => {
+    const body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 18, 14), cm(col, { shininess: 30 }), body, [0, 1.0, 0], null, [0.62, 0.78, 0.58]);
+    R(T.sphere(1, 14, 10), cm("#e8d8a8"), body, [0, 0.82, 0.3], null, [0.45, 0.5, 0.32]);
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(0.24, 14, 10), cm("#e8e4d0"), body, [sx * 0.24, 1.38, 0.42]);
+      R(T.sphere(0.13, 10, 8), cb("#14141e"), body, [sx * 0.26, 1.4, 0.6]);
+      R(T.sphere(0.04, 6, 4), cb("#ffffff"), body, [sx * 0.22, 1.46, 0.71]);
+      R(T.cone(0.1, 0.32, 6), cm(col), body, [sx * 0.34, 1.82, 0], [0, 0, -sx * 0.3]);
+      R(T.sphere(1, 10, 8), cm(col), body, [sx * 0.6, 0.95, -0.05], [0, 0, sx * 0.2], [0.14, 0.42, 0.32]);
+      R(T.sphere(1, 8, 6), cm("#f2a02a"), body, [sx * 0.2, 0.25, 0.25], null, [0.14, 0.05, 0.18]);
+    });
+    R(T.cone(0.07, 0.16, 6), cm("#f2a02a"), body, [0, 1.25, 0.62], [Math.PI / 2, 0, 0]);
+    if (hatCol) {
+      const hat = new THREE.Group();
+      hat.position.set(0, 1.78, 0), body.add(hat);
+      R(T.cyl(0.42, 0.42, 0.04, 20), cm("#14141e"), hat), R(T.cyl(0.26, 0.28, 0.42, 16), cm("#14141e"), hat, [0, 0.22, 0]), R(T.cyl(0.285, 0.285, 0.08, 16), cm(hatCol), hat, [0, 0.07, 0]);
+    }
+    return life(g, (t, dt, s) => {
+      (body.rotation.z = 0.05 * Math.sin(1.4 * t) + 0.12 * s.tk * Math.sin(10 * t)), (body.position.y = 0.06 * Math.abs(Math.sin(6 * t)) * s.wk);
+    });
+  };
+  const bunny = (g, miss) => {
+    const fur = cm("#b07a3e", { shininess: 20 }),
+      body = new THREE.Group();
+    g.add(body);
+    if (miss) {
+      const dress = new THREE.CylinderGeometry(0.28, 0.62, 0.95, 20, 1, !0);
+      R(dress, cm("#c42026"), body, [0, 0.72, 0]), R(T.torus(0.6, 0.04, 6, 24), cm("#f8f4ec"), body, [0, 0.26, 0], [Math.PI / 2, 0, 0]);
+      R(T.sphere(1, 14, 10), cm("#c42026"), body, [0, 1.22, 0], null, [0.36, 0.3, 0.3]);
+    } else {
+      R(T.sphere(1, 14, 10), cm("#c83030"), body, [0, 0.95, 0.05], null, [0.36, 0.48, 0.32]);
+      R(T.sphere(1, 14, 10), cm("#2a6a3a"), body, [0, 0.98, -0.02], null, [0.42, 0.5, 0.33]);
+      R(T.box(0.18, 0.06, 0.04), cm("#c42026"), body, [0, 1.38, 0.3]);
+      [-1, 1].forEach((sx) => R(T.sphere(1, 10, 8), fur, body, [sx * 0.16, 0.35, 0.05], null, [0.11, 0.35, 0.11]));
+    }
+    [-1, 1].forEach((sx) => R(T.sphere(1, 10, 8), fur, body, [sx * 0.2, 0.08, 0.12], null, [0.14, 0.07, 0.22]));
+    [-1, 1].forEach((sx) => R(T.sphere(1, 10, 8), fur, body, [sx * 0.44, 1.05, 0.05], [0, 0, sx * 0.3], [0.09, 0.32, 0.09]));
+    const head = new THREE.Group();
+    head.position.set(0, 1.72, 0.03), body.add(head);
+    R(T.sphere(0.36, 16, 12), fur, head), R(T.sphere(1, 12, 8), cm("#e8c898"), head, [0, -0.1, 0.26], null, [0.2, 0.14, 0.14]);
+    R(T.sphere(0.04, 6, 4), cm("#5a2a1a"), head, [0, -0.04, 0.4]);
+    eyes(head, 0.14, 0.08, 0.28, 0.06, "#ffffff", "#5a3a8a");
+    [-1, 1].forEach((sx) => R(T.circle(0.06, 10), cm("#f2a0b0"), head, [sx * 0.24, -0.08, 0.27], [0, sx * 0.5, 0]));
+    const ears = [-1, 1].map((sx) => R(T.sphere(1, 10, 8), fur, head, [sx * 0.32, -0.05, 0], [0, 0, sx * 0.35], [0.1, 0.42, 0.14]));
+    if (miss) {
+      [-1, 1].forEach((sx) => R(T.torus(0.15, 0.06, 6, 14), cm("#d8202a"), head, [sx * 0.17, 0.42, 0], [0, sx * 0.4, 0], [1, 0.75, 1]));
+      R(T.sphere(0.07, 8, 6), cm("#d8202a"), head, [0, 0.42, 0]);
+    } else {
+      const hat = new THREE.Group();
+      hat.position.set(0, 0.32, 0), head.add(hat);
+      R(T.cyl(0.36, 0.36, 0.04, 20), cm("#14141e"), hat), R(T.cyl(0.22, 0.24, 0.38, 16), cm("#14141e"), hat, [0, 0.2, 0]), R(T.cyl(0.245, 0.245, 0.07, 16), cm("#c42026"), hat, [0, 0.06, 0]);
+      R(T.cone(0.03, 0.12, 4), cm("#3a8a2a"), hat, [0.2, 0.15, 0.1], [0, 0, -0.5]);
+    }
+    return life(g, (t, dt, s) => {
+      ears.forEach((e, k) => (e.rotation.z = (k ? 1 : -1) * (0.35 + 0.08 * Math.sin(2 * t + k) + 0.2 * s.tk * Math.abs(Math.sin(9 * t)))));
+      (body.position.y = 0.08 * Math.abs(Math.sin(6 * t)) * s.wk), (head.rotation.z = 0.06 * Math.sin(1.1 * t));
+    });
+  };
+
+  // SPARKY (Woods): blue wolf with yellow flowers, small white wing-fins and a long striped tail
+  WD.sparky = (g) => {
+    const blue = cm("#2a4ab8", { shininess: 40 }),
+      body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 18, 14), blue, body, [0, 0.95, 0], null, [0.42, 0.42, 0.85]);
+    const legs = quadLegs(body, [[-0.25, 0.5], [0.25, 0.5], [-0.25, -0.5], [0.25, -0.5]], 0.75, 0.09, blue);
+    [-1, 1].forEach((sx) => {
+      flower(body, [sx * 0.4, 1.05, 0.15], "#ffd23a", 0.1), flower(body, [sx * 0.38, 0.9, -0.3], "#ffd23a", 0.08);
+      R(T.sphere(1, 8, 6), cm("#f4f6ff"), body, [sx * 0.3, 1.32, -0.05], [0.3, 0, sx * 0.6], [0.06, 0.28, 0.2]);
+    });
+    const head = new THREE.Group();
+    head.position.set(0, 1.3, 0.85), body.add(head);
+    R(T.sphere(0.3, 14, 10), blue, head), R(T.cone(0.15, 0.4, 8), blue, head, [0, -0.05, 0.32], [Math.PI / 2, 0, 0]);
+    R(T.sphere(0.05, 6, 4), cb("#0c0c10"), head, [0, -0.05, 0.53]);
+    [-1, 1].forEach((sx) => R(T.cone(0.1, 0.3, 4), blue, head, [sx * 0.16, 0.32, -0.05], [0, 0, -sx * 0.2]));
+    eyes(head, 0.13, 0.08, 0.22, 0.05, "#ffe23a", "#14141e");
+    const tail = new THREE.Group();
+    tail.position.set(0, 1.0, -0.85), body.add(tail);
+    for (let k = 0; k < 6; k++) R(T.cyl(0.06 - 0.007 * k, 0.065 - 0.007 * k, 0.24, 6), cm(k % 2 ? "#35d0c5" : "#2a4ab8"), tail, [0, 0.02 * k, -0.12 - 0.22 * k], [Math.PI / 2, 0, 0]);
+    R(T.sphere(0.06, 8, 6), cm("#e8302e"), tail, [0, 0.12, -1.42]);
+    return life(g, (t, dt, s) => {
+      walk4(legs, t, s.wk), (tail.rotation.y = 0.3 * Math.sin(3 * t)), (head.rotation.x = -0.2 * s.tk * Math.abs(Math.sin(10 * t)));
+    });
+  };
+  // MONT (Woods): CRT head, round circuit body with a teal belly, thin tail, teal boots
+  WD.mont = (g) => {
+    const teal = cm("#3cc8b8"),
+      scr = tex(256, 192, (c) => {
+        (c.fillStyle = "#6a2ad8"), c.fillRect(0, 0, 256, 192), (c.fillStyle = "#ffd23a"), (c.font = "bold 24px monospace"), (c.textAlign = "center"), c.fillText("gfxinfo gfxinfo", 128, 34);
+        (c.strokeStyle = "#ffffff"), (c.lineWidth = 8), c.beginPath(), c.arc(128, 104, 38, 0.2 * Math.PI, 0.8 * Math.PI), c.stroke(), (c.fillStyle = "#ffffff"), c.fillRect(100, 80, 12, 18), c.fillRect(144, 80, 12, 18);
+      }),
+      circ = tex(128, 128, (c) => {
+        (c.fillStyle = "#1a2a26"), c.fillRect(0, 0, 128, 128);
+        for (let k = 0; k < 350; k++) (c.fillStyle = "rgba(90,220,170,.45)"), c.fillRect(128 * Math.random(), 128 * Math.random(), 2, 1);
+      }),
+      body = new THREE.Group();
+    g.add(body);
+    const legs = [-0.2, 0.2].map((x0) => {
+      const lg = new THREE.Group();
+      lg.position.set(x0, 0.55, 0), body.add(lg), R(T.cyl(0.09, 0.08, 0.45, 8), cm("#14302c"), lg, [0, -0.22, 0]);
+      R(T.cyl(0.13, 0.13, 0.22, 10), teal, lg, [0, -0.42, 0.02]), R(T.box(0.24, 0.07, 0.3), cm("#f2702a"), lg, [0, -0.54, 0.05]);
+      return lg;
+    });
+    R(T.sphere(1, 18, 14), cm("#ffffff", { map: circ }), body, [0, 1.05, 0], null, [0.45, 0.5, 0.38]);
+    R(T.circle(0.26, 18), teal, body, [0, 1.0, 0.38]);
+    [-1, 1].forEach((sx) => R(T.cyl(0.05, 0.04, 0.5, 6), cm("#14302c"), body, [sx * 0.5, 1.05, 0.05], [0, 0, sx * 0.4]));
+    const tail = new THREE.Group();
+    tail.position.set(0, 0.75, -0.35), body.add(tail), R(T.cyl(0.015, 0.04, 0.9, 5), cm("#14302c"), tail, [0, -0.25, -0.35], [1.0, 0, 0]);
+    const head = new THREE.Group();
+    head.position.set(0, 1.85, 0), body.add(head);
+    R(T.box(0.9, 0.72, 0.6), teal, head), R(T.plane(0.74, 0.54), cb("#ffffff", { map: scr }), head, [0, 0.02, 0.305]), R(T.box(0.4, 0.12, 0.3), teal, head, [0, -0.42, 0]);
+    return life(g, (t, dt, s) => {
+      const w = Math.sin(6 * t) * s.wk;
+      (legs[0].rotation.x = 0.5 * w), (legs[1].rotation.x = -0.5 * w), (head.rotation.z = 0.06 * Math.sin(t) + 0.1 * s.tk * Math.sin(9 * t)), (tail.rotation.y = 0.4 * Math.sin(2 * t));
+    });
+  };
+  // GRATELET (Woods): sleepy pale moon-face body, swirl marks, little arms, red root legs
+  WD.gratelet = (g) => {
+    const face = tex(256, 256, (c) => {
+        (c.fillStyle = "#f0dca0"), c.fillRect(0, 0, 256, 256), (c.strokeStyle = "rgba(160,120,60,.5)"), (c.lineWidth = 3);
+        for (let k = 0; k < 4; k++) c.beginPath(), c.arc(128, 190, 14 + 9 * k, 0, 1.7 * Math.PI), c.stroke();
+        for (let k = 0; k < 25; k++) (c.fillStyle = "rgba(190,150,80,.4)"), c.beginPath(), c.arc(256 * Math.random(), 256 * Math.random(), 4 + 6 * Math.random(), 0, l), c.fill();
+        (c.strokeStyle = "#5a4020"), (c.lineWidth = 5), c.beginPath(), c.arc(96, 104, 16, 0.1 * Math.PI, 0.9 * Math.PI), c.stroke(), c.beginPath(), c.arc(160, 104, 16, 0.1 * Math.PI, 0.9 * Math.PI), c.stroke();
+        (c.fillStyle = "rgba(255,140,150,.6)"), c.beginPath(), c.arc(70, 130, 12, 0, l), c.fill(), c.beginPath(), c.arc(186, 130, 12, 0, l), c.fill();
+      }),
+      fl = new THREE.Group();
+    g.add(fl);
+    R(T.sphere(0.72, 22, 18), cm("#ffffff", { map: face, shininess: 20 }), fl, [0, 1.65, 0], [0, -Math.PI / 2, 0]);
+    [-1, 1].forEach((sx) => R(T.sphere(1, 10, 8), cm("#f0dca0"), fl, [sx * 0.72, 1.5, 0.1], null, [0.2, 0.17, 0.17]));
+    const roots = [];
+    for (let k = 0; k < 9; k++) {
+      const a = (k / 9) * l,
+        rg = new THREE.Group();
+      rg.position.set(0.35 * Math.cos(a), 1.0, 0.35 * Math.sin(a)), fl.add(rg);
+      R(T.cyl(0.035, 0.012, 1.0, 5), cm("#c8302a"), rg, [0, -0.5, 0], [0.15 * Math.sin(a), 0, 0.15 * Math.cos(a)]), roots.push(rg);
+    }
+    return life(g, (t, dt, s) => {
+      (fl.position.y = 0.1 * Math.sin(1.1 * t)), (fl.rotation.z = 0.05 * Math.sin(0.8 * t) + 0.1 * s.tk * Math.sin(8 * t));
+      roots.forEach((rg, k) => (rg.rotation.x = 0.15 * Math.sin(1.8 * t + k)));
+    });
+  };
+  WD.owl = (g) => owlBody(g, "#c89a5a");
+  WD.owlblue = (g) => owlBody(g, "#8ad8f0");
+  WD.shopowl = (g) => owlBody(g, "#b88a4a", "#ff5fb0");
+  // FROG (Woods)
+  WD.frog = (g) => {
+    const gr = cm("#4fc83a", { shininess: 60 }),
+      body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 18, 14), gr, body, [0, 0.62, 0], null, [0.75, 0.55, 0.7]);
+    R(T.sphere(1, 14, 10), cm("#e8f0b8"), body, [0, 0.52, 0.32], null, [0.55, 0.38, 0.4]);
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(0.24, 14, 10), gr, body, [sx * 0.35, 1.12, 0.25]), R(T.sphere(0.16, 12, 8), cm("#ffffff"), body, [sx * 0.37, 1.18, 0.38]), R(T.sphere(0.08, 8, 6), cb("#14141e"), body, [sx * 0.37, 1.18, 0.52]);
+      R(T.sphere(1, 10, 8), gr, body, [sx * 0.6, 0.18, 0.35], null, [0.22, 0.06, 0.24]), R(T.sphere(1, 10, 8), gr, body, [sx * 0.7, 0.3, -0.2], null, [0.25, 0.22, 0.35]);
+    });
+    const mouth = R(T.torus(0.35, 0.025, 6, 20, Math.PI), cb("#2a5a1a"), body, [0, 0.82, 0.62], [0, 0, Math.PI]);
+    return life(g, (t, dt, s) => {
+      body.scale.y = 1 + 0.04 * Math.sin(3 * t) + 0.1 * s.tk * Math.sin(12 * t);
+      body.position.y = 0.25 * Math.max(0, Math.sin(5 * t)) * s.wk;
+    });
+  };
+  // THE PROFESSOR (Woods): dark-navy slug scholar with stalk eyes, whiskers, gold crown and coins
+  WD.professor = (g) => {
+    const navy = cm("#1c2b44", { shininess: 90, specular: 8947848 }),
+      gold = cm("#f2c22e", { shininess: 90 }),
+      body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 18, 14), navy, body, [0, 0.95, 0], null, [0.55, 0.6, 0.5]);
+    [-1, 1].forEach((sx) => R(T.cyl(0.05, 0.05, 0.4, 6), cm("#d8a868"), body, [sx * 0.22, 0.25, 0]));
+    const neck = new THREE.Group();
+    neck.position.set(0, 1.45, 0.05), body.add(neck), R(T.sphere(1, 14, 10), navy, neck, [0, 0.35, 0.15], null, [0.35, 0.45, 0.35]);
+    for (let k = 0; k < 8; k++) R(T.cyl(0.006, 0.006, 0.4, 3), cb("#0c0c10"), neck, [0.06 * (k - 3.5) * 0.4, 0.3, 0.5], [0, 0, 1.2 + 0.1 * k]);
+    [-1, 1].forEach((sx) => {
+      R(T.cyl(0.025, 0.025, 0.35, 5), navy, neck, [sx * 0.15, 0.85, 0.15], [0, 0, -sx * 0.2]);
+      R(T.sphere(0.08, 10, 8), cm("#ffffff"), neck, [sx * 0.2, 1.03, 0.15]), R(T.sphere(0.04, 6, 4), cb("#14141e"), neck, [sx * 0.2, 1.03, 0.22]);
+    });
+    for (let k = 0; k < 4; k++) R(T.box(0.18 - 0.03 * k, 0.08, 0.12), gold, neck, [0, 0.72 + 0.08 * k, 0]);
+    [-1, 1].forEach((sx) => R(T.cyl(0.07, 0.07, 0.04, 10), gold, body, [sx * 0.42, 0.9, 0.35], [Math.PI / 2, 0, 0]));
+    const tail = new THREE.Group();
+    tail.position.set(0, 0.7, -0.4), body.add(tail), R(T.cyl(0.04, 0.12, 0.7, 8), navy, tail, [0, 0.3, -0.2], [-0.6, 0, 0]);
+    return life(g, (t, dt, s) => {
+      (neck.rotation.z = 0.08 * Math.sin(t)), (neck.rotation.x = 0.1 * s.tk * Math.sin(9 * t)), (tail.rotation.y = 0.3 * Math.sin(1.8 * t));
+    });
+  };
+  WD.mrbun = (g) => bunny(g, !1);
+  WD.missbun = (g) => bunny(g, !0);
+  // CUTEBEX (Woods): leafy bush-ball with a shy face and berries
+  WD.cutebex = (g) => {
+    const ball = new THREE.Group();
+    g.add(ball);
+    R(T.sphere(0.85, 18, 14), cm("#3a8a2a"), ball, [0, 0.9, 0]);
+    for (let k = 0; k < 70; k++) {
+      const u = Math.acos(1 - 2 * ((k + 0.5) / 70)),
+        v = k * 2.4,
+        dx = Math.sin(u) * Math.cos(v),
+        dy = Math.cos(u),
+        dz = Math.sin(u) * Math.sin(v);
+      if (dz > 0.75 && Math.abs(dy) < 0.35) continue;
+      const lf = R(T.sphere(1, 6, 4), cm(k % 3 ? "#4fa83a" : "#6ac84a"), ball, [0.86 * dx, 0.9 + 0.86 * dy, 0.86 * dz], null, [0.2, 0.05, 0.13]);
+      lf.lookAt(lf.position.x * 3, (lf.position.y - 0.9) * 3 + 0.9, lf.position.z * 3);
+    }
+    R(T.sphere(0.32, 14, 10), cm("#e8f0c8"), ball, [0, 0.95, 0.7], null, [1, 0.9, 0.5]);
+    eyes(ball, 0.1, 1.0, 0.83, 0.04, "#14141e", "#14141e");
+    R(T.sphere(0.06, 8, 6), cm("#5a1a1a"), ball, [0, 0.86, 0.85], null, [1, 0.8, 0.5]);
+    for (let k = 0; k < 6; k++) R(T.sphere(0.05, 6, 4), cm(k % 2 ? "#e8302e" : "#f2a02a"), ball, [0.9 * Math.cos(k * 1.1), 0.9 + 0.5 * Math.sin(k * 1.7), 0.5 * Math.sin(k * 1.1)]);
+    return life(g, (t, dt, s) => {
+      ball.rotation.y = 0.15 * Math.sin(0.9 * t);
+      ball.scale.setScalar(1 + 0.03 * Math.sin(2 * t) + 0.06 * s.tk * Math.sin(12 * t));
+    });
+  };
+  // ORSON (Woods): golden bird bard in a pith helmet, playing a banjo
+  WD.orson = (g) => {
+    const gold = cm("#c8962a", { shininess: 80, specular: 10066329 }),
+      body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 16, 12), gold, body, [0, 1.05, 0], null, [0.4, 0.5, 0.38]);
+    [-1, 1].forEach((sx) => R(T.cyl(0.03, 0.03, 0.55, 5), gold, body, [sx * 0.15, 0.3, 0]));
+    [-1, 1].forEach((sx) => R(T.box(0.16, 0.08, 0.26), cm("#6a4a1a"), body, [sx * 0.15, 0.04, 0.06]));
+    const head = new THREE.Group();
+    head.position.set(0, 1.72, 0.05), body.add(head);
+    R(T.sphere(0.28, 14, 10), gold, head), R(T.cone(0.06, 0.55, 8), cm("#a87a2a"), head, [0, -0.02, 0.4], [Math.PI / 2, 0, 0]);
+    eyes(head, 0.11, 0.06, 0.2, 0.05, "#ffffff", "#14141e");
+    R(T.sphere(0.3, 14, 8), gold, head, [0, 0.18, 0], null, [1, 0.6, 1]), R(T.cyl(0.38, 0.38, 0.03, 16), gold, head, [0, 0.12, 0]), R(T.sphere(0.04, 6, 4), gold, head, [0, 0.36, 0]);
+    const banjo = new THREE.Group();
+    banjo.position.set(0.15, 1.0, 0.4), (banjo.rotation.z = -0.7), body.add(banjo);
+    R(T.cyl(0.2, 0.2, 0.06, 18), cm("#e8dcb8"), banjo, [0, 0, 0], [Math.PI / 2, 0, 0]), R(T.torus(0.2, 0.025, 6, 18), cm("#8a5a2a"), banjo);
+    R(T.box(0.05, 0.7, 0.03), cm("#6a3a1a"), banjo, [0, 0.45, 0]);
+    const arm = R(T.cyl(0.03, 0.03, 0.4, 5), gold, body, [0.28, 1.05, 0.3], [0, 0, 0.9]);
+    return life(g, (t, dt, s) => {
+      (arm.rotation.x = 0.3 * Math.sin(12 * t) * (0.3 + s.tk)), (head.rotation.y = 0.2 * Math.sin(0.8 * t)), (body.rotation.z = 0.04 * Math.sin(2 * t));
+    });
+  };
+
+  // ---- merges (elements taken equally from both parents) ----------------------
+  // GORBO = GORBO (v15) + GORBO (Woods)
+  WD.gorboMerge = (g) => {
+    const blob = new THREE.Group();
+    g.add(blob);
+    R(T.torus(0.95, 0.2, 10, 28), cm("#c8f03a", { shininess: 60 }), g, [0, 0.2, 0], [Math.PI / 2, 0, 0]); // lime ring base (v15)
+    const geo = new THREE.SphereGeometry(1, 28, 20),
+      ps = geo.attributes.position;
+    for (let k = 0; k < ps.count; k++) {
+      const X = ps.getX(k),
+        Y = ps.getY(k),
+        Z = ps.getZ(k),
+        q = 1 + 0.07 * Math.sin(5 * X + 3 * Y) * Math.cos(4 * Z); // lumpy surface (v15)
+      ps.setXYZ(k, X * q, Y * q, Z * q);
+    }
+    geo.computeVertexNormals();
+    R(geo, cm("#3ad8e8", { shininess: 70, specular: 8947848 }), blob, [0, 1.25, 0], null, [0.72, 1.0, 0.72]); // tall oval (Woods)
+    R(T.torus(0.55, 0.12, 8, 24, Math.PI * 1.2), cm("#d8f03a"), blob, [0, 0.7, 0.35], [-0.3, 0, Math.PI * 0.9]); // yellow-green crescent (Woods)
+    [
+      [0.35, 1.55, 0.55, 0.22],
+      [-0.4, 1.2, 0.55, 0.17],
+    ].forEach(([px, py, pz, r]) => {
+      const sp = new THREE.Group();
+      sp.position.set(px, py, pz), sp.lookAt(px * 3, py, pz * 3), blob.add(sp);
+      R(T.cyl(r, r, 0.04, 8), cm("#e84fd0"), sp, null, [Math.PI / 2, 0, 0]), R(T.cyl(r * 0.75, r * 0.75, 0.05, 8), cm("#8a3ffc"), sp, null, [Math.PI / 2, 0, 0]); // octagon spots (Woods)
+    });
+    const signs = [floatSign(g, "AP", "#e8302e", [0.95, 1.55, 0.2]), floatSign(g, "IP", "#e8302e", [1.05, 0.95, 0.35])]; // AP/IP signs (v15)
+    const wifi = new THREE.Group();
+    wifi.position.set(-0.5, 2.45, 0), g.add(wifi);
+    [0.1, 0.18, 0.26].forEach((r) => R(T.torus(r, 0.022, 4, 16, Math.PI / 2), cb("#c83ae8"), wifi, [0, -0.1, 0], [0, 0, Math.PI / 4])); // wifi icon (Woods)
+    const drops = [0, 1, 2].map((k) => R(T.sphere(0.07, 8, 6), cm(k % 2 ? "#a8e830" : "#f4f4ec"), blob, [0.3 * Math.cos(2 * k), 2.3, 0.3 * Math.sin(2 * k)])); // droplets (v15)
+    return life(g, (t, dt, s) => {
+      const q = 1 + 0.05 * Math.sin(3 * t) + 0.12 * s.tk * Math.sin(14 * t);
+      blob.scale.set(1 / Math.sqrt(q), q, 1 / Math.sqrt(q));
+      signs.forEach((sg, k) => (sg.position.y = (k ? 0.95 : 1.55) + 0.06 * Math.sin(2 * t + k)));
+      drops.forEach((d, k) => (d.position.y = 2.3 + 0.08 * Math.sin(3 * t + k))), wifi.scale.setScalar(1 + 0.1 * Math.sin(4 * t));
+    });
+  };
+  // MALTOE = MALTOE (Greeblis City) + MALTOE (Woods)
+  WD.maltoeMerge = (g) => {
+    const gr = cm("#7ac83a", { shininess: 60 }),
+      grid = tex(64, 64, (c) => {
+        (c.fillStyle = "#3a8a6a"), c.fillRect(0, 0, 64, 64), (c.strokeStyle = "#c8f05a"), (c.lineWidth = 2);
+        for (let k = 0; k < 64; k += 8) c.beginPath(), c.moveTo(k, 0), c.lineTo(k, 64), c.moveTo(0, k), c.lineTo(64, k), c.stroke();
+      }),
+      body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 18, 14), gr, body, [0, 1.45, 0], null, [0.42, 0.62, 0.38]); // round body (Greeblis City)
+    R(T.box(0.5, 0.42, 0.06), cm("#ffffff", { map: grid }), body, [0, 1.35, 0.37]); // grid chest panel (Woods)
+    const tents = [];
+    for (let k = 0; k < 6; k++) {
+      const a = (k / 6) * l,
+        tg = new THREE.Group();
+      tg.position.set(0.22 * Math.cos(a), 0.9, 0.22 * Math.sin(a)), body.add(tg);
+      R(T.cyl(0.05, 0.02, 0.85, 6), gr, tg, [0, -0.42, 0], [0.25 * Math.sin(a), 0, 0.25 * Math.cos(a)]), tents.push(tg); // tentacle legs (Woods)
+    }
+    const head = new THREE.Group();
+    head.position.set(0, 2.1, 0), body.add(head);
+    R(T.sphere(0.32, 14, 10), gr, head);
+    [-1, 1].forEach((sx) => {
+      R(T.cyl(0.11, 0.11, 0.18, 12), cm("#2a3a4a"), head, [sx * 0.13, 0.02, 0.28], [Math.PI / 2, 0, 0]), R(T.circle(0.08, 12), cm("#5ab4ff", { shininess: 120 }), head, [sx * 0.13, 0.02, 0.38]);
+    }); // binocular goggles (both)
+    const hat = new THREE.Group();
+    hat.position.set(0, 0.28, 0), head.add(hat);
+    R(T.cyl(0.5, 0.5, 0.04, 20), cm("#a8753e"), hat), R(T.cyl(0.24, 0.28, 0.3, 16), cm("#9a6a36"), hat, [0, 0.16, 0]); // sheriff hat (Greeblis City)
+    R(T.cyl(0.08, 0.08, 0.02, 5), cm("#e8b830", { shininess: 120 }), body, [-0.18, 1.7, 0.4], [Math.PI / 2, 0, 0]); // star badge (Greeblis City)
+    const discs = [];
+    for (let k = 0; k < 6; k++) {
+      const dg = new THREE.Group();
+      body.add(dg), R(T.cyl(0.2, 0.2, 0.05, 16), cm("#2a5ab8"), dg, null, [Math.PI / 2, 0, 0]), R(T.torus(0.2, 0.04, 6, 16), cm("#e8a830"), dg), discs.push(dg); // blue discs (both)
+    }
+    return life(g, (t, dt, s) => {
+      discs.forEach((dg, k) => {
+        const a = 0.4 * t + (k / 6) * l;
+        dg.position.set(0.85 * Math.cos(a), 1.5 + 0.45 * Math.sin(2 * a), 0.85 * Math.sin(a) * 0.5), dg.lookAt(0, 1.5, 3);
+      });
+      tents.forEach((tg, k) => (tg.rotation.x = 0.15 * Math.sin(2 * t + k))), (head.rotation.z = 0.1 * s.tk * Math.sin(9 * t));
+    });
+  };
+  // MUSHROOM = MUSHROOM (Greeblis City) + MUSHROOM (Woods)
+  WD.mushroomMerge = (g) => {
+    const shroom = new THREE.Group();
+    g.add(shroom);
+    R(T.cyl(0.3, 0.38, 1.0, 16), cm("#f4f0d8"), shroom, [0, 0.5, 0]); // cream stem (both)
+    const cap = new THREE.SphereGeometry(0.85, 22, 12, 0, l, 0, Math.PI / 2);
+    R(cap, cm("#f2a02a", { shininess: 40 }), shroom, [0, 0.95, 0], null, [1, 0.62, 1]); // orange dome cap (Greeblis City)
+    R(T.circle(0.85, 22), cm("#f8e8c8"), shroom, [0, 0.95, 0], [Math.PI / 2, 0, 0]);
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * l + 0.3,
+        el = 0.45 + 0.35 * (k % 2);
+      R(T.sphere(0.09, 8, 6), cm("#ffffff"), shroom, [0.82 * Math.cos(a) * Math.cos(el), 0.95 + 0.53 * Math.sin(el), 0.82 * Math.sin(a) * Math.cos(el)], null, [1, 0.5, 1]); // white spots (Woods)
+    }
+    eyes(shroom, 0.12, 0.62, 0.32, 0.06, "#ffffff", "#14141e"); // googly eyes (Woods)
+    [-1, 1].forEach((sx) => R(T.circle(0.06, 10), cm("#f2a0b0"), shroom, [sx * 0.22, 0.5, 0.36], [0, sx * 0.5, 0])); // cheeks (Greeblis City)
+    return life(g, (t, dt, s) => {
+      shroom.scale.y = 1 + 0.03 * Math.sin(2 * t) + 0.08 * s.tk * Math.sin(10 * t);
+      shroom.rotation.z = 0.04 * Math.sin(1.3 * t);
+    });
+  };
+  // LARRY = LARRY (Greeblis City) + LARRY (Woods)
+  WD.larryMerge = (g) => {
+    const teal = cm("#2ac8c0", { shininess: 50 }),
+      body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 16, 12), teal, body, [0, 0.95, 0], null, [0.42, 0.55, 0.45]); // upright lizard torso (Greeblis City)
+    const legs = quadLegs(body, [[-0.25, 0.3], [0.25, 0.3], [-0.25, -0.3], [0.25, -0.3]], 0.55, 0.1, teal); // four sturdy legs (Woods)
+    R(T.torus(0.44, 0.07, 6, 20), cm("#7a2a8a"), body, [0, 1.05, 0], [Math.PI / 2, 0, 0]); // purple saddle band (Woods)
+    R(T.box(0.4, 0.38, 0.32), cm("#e8c82a", { shininess: 80 }), body, [0, 1.25, -0.42]); // gold box on the back (both)
+    const head = new THREE.Group();
+    head.position.set(0, 1.62, 0.18), body.add(head);
+    R(T.sphere(0.32, 14, 10), teal, head), R(T.sphere(1, 12, 8), teal, head, [0, -0.06, 0.3], null, [0.24, 0.18, 0.26]); // long snout (Woods)
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(0.1, 10, 8), cm("#e83a8a", { shininess: 90 }), head, [sx * 0.2, 0.1, 0.18]), R(T.sphere(0.05, 6, 4), cb("#14141e"), head, [sx * 0.24, 0.11, 0.25]);
+    }); // pink eyes (both)
+    const tail = new THREE.Group();
+    tail.position.set(0, 0.7, -0.4), body.add(tail);
+    for (let k = 0; k < 5; k++) {
+      R(T.cyl(0.11 - 0.018 * k, 0.12 - 0.018 * k, 0.24, 8), teal, tail, [0, -0.02 * k, -0.12 - 0.22 * k], [Math.PI / 2, 0, 0]);
+      R(T.cone(0.035, 0.1, 4), cm("#e8c82a"), tail, [0, 0.09 - 0.02 * k, -0.12 - 0.22 * k]); // yellow tail spikes (Greeblis City)
+    }
+    return life(g, (t, dt, s) => {
+      walk4(legs, t, s.wk), (tail.rotation.y = 0.3 * Math.sin(2.5 * t)), (head.rotation.x = -0.15 * s.tk * Math.abs(Math.sin(10 * t)));
+    });
+  };
+  // ANOMALEE = ANOMALEE (Greeblis City) + ANOMALEE (Woods)
+  WD.anomaleeMerge = (g) => {
+    const stripe = tex(64, 64, (c) => {
+        (c.fillStyle = "#2a9a90"), c.fillRect(0, 0, 64, 64), (c.strokeStyle = "#7af0e0"), (c.lineWidth = 4);
+        for (let k = -64; k < 64; k += 12) c.beginPath(), c.moveTo(k, 64), c.lineTo(k + 64, 0), c.stroke();
+      }),
+      scr = textTex(128, 96, "#e83ae8", "#ffffff", "))", "bold 40px Arial"),
+      sm = cm("#ffffff", { map: stripe }),
+      body = new THREE.Group();
+    g.add(body);
+    R(T.box(1.1, 0.5, 0.6), sm, body, [0, 1.0, 0]); // striped box body (Woods)
+    R(T.box(0.5, 0.25, 0.04), cm("#1a6a64"), body, [0, 1.0, 0.31]), R(T.box(0.2, 0.04, 0.04), cm("#e8e8e8"), body, [0, 1.0, 0.34]); // drawer with handle (Greeblis City)
+    const legs = quadLegs(body, [[-0.4, 0.2], [0.4, 0.2], [-0.4, -0.2], [0.4, -0.2]], 0.78, 0.07, sm); // four legs (Woods)
+    const head = new THREE.Group();
+    head.position.set(0, 1.62, 0.05), body.add(head);
+    R(T.box(0.7, 0.58, 0.45), cm("#2a9a90"), head), R(T.plane(0.58, 0.46), cb("#ffffff", { map: scr }), head, [0, 0, 0.23]); // pink wifi screen (both)
+    R(T.box(0.34, 0.2, 0.26), cm("#7a8a6a"), head, [0.05, 0.4, -0.05]), R(T.plane(0.3, 0.16), cb("#ffffff", { map: textTex(64, 32, "#3a4ab8", "#ffffff", "adb", "bold 18px monospace") }), head, [0.05, 0.4, 0.081]); // adb box (Woods)
+    const cable = R(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0.2, 0.45, -0.1), new THREE.Vector3(0.45, 0.7, -0.3), new THREE.Vector3(0.6, 0.1, -0.4)]), 12, 0.02, 5), cm("#3a5ab8"), head); // cable (Woods)
+    [-1, 1].forEach((sx) => R(T.box(0.15, 0.32, 0.4), cm("#1a6a64"), head, [sx * 0.42, -0.05, 0])); // side panels (Greeblis City)
+    return life(g, (t, dt, s) => {
+      walk4(legs, t, s.wk), (head.rotation.z = 0.04 * Math.sin(1.2 * t) + 0.1 * s.tk * Math.sin(10 * t));
+    });
+  };
+  // SLUGWERTH = SLUGWERTH (Greeblis City) + SLUGWORTH (Woods)
+  WD.slugMerge = (g) => {
+    const scales = tex(128, 128, (c) => {
+        (c.fillStyle = "#3ab8d8"), c.fillRect(0, 0, 128, 128);
+        for (let y = 0; y < 128; y += 10) for (let x = (y / 10) % 2 ? 5 : 0; x < 128; x += 10) (c.fillStyle = Math.random() < 0.5 ? "#2a5ae8" : "#1a3ab8"), c.beginPath(), c.arc(x, y, 5, 0, Math.PI), c.fill();
+      }),
+      body = new THREE.Group();
+    g.add(body);
+    const segs = [];
+    for (let k = 0; k < 4; k++) segs.push(R(T.sphere(0.36 - 0.04 * k, 16, 12), cm("#ffffff", { map: scales }), body, [0, 0.6 + 0.42 * k, 0.04 * k])); // segmented body (Greeblis City) in blue scales (Woods)
+    const head = new THREE.Group();
+    head.position.set(0, 2.15, 0.15), body.add(head);
+    R(T.sphere(0.3, 14, 10), cm("#3ab8d8"), head);
+    R(T.sphere(0.16, 12, 10), cm("#ffffff"), head, [0, 0.05, 0.25]), R(T.sphere(0.09, 10, 8), cm("#c8702a"), head, [0, 0.05, 0.37]), R(T.sphere(0.04, 6, 4), cb("#14141e"), head, [0, 0.05, 0.45]); // single big eye (Woods)
+    [-1, 1].forEach((sx) => {
+      R(T.cyl(0.015, 0.015, 0.4, 4), cm("#3a3a5a"), head, [sx * 0.12, 0.42, 0], [0, 0, -sx * 0.3]), R(T.sphere(0.06, 8, 6), cm("#ff5fb0"), head, [sx * 0.24, 0.6, 0]);
+    }); // antennae with pink orbs (Greeblis City)
+    [0.08, 0.14].forEach((r) => R(T.torus(r, 0.015, 4, 12, Math.PI / 2), cb("#ffb83a"), head, [0, 0.72, 0], [0, 0, Math.PI / 4])); // wifi (Woods)
+    const diamonds = [0, 1].map((k) => R(T.box(0.3, 0.3, 0.03), cm("#d8f03a", { shininess: 90 }), body, [0, 1.3, 0], [0, 0, Math.PI / 4])); // yellow diamonds (Greeblis City)
+    const feet = [];
+    for (let k = 0; k < 5; k++) {
+      const a = (k / 5) * l,
+        fg = new THREE.Group();
+      fg.position.set(0.2 * Math.cos(a), 0.35, 0.2 * Math.sin(a)), body.add(fg);
+      R(T.cyl(0.05, 0.02, 0.5, 6), cm("#c87ae8"), fg, [0, -0.2, 0], [0.5 * Math.sin(a), 0, 0.5 * Math.cos(a)]), feet.push(fg); // purple tentacle feet (Woods)
+    }
+    return life(g, (t, dt, s) => {
+      segs.forEach((sg, k) => (sg.position.x = 0.05 * Math.sin(2 * t - k)));
+      diamonds.forEach((dm, k) => {
+        const a = 0.8 * t + k * Math.PI;
+        dm.position.set(0.7 * Math.cos(a), 1.3 + 0.2 * Math.sin(2 * a), 0.7 * Math.sin(a)), (dm.rotation.y = -a);
+      });
+      feet.forEach((fg, k) => (fg.rotation.x = 0.2 * Math.sin(3 * t + k))), (head.rotation.z = 0.1 * s.tk * Math.sin(9 * t));
+    });
+  };
+  // KING DINO = KING DINO (v15) + King Dino (Woods)
+  WD.kingdinoMerge = (g) => {
+    const y = cm("#f2e02a", { shininess: 50 }),
+      teal = cm("#35d0c5"),
+      rootG = new THREE.Group();
+    g.add(rootG);
+    R(T.sphere(1, 18, 14), y, rootG, [0, 1.1, 0], null, [0.72, 0.95, 0.7]); // yellow egg body (both)
+    R(T.cone(0.12, 0.45, 8), cm("#e8c82a"), rootG, [0, 1.4, 0.8], [Math.PI / 2, 0, 0]); // pointed snout (Woods)
+    [-1, 1].forEach((sx) => R(T.box(0.1, 0.1, 0.04), cb("#14141e"), rootG, [sx * 0.24, 1.62, 0.66])); // square eyes (Woods)
+    for (let k = 0; k < 5; k++) R(T.box(0.14, 0.14, 0.14), teal, rootG, [0, 1.75 - 0.25 * k, -0.66 + 0.02 * k], [0.4, 0, 0.4]); // back spikes (v15)
+    const legs = legsPair(rootG, [-0.3, 0.3], 0.35, 0.35, 0.12, "#f2e02a", "#e8b82a");
+    R(T.torus(0.28, 0.08, 8, 16, 4.2), teal, rootG, [0.2, 0.45, -0.62], [0, Math.PI / 2, 0]); // curly teal tail (both)
+    const crown = new THREE.Group();
+    crown.position.set(0, 2.02, 0), rootG.add(crown);
+    R(T.cyl(0.34, 0.34, 0.2, 16), teal, crown, [0, 0.1, 0]); // flat teal crown (Woods)
+    [-1, 0, 1].forEach((k) => {
+      R(T.cyl(0.012, 0.012, 0.2, 4), cm("#3a3a3a"), crown, [0.12 * k, 0.3, 0]), R(T.sphere(0.05, 8, 6), cm(["#e8302e", "#3a5ae8", "#f2c22e"][k + 1]), crown, [0.12 * k, 0.42, 0]);
+    }); // ball antennae (Woods)
+    const cape = R(T.box(0.95, 1.2, 0.04), cm("#a8202a"), rootG, [0, 1.25, -0.7], [0.15, 0, 0]); // red cape (v15)
+    return life(g, (t, dt, s) => {
+      const w = Math.sin(6 * t) * s.wk;
+      (legs[0].rotation.x = 0.5 * w), (legs[1].rotation.x = -0.5 * w), (rootG.rotation.z = 0.06 * Math.sin(3 * t) * (s.wk + 0.3));
+      (crown.rotation.z = 0.06 * Math.sin(1.7 * t) + 0.12 * s.tk * Math.sin(10 * t)), (cape.rotation.x = 0.15 + 0.06 * Math.sin(2 * t));
+    });
+  };
+  // NEXTESSA = NEXTESSA (Greeblis City) + NEXTESSA (Woods)
+  WD.nextessaMerge = (g) => {
+    const org = cm("#f2963a", { shininess: 50 }),
+      body = new THREE.Group();
+    g.add(body);
+    [
+      [-0.32, 0.45, 0.2],
+      [0.32, 0.45, 0.2],
+      [0, 0.45, -0.3],
+    ].forEach(([px, py, pz]) => R(T.sphere(0.5, 18, 14), cm("#f27a2a", { shininess: 50 }), body, [px, py, pz])); // three big base bulbs (Greeblis City)
+    const segs = [];
+    for (let k = 0; k < 5; k++) {
+      const sg = R(T.sphere(0.36 - 0.025 * k, 16, 12), org, body, [0, 1.05 + 0.36 * k, 0], null, [1, 0.72, 1]);
+      segs.push(sg);
+      for (let j = 0; j < 4; j++) R(T.sphere(0.03, 6, 4), cm("#8a4a1a"), sg, [0.34 * Math.cos(j * 1.6 + k), 0.1 * Math.sin(j), 0.34 * Math.sin(j * 1.6 + k)]); // brown dots (Woods)
+    }
+    const head = new THREE.Group();
+    head.position.set(0, 2.95, 0), body.add(head);
+    R(T.sphere(0.3, 16, 12), org, head), R(T.box(0.12, 0.08, 0.14), cm("#c86a2a"), head, [0, 0, 0.32]); // square beak (Greeblis City)
+    eyes(head, 0.11, 0.08, 0.24, 0.045, "#14141e", "#14141e");
+    return life(g, (t, dt, s) => {
+      segs.forEach((sg, k) => (sg.position.x = 0.05 * Math.sin(2.2 * t - 0.6 * k) * (1 + s.wk)));
+      (head.position.x = 0.05 * Math.sin(2.2 * t - 3)), (head.rotation.z = 0.1 * s.tk * Math.sin(10 * t));
+    });
+  };
+  // a broken model must never stop the game from booting: fall back to a placeholder dino
+  for (const k in WD)
+    so["w_" + k] = (g, d, opts) => {
+      try {
+        return WD[k](g, d, opts);
+      } catch (err) {
+        vo(err, "model " + k);
+        while (g.children.length) g.remove(g.children[0]);
+        return buildDino(g, d || {}, { plan: "raptor" });
+      }
+    };
   so.jgpKeeper = (g, d) => buildDino(g, d || {}, KEEPER);
 
   // ---- apply cast / text over the engine's defs (runs just before spawn) ----
@@ -12739,6 +13234,14 @@ const JGP = (() => {
     ["orson", "KOLLOD"],
     ["larry", "LARRY"],
   ];
+  const GC_MERGE = {
+      orbiter: "w_maltoeMerge", // MALTOE (Greeblis City) + MALTOE (Woods)
+      drifter: "w_mushroomMerge", // MUSHROOM (Greeblis City) + MUSHROOM (Woods)
+      larry: "w_larryMerge", // LARRY (Greeblis City) + LARRY (Woods)
+      blinker: "w_anomaleeMerge", // ANOMALEE (Greeblis City) + ANOMALEE (Woods)
+      slugwerth: "w_slugMerge", // SLUGWERTH (Greeblis City) + SLUGWORTH (Woods)
+    },
+    GC_MERGE_NAME = {};
   const ROW3_X = -34,
     ROW3_Z0 = -12,
     ROW3_STEP = 3;
@@ -12759,14 +13262,53 @@ const JGP = (() => {
         });
       ["throwsGoo", "gcPost", "gcRoam", "goHome", "talkR", "respawnS", "stamina", "moves", "title"].forEach((f) => delete nd[f]);
       d.builderOpts && (nd.builderOpts = Object.assign({}, d.builderOpts));
+      // same-named creatures from Greeblis Woods are merged into these
+      GC_MERGE[src] && ((nd.builder = GC_MERGE[src]), delete nd.builderOpts, delete nd.modelScale, (nd.name = GC_MERGE_NAME[src] || nd.name));
       o[id] = nd;
       Zt[id] = Zt[src] ? JSON.parse(JSON.stringify(Zt[src])) : { g: [-0.9, 1.3, 0.4], c: [0.9, 1.0, 0.4] };
       a[src] && (a[id] = a[src]);
     });
   }
+  // Row 4 (south side, facing the garden): creatures from GREEBLIS WOODS without a same-named twin.
+  const WOODS = [
+    ["w4_sparky", "SPARKY", "w_sparky", "#2a4ab8", 0.9],
+    ["w4_mont", "MONT", "w_mont", "#3cc8b8", 0.8],
+    ["w4_gratelet", "GRATELET", "w_gratelet", "#c8a858", 0.9],
+    ["w4_owl", "OWL", "w_owl", "#b88a4a", 0.7],
+    ["w4_owlblue", "OWL", "w_owlblue", "#5ab8d8", 0.7],
+    ["w4_frog", "FROG", "w_frog", "#4f9a32", 0.9],
+    ["w4_professor", "THE PROFESSOR", "w_professor", "#1c2b44", 0.8],
+    ["w4_mrbun", "MR BUN", "w_mrbun", "#a8733a", 0.6],
+    ["w4_missbun", "MISS BUN", "w_missbun", "#c42026", 0.7],
+    ["w4_cutebex", "CUTEBEX", "w_cutebex", "#3a8a2a", 0.9],
+    ["w4_orson", "ORSON", "w_orson", "#c8962a", 0.7],
+    ["w4_shopowl", "SHOPKEEPER OWL", "w_shopowl", "#b88a4a", 0.7],
+  ];
+  const ROW4_Z = 31,
+    ROW4_X0 = -17,
+    ROW4_STEP = 3;
+  function addWoods() {
+    WOODS.forEach(([id, name, builder, color, bodyR], k) => {
+      o[id] = {
+        name,
+        color,
+        builder,
+        bodyR,
+        at: [ROW4_X0 + k * ROW4_STEP, ROW4_Z],
+        pattern: ["post", { face: Math.PI }],
+        stationary: !0,
+        emotes: ["!", "♥", "✿"],
+        lines: L3(),
+        gift: "Placeholder blossom line",
+        campfire: "Placeholder campfire line",
+      };
+      Zt[id] = { g: [-0.8, 1.1, 0.45], c: [0.8, 0.95, 0.45] };
+    });
+  }
   function applyCast() {
     addGreeblisCity();
     addV15();
+    addWoods();
     const all = Object.assign({}, e, o, n);
     if (FREEZE_NPCS) {
       const row = Object.keys(CAST).filter((id) => all[id]);
@@ -12811,7 +13353,8 @@ const JGP = (() => {
     }
     for (const id in BATTLES) all[id] && (Object.assign(all[id], BATTLES[id]), (all[id].danceGeneric = !0));
     t.noBlossoms.length = 0;
-    // pizza courier: NEXTESSA keeps her original model and lines from Greeblis City
+    // pizza courier: NEXTESSA keeps her Greeblis City lines; model = merge with NEXTESSA (Woods)
+    (s.builder = "w_nextessaMerge"), (s.modelScale = 0.9);
     i.name = KEEPER.name;
     i.shopLog = "Placeholder shop line";
     i.campfire = "Placeholder campfire line";
@@ -13189,6 +13732,18 @@ const JGP = (() => {
     gc_cutebex: ["dig", 2.5, 0.9, -0.15],
     gc_orson: ["pat", 2.3, 0.9],
     gc_larry: ["sniff", 1.9, 0.7],
+    w4_sparky: ["scatter", 2.4, 1.2],
+    w4_mont: ["dig", 2.8, 0.7, 0.1],
+    w4_gratelet: ["wiggle", 0.9, 1.1],
+    w4_owl: ["hop", 3.3, 0.7],
+    w4_owlblue: ["twirl", 2.1, 0.9],
+    w4_frog: ["hop", 1.2, 1.5],
+    w4_professor: ["sniff", 1.3, 1.3],
+    w4_mrbun: ["stomp", 3.0, 0.6],
+    w4_missbun: ["twirl", 1.5, 0.8],
+    w4_cutebex: ["wiggle", 3.6, 0.6],
+    w4_orson: ["pat", 3.1, 0.7],
+    w4_shopowl: ["dig", 1.0, 1.2, 0.25],
   };
   function plantMove(key, t) {
     const [type, w, a, extra = 0] = MOVES[key] || MOVES.mont,

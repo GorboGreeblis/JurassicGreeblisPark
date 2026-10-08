@@ -4,6 +4,25 @@
  <script>!function(){try{var t=HTMLCanvasElement.prototype,e=t.getContext;t.getContext=function(t){var a=e.apply(this,arguments);try{a&&"2d"===t&&(a.imageSmoothingEnabled=!1)}catch(t){}return a}}catch(t){}try{if("undefined"==typeof THREE||!THREE.CanvasTexture)return;var a=window.__gbTexReg=[],n=THREE.CanvasTexture;THREE.CanvasTexture=class extends n{constructor(){super(...arguments);try{if(this.image&&"CANVAS"===this.image.tagName){a.push(this);var t=this;this.addEventListener("dispose",function(){t.__gbRetired=1;var e=a.indexOf(t);e>=0&&a.splice(e,1)})}}catch(t){}}}}catch(t){}}();</script>
 <script>
 "use strict";
+// JGP mobile test mode flag (temporary): phones (not Quest) or ?mobile=1; ?mobile=0 forces it off
+window.__jgpMobile = (() => {
+  const q = location.search;
+  if (/[?&]mobile=0/.test(q)) return !1;
+  if (/[?&]mobile=1/.test(q)) return !0;
+  const ua = navigator.userAgent || "";
+  return /Android|iPhone|iPad|Mobile/i.test(ua) && !/OculusBrowser|Quest/i.test(ua);
+})();
+// count shader compile/link failures (shown in the mobile diagnostics panel)
+(() => {
+  const ce = console.error;
+  window.__jgpShaderErrors = 0;
+  console.error = function () {
+    try {
+      /Shader Error|shader error|VALIDATE_STATUS|Program Info Log|could not compile/i.test(String(arguments[0])) && window.__jgpShaderErrors++;
+    } catch (e) {}
+    return ce.apply(console, arguments);
+  };
+})();
 const t = {
     debug: !(!window.__gbGuard || !window.__gbGuard.DEBUG),
     clearingR: 48,
@@ -11,8 +30,8 @@ const t = {
     spreadR: 13,
     personalSpace: 7,
     sky: { top: 0x5f9ccf, horizon: 0xe6dcb4 },
-    fog: { near: 70, far: 300 },
-    far: 400,
+    fog: { near: 70, far: window.__jgpMobile ? 230 : 300 },
+    far: window.__jgpMobile ? 260 : 400,
     player: { speed: 4.5, bodyR: 0.6, spawn: [0, 20], hair: "#c8321e", dress: "#ff5fb0", skin: "#f2c6a0" },
     propsBlock: !1,
     bodies: { solidK: 0.85, aisle: 2.6 },
@@ -486,10 +505,10 @@ const G = (() => {
   })(),
   I = { sky: null, w: innerWidth, h: innerHeight },
   C = new THREE.Scene(),
-  O = new THREE.WebGLRenderer({ antialias: !0, powerPreference: "high-performance" }),
+  O = new THREE.WebGLRenderer({ antialias: !window.__jgpMobile, powerPreference: "high-performance" }),
   B = new THREE.PerspectiveCamera(t.camera.fov, innerWidth / innerHeight, 0.5, t.far);
 !(function () {
-  O.setSize(innerWidth, innerHeight), O.setPixelRatio(Math.min(devicePixelRatio || 1, 2)), (O.shadowMap.enabled = !1);
+  O.setSize(innerWidth, innerHeight), O.setPixelRatio(Math.min(devicePixelRatio || 1, window.__jgpMobile ? 1 : 2)), (O.shadowMap.enabled = !1);
   try {
     Object.defineProperty(O.shadowMap, "enabled", { get: () => !1, set: () => {}, configurable: !0 });
   } catch (e) {}
@@ -2953,12 +2972,15 @@ function _e(t, e) {
     !t ||
     t.userData.gcEB ||
     !(function () {
+      if (window.__jgpMobile && /[?&]batch=0/.test(location.search)) gcEB.off = !0;
       if (gcEB.off) return !1;
       if (gcEB.root) return !0;
       if (!O.capabilities.isWebGL2) return !1;
       const t = O.getContext(),
         e = t.getParameter(t.MAX_VERTEX_UNIFORM_VECTORS) || 256;
-      gcEB.N = Math.max(8, Math.min(32, Math.floor((e - 96) / 4)));
+      gcEB.N = window.__jgpMobile
+        ? Math.max(4, Math.min(8, Math.floor((e - 192) / 4)))
+        : Math.max(8, Math.min(32, Math.floor((e - 96) / 4)));
       const o = (gcEB.root = new THREE.Group());
       (gcEB.obr = o.onBeforeRender),
         (gcEB.obc = new THREE.MeshBasicMaterial().onBeforeCompile),
@@ -10834,7 +10856,120 @@ const xe = (() => {
       grip: new THREE.Object3D(),
       rc: new THREE.Raycaster(),
       walk: 0,
+      joy: { x: 0, y: 0 },
     };
+    /* ==================================================================
+     * JGP MOBILE TEST MODE (temporary, for testing only)
+     * Builds on the desktop test mode: on-screen joystick + buttons, a
+     * diagnostics panel, portrait-friendly UI placement and adaptive
+     * resolution. Enabled automatically on phones, or with ?mobile=1.
+     * ================================================================== */
+    const MOB = window.__jgpMobile;
+    const mob = { pr: 1, frames: 0, last: performance.now(), fps: 0, el: null, diag: null };
+    function mobileOverlay() {
+      const css = document.createElement("style");
+      css.textContent =
+        "#jgpTouch{position:fixed;inset:0;z-index:40;pointer-events:none;font-family:'Courier New',monospace;font-weight:bold;user-select:none;-webkit-user-select:none}" +
+        "#jgpTouch .pad{position:absolute;left:18px;bottom:22px;width:132px;height:132px;border-radius:50%;background:rgba(13,13,26,.35);border:3px solid rgba(232,232,255,.55);pointer-events:auto;touch-action:none}" +
+        "#jgpTouch .knob{position:absolute;left:41px;top:41px;width:50px;height:50px;border-radius:50%;background:rgba(168,232,48,.85);border:3px solid #0d0d1a}" +
+        "#jgpTouch .btns{position:absolute;right:14px;bottom:22px;display:grid;grid-template-columns:repeat(2,74px);gap:10px;pointer-events:auto}" +
+        "#jgpTouch button{height:52px;border-radius:14px;border:3px solid #0d0d1a;background:#8a3ffc;color:#fff;font:bold 14px 'Courier New',monospace;touch-action:manipulation}" +
+        "#jgpTouch button:active{background:#a8e830;color:#0d0d1a}" +
+        "#jgpTouch .zoom{position:absolute;right:14px;top:14px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}" +
+        "#jgpTouch .zoom button{width:46px;height:46px;font-size:22px;background:rgba(32,32,74,.85)}" +
+        "#jgpDiag{position:absolute;left:50%;top:8px;transform:translateX(-50%);max-width:62vw;padding:6px 8px;border-radius:8px;background:rgba(13,13,26,.72);color:#e8e8ff;font:11px/1.35 'Courier New',monospace;white-space:pre;pointer-events:auto}" +
+        "#jgpDiag b{color:#a8e830}#jgpDiag .bad{color:#ff5fb0}#jgpDiag button{height:28px;margin-top:4px;font-size:11px;border-width:2px;border-radius:8px;padding:0 8px}";
+      document.head.appendChild(css);
+      const root = document.createElement("div");
+      root.id = "jgpTouch";
+      root.innerHTML =
+        '<div class="pad"><div class="knob"></div></div>' +
+        '<div class="btns"><button data-k="talk">TALK</button><button data-k="give">GIVE</button><button data-k="next">NEXT</button><button data-k="close">CLOSE</button></div>' +
+        '<div class="zoom"><button data-k="zin">+</button><button data-k="zout">−</button></div>' +
+        '<div id="jgpDiag" class="min"></div>';
+      document.body.appendChild(root);
+      // joystick
+      const pad = root.querySelector(".pad"),
+        knob = root.querySelector(".knob");
+      let pid = null;
+      const setJoy = (e) => {
+        const r = pad.getBoundingClientRect(),
+          dx = e.clientX - (r.left + r.width / 2),
+          dy = e.clientY - (r.top + r.height / 2),
+          m = Math.hypot(dx, dy),
+          R2 = r.width / 2 - 10,
+          k = m > R2 ? R2 / m : 1;
+        (knob.style.transform = "translate(" + dx * k + "px," + dy * k + "px)"), (dk.joy.x = (dx * k) / R2), (dk.joy.y = (-dy * k) / R2);
+      };
+      pad.addEventListener("pointerdown", (e) => {
+        (pid = e.pointerId), pad.setPointerCapture(pid), setJoy(e), e.preventDefault();
+      });
+      pad.addEventListener("pointermove", (e) => e.pointerId === pid && setJoy(e));
+      const end = (e) => {
+        e.pointerId === pid && ((pid = null), (dk.joy.x = dk.joy.y = 0), (knob.style.transform = ""));
+      };
+      pad.addEventListener("pointerup", end), pad.addEventListener("pointercancel", end);
+      // buttons
+      root.querySelectorAll("button[data-k]").forEach((bt) =>
+        bt.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const k = bt.dataset.k;
+          try {
+            if ("talk" === k) ae.open ? ae.options[0] && ae.options[0].run() : "playing" === jt.top && xe.run("interact");
+            else if ("give" === k) "playing" === jt.top && !ae.open && xe.run("give");
+            else if ("next" === k) qt.isOpen ? qt.advance() : jt.has("panel") && _t.confirm();
+            else if ("close" === k) ae.open ? re() : jt.has("panel") ? _t.close() : qt.isOpen && qt.skipAll();
+            else if ("zin" === k) dk.dist = u(dk.dist - 1.2, 3, 16);
+            else if ("zout" === k) dk.dist = u(dk.dist + 1.2, 3, 16);
+          } catch (err) {
+            vo(err, "mobile-btn");
+          }
+        }),
+      );
+      mob.el = root;
+      mob.diag = root.querySelector("#jgpDiag");
+      mob.diag.addEventListener("click", (e) => {
+        const tg = e.target.dataset && e.target.dataset.act;
+        if (tg) {
+          const q = new URLSearchParams(location.search);
+          "batch" === tg && q.set("batch", "0" === q.get("batch") ? "1" : "0");
+          "quality" === tg && q.set("hq", "1" === q.get("hq") ? "0" : "1");
+          q.set("mobile", "1"), (location.search = q.toString());
+          return;
+        }
+        mob.diag.classList.toggle("min");
+      });
+      mob.pr = Math.min(1, devicePixelRatio || 1);
+    }
+    function mobileTick(now) {
+      mob.frames++;
+      if (now - mob.last < 1000) return;
+      (mob.fps = Math.round((1e3 * mob.frames) / (now - mob.last))), (mob.frames = 0), (mob.last = now);
+      // adaptive resolution: hold ~30+ fps
+      const hq = /[?&]hq=1/.test(location.search),
+        top = hq ? Math.min(2, devicePixelRatio || 1) : 1;
+      let pr = mob.pr;
+      mob.fps < 28 && pr > 0.75 ? (pr -= 0.1) : mob.fps > 50 && pr < top && (pr += 0.1);
+      pr !== mob.pr && ((mob.pr = Math.round(10 * pr) / 10), O.setPixelRatio(mob.pr), O.setSize(innerWidth, innerHeight));
+      if (!mob.diag) return;
+      if (mob.diag.classList.contains("min"))
+        return void (mob.diag.innerHTML = "<b>" + mob.fps + " fps</b> x" + mob.pr + ((window.__jgpShaderErrors || Re.errors) ? ' <span class="bad">!</span>' : "") + " ▾");
+      const gl = O.getContext(),
+        info = O.info,
+        se2 = window.__jgpShaderErrors || 0;
+      mob.diag.innerHTML =
+        "<b>MOBILE TEST MODE</b>\n" +
+        "fps " + mob.fps + "  res x" + mob.pr + "\n" +
+        "calls " + info.render.calls + "  tris " + Math.round(info.render.triangles / 1e3) + "k\n" +
+        "tex " + info.memory.textures + "  geo " + info.memory.geometries + "\n" +
+        (O.capabilities.isWebGL2 ? "WebGL2" : '<span class="bad">WebGL1</span>') +
+        "  vUniforms " + gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS) + "\n" +
+        "batching " + (gcEB.off ? '<span class="bad">OFF</span>' : "ON x" + gcEB.N) + "\n" +
+        (se2 ? '<span class="bad">shader errors ' + se2 + "</span>\n" : "shader errors 0\n") +
+        (Re.errors ? '<span class="bad">game errors ' + Re.errors + "</span>\n" : "") +
+        '<button data-act="batch">batching ' + (gcEB.off ? "ON" : "OFF") + '</button> <button data-act="quality">' + (/[?&]hq=1/.test(location.search) ? "low res" : "high res") + "</button>";
+    }
+    /* ========================== end mobile ============================ */
     function enterDesktop() {
       if (o.presenting || !At) return;
       buildUI();
@@ -10850,6 +10985,7 @@ const xe = (() => {
       (dk.yaw = At.rotation.y + Math.PI), (dk.on = !0), (At.visible = !0);
       (o.presenting = !0), (o.lastFrame = performance.now()), (F.placed = !1), re();
       o.onPresenting && o.onPresenting(!0);
+      MOB && mobileOverlay();
       const cv = O.domElement;
       cv.addEventListener("contextmenu", (e) => e.preventDefault());
       cv.addEventListener("pointermove", (e) => {
@@ -10923,14 +11059,15 @@ const xe = (() => {
     function dkUpdate(t) {
       _e();
       const K = (c) => dk.keys.has(c),
-        mx = (K("KeyD") || K("ArrowRight") ? 1 : 0) - (K("KeyA") || K("ArrowLeft") ? 1 : 0),
-        my = (K("KeyW") || K("ArrowUp") ? 1 : 0) - (K("KeyS") || K("ArrowDown") ? 1 : 0),
-        ml = Math.hypot(mx, my) || 1;
+        mx = u((K("KeyD") || K("ArrowRight") ? 1 : 0) - (K("KeyA") || K("ArrowLeft") ? 1 : 0) + dk.joy.x, -1, 1),
+        my = u((K("KeyW") || K("ArrowUp") ? 1 : 0) - (K("KeyS") || K("ArrowDown") ? 1 : 0) + dk.joy.y, -1, 1),
+        ml = Math.max(1, Math.hypot(mx, my));
       (o.move.x = mx / ml), (o.move.y = my / ml);
+      MOB && mobileTick(performance.now());
       const turn = (K("KeyQ") ? 1 : 0) - (K("KeyE") ? 1 : 0);
       dk.yaw += 1.8 * turn * t;
       const moving =
-        (mx || my) && ("playing" === jt.top || "dialogue" === jt.top || "panel" === jt.top);
+        Math.hypot(mx, my) > 0.08 && ("playing" === jt.top || "dialogue" === jt.top || "panel" === jt.top);
       if (moving) {
         const s = Math.sin(o.headYaw),
           c = Math.cos(o.headYaw),
@@ -10955,6 +11092,11 @@ const xe = (() => {
         B.updateMatrixWorld(!0),
         dkRay(),
         dkPlaceUI();
+      {
+        const hh = 0.62 * Math.tan((B.fov * Math.PI) / 360),
+          hw = hh * B.aspect;
+        dk.grip.position.set(-hw + 0.1, MOB ? hh - 0.11 : -hh + 0.15, -0.62);
+      }
     }
     // screen-aligned placement of the dialogue / panel (VR places them in the world instead)
     const dkF = new c(),
@@ -10966,7 +11108,8 @@ const xe = (() => {
         vh = 2 * D * Math.tan((B.fov * Math.PI) / 360),
         vw = vh * B.aspect,
         panel = jt.has("panel"),
-        sc = Math.min(panel ? (0.82 * vh) / 0.914 : (0.4 * vh) / 0.569, (0.6 * vw) / 1.3);
+        narrow = vw < vh,
+        sc = Math.min(panel ? (0.82 * vh) / 0.914 : (0.4 * vh) / 0.569, ((narrow ? 0.97 : 0.6) * vw) / 1.3);
       dkF.set(0, 0, -1).applyQuaternion(B.quaternion),
         dkR.set(1, 0, 0).applyQuaternion(B.quaternion),
         dkU.set(0, 1, 0).applyQuaternion(B.quaternion),
@@ -10975,8 +11118,8 @@ const xe = (() => {
         F.anchor.position
           .copy(B.position)
           .addScaledVector(dkF, D)
-          .addScaledVector(dkR, panel ? 0.17 * vw : 0)
-          .addScaledVector(dkU, panel ? 0 : -0.27 * vh),
+          .addScaledVector(dkR, panel && !narrow ? 0.17 * vw : 0)
+          .addScaledVector(dkU, panel ? (narrow ? 0.08 * vh : 0) : narrow ? -0.12 * vh : -0.27 * vh),
         (F.placed = !0),
         (be = null);
     }
@@ -11014,8 +11157,9 @@ const xe = (() => {
       requestAnimationFrame(e), (o.onPresenting = (t) => Ze.classList.toggle("on", !t));
     } else {
       ($e.textContent = "-Jurassic Greeblis Park-"),
-        (Ke.textContent =
-          "DESKTOP TEST MODE\n(temporary, VR is the real game)\n\nClick to start\n\nWASD move · drag / Q E orbit · wheel zoom\nclick select · F talk · G give blossom\nSpace advance · 1-9 pick · Esc close"),
+        (Ke.textContent = MOB
+          ? "MOBILE TEST MODE\n(temporary, VR is the real game)\n\nTap to start\n\nleft stick: move · drag: look\ntap a creature or use TALK / GIVE\nNEXT / CLOSE for dialogue"
+          : "DESKTOP TEST MODE\n(temporary, VR is the real game)\n\nClick to start\n\nWASD move · drag / Q E orbit · wheel zoom\nclick select · F talk · G give blossom\nSpace advance · 1-9 pick · Esc close"),
         (mo("gateVer").textContent = "v0.1 prototype"),
         Ze.classList.add("on"),
         (o.onPresenting = (t) => Ze.classList.toggle("on", !t));
@@ -13005,8 +13149,9 @@ const JGP = (() => {
         rnd() < 0.6 && add(T.dodeca(1, 0), "#5a8a3a", S(X, y + 0.62 * s, Z, rnd(), rnd() * l, 0, 0.9 * s, 0.25 * s, 0.8 * s));
       };
 
-    // dense tropical jungle around the clearing
-    for (let k = 0; k < 360; k++) {
+    // dense tropical jungle around the clearing (thinned in the mobile test mode)
+    const LOD = window.__jgpMobile ? 0.4 : 1;
+    for (let k = 0; k < 360 * LOD; k++) {
       const a = rnd() * l,
         r = rr(52, 115),
         X = Math.cos(a) * r,
@@ -13014,7 +13159,7 @@ const JGP = (() => {
         q = rnd();
       q < 0.5 ? palm(X, Z, rr(0.9, 1.6)) : q < 0.7 ? treeFern(X, Z, rr(1, 1.6)) : q < 0.85 ? banana(X, Z, rr(1, 1.5)) : q < 0.93 ? cycad(X, Z, rr(1, 1.6)) : rock(X, Z, rr(1.5, 3.5));
     }
-    for (let k = 0; k < 140; k++) {
+    for (let k = 0; k < 140 * LOD; k++) {
       const a = rnd() * l,
         X = Math.cos(a) * rr(47, 60),
         Z = Math.sin(a) * rr(47, 60),
@@ -13026,7 +13171,7 @@ const JGP = (() => {
     const freeSpot = (X, Z, r) =>
       busy.every(([x0, z0]) => Math.hypot(X - x0, Z - z0) > r + 4) && Math.abs(Z - LINE_Z) > r + 3 && E.clear(X, Z, r);
     let placed = 0;
-    for (let k = 0; k < 500 && placed < 50; k++) {
+    for (let k = 0; k < 500 && placed < 50 * LOD; k++) {
       const a = rnd() * l,
         r = rr(14, 46),
         X = Math.cos(a) * r,
@@ -13105,7 +13250,7 @@ const JGP = (() => {
     R(vg, new THREE.MeshLambertMaterial({ vertexColors: !0, fog: !1 }), volcano);
     // jungle trees on the lower slopes
     const slope = [];
-    for (let k = 0; k < 70; k++) {
+    for (let k = 0; k < 70 * LOD; k++) {
       const th = rnd() * l,
         y = rr(2, VH * 0.22),
         r = rAt(y) * 1.02;

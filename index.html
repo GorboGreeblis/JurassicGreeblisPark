@@ -7483,7 +7483,7 @@ function te(t, e) {
     (n = o.lines[e % o.lines.length]), (Kt.talkState[t] = e + 1);
   }
   let r =
-    e && "drifter" === a
+    e && "drifter" === a && !JGP.FREEZE_NPCS
       ? () =>
           (function (t) {
             if (!t || t.gcOut || me.active) return;
@@ -8009,15 +8009,15 @@ const ee = (function () {
         sub: this.sub(),
       });
     },
-    sub: () => "Ore: " + Kt.acorns,
+    sub: () => "Flint: " + Kt.acorns,
     items() {
       return [...r.filter((t) => !t.reward), ...r.filter((t) => t.reward)].map((t) => {
         const e = Kt.owned.has(t.id);
         return t.reward
-          ? { label: t.name, meta: e ? "bought" : t.cost + " ore", disabled: e, onClick: () => this.buy(t) }
+          ? { label: t.name, meta: e ? "bought" : t.cost + " flint", disabled: e, onClick: () => this.buy(t) }
           : {
               label: Kt.equip[t.slot] === t ? "Change out" : t.name,
-              meta: e ? "" : t.cost + " ore",
+              meta: e ? "" : t.cost + " flint",
               onClick: () => this.buy(t),
             };
       });
@@ -8029,7 +8029,7 @@ const ee = (function () {
           Kt.owned.has(t.id)
             ? (e = "You already have Plutonium Rods for the concert.")
             : Kt.acorns < t.cost
-              ? ((e = "You need " + (t.cost - Kt.acorns) + " more ore for the " + t.name + "."), G.bump())
+              ? ((e = "You need " + (t.cost - Kt.acorns) + " more flint for the " + t.name + "."), G.bump())
               : ((Kt.acorns -= t.cost),
                 Kt.owned.add(t.id),
                 (Kt.rewards[t.reward] = !0),
@@ -8048,7 +8048,7 @@ const ee = (function () {
           ? ((Kt.equip[t.slot] = null), (e = "You take off the " + t.name + "."))
           : ((Kt.equip[t.slot] = t), (e = "You put on the " + t.name + "."))
         : Kt.acorns < t.cost
-          ? ((e = "You need " + (t.cost - Kt.acorns) + " more ore for the " + t.name + "."), G.bump())
+          ? ((e = "You need " + (t.cost - Kt.acorns) + " more flint for the " + t.name + "."), G.bump())
           : ((Kt.acorns -= t.cost),
             Kt.owned.add(t.id),
             G.pickup(),
@@ -8179,40 +8179,8 @@ const le = (() => {
           if (!t) continue;
           const o = new THREE.Group();
           o.position.set(t.x, 0, t.z),
-            C.add(o),
-            R(
-              v([
-                { geo: T.cyl(0.1, 0.12, 0.05, 10), matrix: S(0, 0.025, 0), color: "#3a3e4c" },
-                { geo: T.cyl(0.022, 0.028, 0.7, 6), matrix: S(0, 0.37, 0), color: "#b8c0cc" },
-                { geo: T.box(0.16, 0.02, 0.06), matrix: S(0.07, 0.32, 0, 0, 0, 0.5), color: "#b8c0cc" },
-              ]),
-              V.ebStemM ||
-                (V.ebStemM = new THREE.MeshPhongMaterial({ vertexColors: !0, shininess: 90, specular: 13421772 })),
-              o,
-            );
-          const a = new THREE.Group();
-          (a.position.y = 0.75), o.add(a);
-          const n = [];
-          for (let t = 0; t < 6; t++) {
-            const e = (t / 6) * l;
-            n.push({
-              geo: T.ico(0.13, 0),
-              matrix: S(0.15 * Math.cos(e), 0, 0.15 * Math.sin(e), 0, -e, 0, 1.25, 0.22, 0.5),
-              color: "#ffe23a",
-            });
-          }
-          n.push(
-            { geo: T.sphere(0.065, 10, 8), matrix: S(0, 0.03, 0), color: "#bff6ff" },
-            { geo: T.torus(0.07, 0.012, 4, 16), matrix: S(0, 0.04, 0, Math.PI / 2), color: "#ffe23a" },
-          ),
-            R(v(n), V.ebGlowM || (V.ebGlowM = new THREE.MeshBasicMaterial({ vertexColors: !0 })), a);
-          const r = R(
-            T.torus(0.3, 0.015, 4, 20),
-            x.basic("#ffe23a", { transparent: !0, opacity: 0.7 }),
-            o,
-            [0, 1.05, 0],
-            [Math.PI / 2, 0, 0],
-          );
+            C.add(o);
+          const { head: a, halo: r } = JGP.fireBlossom(o);
           o.userData = { taken: !1, regrowAt: 0, phase: Math.random() * l, head: a, halo: r };
           {
             const t = [];
@@ -8242,7 +8210,7 @@ const le = (() => {
               n ? (o.position.set(n.x, 0, n.z), (a.taken = !1), (o.visible = !a.gcHid)) : (a.regrowAt = t + 1);
             }
           } else
-            (a.head.rotation.y = 1.4 * t + a.phase),
+            (a.head.rotation.z = 0.12 * Math.sin(1.4 * t + a.phase)),
               (a.halo.position.y = 1.05 + 0.08 * Math.sin(2 * t + a.phase)),
               "playing" === jt.top &&
                 Math.hypot(At.position.x - o.position.x, At.position.z - o.position.z) < 1.3 &&
@@ -8253,11 +8221,11 @@ const le = (() => {
   })(),
   ce = (() => {
     const e = [],
-      o = new THREE.MeshPhongMaterial({ color: "#2f6fe0", vertexColors: !0, shininess: 110, specular: 12574975 });
+      o = new THREE.MeshPhongMaterial({ color: "#ffffff", vertexColors: !0, shininess: 110, specular: 8947848 });
     return {
       list: e,
       build() {
-        o.emissive.set("#2a5fd0"), (o.userData.gcNight = [0.06, 0.45]);
+        o.emissive.set("#18181c"), (o.userData.gcNight = [0.06, 0.45]);
         for (let a = 0; a < t.acornCount; a++) {
           const t = go(null, e);
           if (!t) continue;
@@ -8269,7 +8237,7 @@ const le = (() => {
             a.add(n),
             R(
               v([
-                { geo: T.dodeca(0.13), matrix: S(0, -0.07, 0, 0.4, 0, 0.2, 1.25, 0.6, 1.05), color: "#4d5463" },
+                { geo: T.dodeca(0.13), matrix: S(0, -0.07, 0, 0.4, 0, 0.2, 1.25, 0.6, 1.05), color: "#26262b" },
                 ...[
                   [0, 0.02, 0, 0.1],
                   [0.09, -0.02, 0.04, 0.075],
@@ -8278,7 +8246,7 @@ const le = (() => {
                 ].map(([t, e, o, a], n) => ({
                   geo: T.ico(a, 0),
                   matrix: S(t, e, o, n, 2 * n, 0.5 * n, 1, 1.25, 0.9),
-                  color: "#ffffff",
+                  color: n % 2 ? "#2c2c32" : "#141418",
                 })),
               ]),
               o,
@@ -9584,7 +9552,7 @@ const xe = (() => {
         o.push({ verb: "interact", label: "Talk to " + a, run: () => te(e) }),
           Kt.blossoms > 0 &&
             !t.noBlossoms.includes(e.id) &&
-            o.push({ verb: "give", label: "Give an electric blossom", run: () => te(e, !0) });
+            o.push({ verb: "give", label: "Give a fire blossom", run: () => te(e, !0) });
       } else e && o.push({ verb: "interact", label: e.label(), run: e.run });
       return o;
     }
@@ -11129,11 +11097,11 @@ const Re = (() => {
         const e = p[t];
         i("entity:" + (e.id || e.kind), () => Lt(e, o, c, h));
       }
-      i("director", () => pe.update(o, c)),
+      i("director", () => JGP.FREEZE_NPCS || pe.update(o, c)),
         i("finale", () => me.update(o, c)),
         i("gohome", () => fe.update(o)),
         i("pizza", () => ue.update(o, c)),
-        i("bundate", () => de.update(o, c)),
+        i("bundate", () => JGP.FREEZE_NPCS || de.update(o, c)),
         i("blossoms", () => le.update(o)),
         i("acorns", () => ce.update(o)),
         i("fx", () => Nt.update(o, c)),
@@ -11347,6 +11315,11 @@ const JGP = (() => {
     cutebex: { name: "PROTO", plan: "proto", color: "#e6c42e", accent: "#8a6a1a" },
     orson: { name: "STEGO JR", plan: "stego", color: "#3fae2a", accent: "#ffd84a", scale: 0.7 },
   };
+  // Temporary: all NPCs stand in one row and never walk, until their models are finished.
+  // Set FREEZE_NPCS to false to restore the engine's wandering, director scenes and dates.
+  const FREEZE_NPCS = !0,
+    LINE_Z = -9,
+    LINE_STEP = 3.6;
   const COURIER = { name: "GALLI", plan: "raptor", color: "#ef7536", accent: "#ffffff", scale: 1.1 };
   const KEEPER = { name: "SHOPKEEPER", plan: "para", color: "#9a7250", accent: "#e8d0a8" };
 
@@ -11542,6 +11515,7 @@ const JGP = (() => {
       height = Math.max(0.8, box.max.y);
     let wk = 0,
       ph = Math.random() * l,
+      tph = Math.random() * l,
       talkT = 0,
       singT = 0;
     const seed = Math.random() * 10,
@@ -11566,7 +11540,10 @@ const JGP = (() => {
         arms.forEach((g, k) => (g.rotation.x = 0.9 + 0.25 * Math.sin(ph + k * Math.PI) * wk + 0.06 * Math.sin(2 * t + seed)));
         (body.position.y = bodyBase + 0.06 * wk * Math.abs(Math.sin(ph)) + 0.015 * Math.sin(1.7 * t + seed)),
           (body.rotation.z = 0.05 * wk * Math.sin(ph));
-        tail.forEach((g, k) => (g.rotation.y = Math.sin(t * (1.3 + 1.8 * wk) + seed - 0.6 * k) * (0.08 + 0.06 * wk)));
+        // Accumulate the sway phase per frame. Using sin(t * speed(wk)) with absolute time made the
+        // phase jump by t * dSpeed whenever walking started/stopped, so tails shook wildly in long sessions.
+        tph += e * (1.3 + 1.8 * wk);
+        tail.forEach((g, k) => (g.rotation.y = Math.sin(tph - 0.6 * k) * (0.08 + 0.06 * wk)));
         neck.forEach((g, k) => {
           (g.rotation.y = 0.12 * Math.sin(0.45 * t + seed + 0.3 * k) * (1 - wk)),
             (g.rotation.x = neckBase[k] + 0.04 * Math.sin(1.3 * t + seed + k) + 0.05 * wk * Math.sin(2 * ph));
@@ -11584,6 +11561,17 @@ const JGP = (() => {
   // ---- apply cast / text over the engine's defs (runs just before spawn) ----
   function applyCast() {
     const all = Object.assign({}, e, o, n);
+    if (FREEZE_NPCS) {
+      // the concert singer (frog) is driven by the concert system and stays hidden until then
+      const row = Object.keys(CAST).filter((id) => all[id] && "frog" !== id);
+      row.forEach((id, k) => {
+        const d = all[id];
+        (d.at = [(k - (row.length - 1) / 2) * LINE_STEP, LINE_Z]),
+          (d.pattern = ["post", { face: 0 }]),
+          (d.stationary = !0),
+          delete d.gcPost;
+      });
+    }
     for (const id in all) {
       const d = all[id],
         c = CAST[id];
@@ -11594,7 +11582,8 @@ const JGP = (() => {
       d.builderOpts = { plan: c.plan, color: c.color, accent: c.accent, scale: c.scale };
       delete d.modelScale;
       // props they used to sit/lie on (kennel posts, repair bed) are gone with the city
-      d.pattern &&
+      !FREEZE_NPCS &&
+        d.pattern &&
         "post" === d.pattern[0] &&
         (d.pattern = ["post", { face: d.pattern[1] && d.pattern[1].face }]);
       d.lines = L3();
@@ -11647,6 +11636,182 @@ const JGP = (() => {
     return () => ((sd = (16807 * sd) % 2147483647) / 2147483647);
   })();
   const rr = (a, b) => a + rnd() * (b - a);
+  // ---- props: prehistoric shop, pond, fire blossom --------------------------
+  // Shop in a Flintstones style: stone-slab counter on boulders, lashed log posts,
+  // thatched roof with a bone ornament and a chiselled stone sign. Local +Z faces
+  // the customer; the shopkeeper stands at (0, 0.2, -0.45) behind the counter.
+  function buildShop(o) {
+    const stone = x.world("#a89a88"),
+      stone2 = x.world("#8f8374"),
+      wood = x.world("#8a5a30"),
+      straw = x.world("#d8b060"),
+      straw2 = x.world("#c49a48"),
+      rope = x.world("#c8a060"),
+      bone = x.world("#f2ead0"),
+      pot = x.world("#b0643a");
+    R(T.cyl(3.1, 3.3, 0.2, 9), stone2, o, [0, 0.1, 0]);
+    for (let k = 0; k < 9; k++) {
+      const a = (k / 9) * l + 0.2;
+      R(T.cyl(0.62, 0.66, 0.06, 6), stone, o, [1.9 * Math.cos(a), 0.22, 1.9 * Math.sin(a)], [0, k, 0]);
+    }
+    // counter: big slab resting on two boulders
+    [-1.05, 1.05].forEach((sx) => R(T.dodeca(0.55, 0), stone2, o, [sx, 0.5, 0.62], [0.3, sx, 0.2], [1, 0.95, 0.75]));
+    R(T.box(3.4, 0.24, 0.95), stone, o, [0, 1.0, 0.62], [0, 0, 0.015]);
+    // side shelves
+    [-1, 1].forEach((sx) => {
+      R(T.dodeca(0.45, 0), stone2, o, [1.4 * sx, 0.42, -0.38], [0.4, sx, 0], [0.8, 1, 1.3]);
+      R(T.box(0.62, 0.16, 1.6), stone, o, [1.39 * sx, 0.92, -0.38], [0, 0, 0.03 * sx]);
+    });
+    // lashed log posts and beams
+    [
+      [-1.5, -1.02],
+      [1.5, -1.02],
+      [-1.5, 0.82],
+      [1.5, 0.82],
+    ].forEach(([px, pz], k) => {
+      R(T.cyl(0.13, 0.17, 3.4, 7), wood, o, [px, 1.9, pz], [0.02 * (k % 2 ? 1 : -1), 0, 0.03 * (k < 2 ? 1 : -1)]);
+      [1.3, 3.3].forEach((yy) => R(T.torus(0.16, 0.035, 5, 10), rope, o, [px, yy, pz], [Math.PI / 2, 0, 0]));
+    });
+    [0.82, -1.02].forEach((pz) => R(T.cyl(0.11, 0.12, 3.5, 7), wood, o, [0, 3.45, pz], [0, 0, Math.PI / 2]));
+    [-1.5, 1.5].forEach((px) => R(T.cyl(0.1, 0.11, 2.1, 7), wood, o, [px, 3.5, -0.1], [Math.PI / 2, 0, 0]));
+    // thatched roof
+    const roof = new THREE.Group();
+    roof.position.set(0, 3.55, -0.1), o.add(roof);
+    R(T.cone(3, 1.3, 10), straw, roof, [0, 0.6, 0], null, [1, 1, 0.85]);
+    R(T.cone(2.1, 1, 10), straw2, roof, [0, 1.15, 0], null, [1, 1, 0.85]);
+    for (let k = 0; k < 22; k++) {
+      const a = (k / 22) * l;
+      R(T.cone(0.2, 0.5, 4), k % 2 ? straw2 : straw, roof, [2.85 * Math.cos(a), -0.08, 2.4 * Math.sin(a)], [Math.PI, a, 0]);
+    }
+    // bone ornament on the peak
+    R(T.cyl(0.07, 0.07, 1.4, 8), bone, roof, [0, 1.78, 0], [0, 0, Math.PI / 2]);
+    [-1, 1].forEach((sx) => [-1, 1].forEach((sy) => R(T.sphere(0.12, 8, 6), bone, roof, [0.72 * sx, 1.78 + 0.08 * sy, 0])));
+    // chiselled stone sign on the front of the roof
+    const tex = b(
+      256,
+      128,
+      (c) => {
+        (c.fillStyle = "#a89a88"), c.fillRect(0, 0, 256, 128);
+        for (let k = 0; k < 500; k++)
+          (c.fillStyle = rnd() < 0.5 ? "rgba(255,255,255,.12)" : "rgba(0,0,0,.14)"), c.fillRect(256 * rnd(), 128 * rnd(), 2, 2);
+        (c.font = "bold 72px Georgia, 'Times New Roman', serif"), (c.textAlign = "center"), (c.textBaseline = "middle");
+        (c.fillStyle = "rgba(255,255,255,.35)"), c.fillText("SHOP", 130, 68);
+        (c.fillStyle = "#4a3422"), c.fillText("SHOP", 128, 66);
+      },
+      { smooth: !0 },
+    );
+    const sign = new THREE.Group();
+    sign.position.set(0, 4.15, 1.55), (sign.rotation.x = -0.4), o.add(sign);
+    R(T.box(2, 0.9, 0.14), stone2, sign);
+    R(T.plane(1.88, 0.8), x.world(16777215, { map: tex }), sign, [0, 0, 0.075]);
+    // counter goods: clay pots, flint stones, a fire blossom and the glow-stick reward bundle
+    [
+      [-0.75, "#e8301e"],
+      [0, "#ffd23a"],
+      [0.62, "#5aa83a"],
+    ].forEach(([px, col]) => {
+      R(T.cyl(0.17, 0.12, 0.3, 9), pot, o, [px, 1.27, 0.55]);
+      R(T.sphere(0.12, 8, 6), x.clay(col), o, [px, 1.42, 0.55]);
+    });
+    for (let k = 0; k < 6; k++)
+      R(T.dodeca(0.09, 0), x.clay("#1c1c20", { shininess: 110, specular: 8947848 }), o, [(k % 2 ? 1 : -1) * (1.39 + 0.08 * (rnd() - 0.5)), 1.06, 0.3 * Math.floor(k / 2) - 0.95], [k, 2 * k, 0], [1, 0.8, 1]);
+    const gs = new THREE.Group();
+    gs.position.set(1.25, 1.12, 0.5), o.add(gs);
+    R(T.cyl(0.13, 0.11, 0.22, 9), pot, gs, [0, 0.11, 0]);
+    [
+      [0, 0, 0.05, -0.06],
+      [0.05, 0.04, -0.12, 0.1],
+      [-0.05, 0.03, 0.1, 0.12],
+      [0.03, -0.05, -0.08, -0.14],
+    ].forEach(([px, pz, rx, rz]) => {
+      const g = yt(0.42, 0.022);
+      g.position.set(px, 0.04, pz), g.rotation.set(rx, 0, rz), gs.add(g);
+    });
+  }
+
+  // A natural pond (replaces the city fountain); o sits at the pool station.
+  function buildPond(o) {
+    R(T.circle(4.9, 28), x.world("#b89a6a"), o, [0, 0.015, 0], [-Math.PI / 2, 0, 0]);
+    R(T.circle(4.1, 28), x.world("#6a5a3a"), o, [0, 0.025, 0], [-Math.PI / 2, 0, 0]);
+    const water = R(
+      T.circle(3.7, 36),
+      x.clay("#3a8aa0", { unique: !0, shininess: 90, specular: 10066363, polygonOffset: !0, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
+      o,
+      [0, 0.04, 0],
+      [-Math.PI / 2, 0, 0],
+    );
+    for (let k = 0; k < 20; k++) {
+      const a = (k / 20) * l + 0.2 * rnd(),
+        r = rr(3.7, 4.3),
+        s = rr(0.22, 0.48);
+      R(T.dodeca(s, 0), x.world(rnd() < 0.35 ? "#5a8a3a" : rnd() < 0.5 ? "#7a726a" : "#6a6460"), o, [r * Math.cos(a), 0.08, r * Math.sin(a)], [rnd(), rnd() * l, 0], [1.2, 0.6, 1]);
+    }
+    for (let k = 0; k < 8; k++) {
+      const a = rnd() * l,
+        r = rr(0.8, 3),
+        px = r * Math.cos(a),
+        pz = r * Math.sin(a);
+      R(T.cyl(0.3, 0.3, 0.02, 12), x.world(k % 2 ? "#4f9a2a" : "#5aa83a"), o, [px, 0.06, pz], [0, a, 0]);
+      k % 3 || R(T.cone(0.08, 0.12, 6), x.world("#ff8ac0"), o, [px, 0.13, pz]);
+    }
+    for (let k = 0; k < 16; k++) {
+      const a = rnd() * l,
+        r = rr(3.4, 4),
+        h = rr(0.7, 1.3),
+        px = r * Math.cos(a),
+        pz = r * Math.sin(a),
+        tilt = rr(-0.12, 0.12);
+      R(T.cyl(0.018, 0.024, h, 5), x.world("#4f8a2a"), o, [px, h / 2, pz], [tilt, 0, tilt]);
+      k % 2 || R(T.cyl(0.045, 0.045, 0.24, 6), x.world("#6a4422"), o, [px + tilt * h, h - 0.1, pz - tilt * h]);
+    }
+    const rip = [0, 0.5].map(() =>
+      R(T.torus(1, 0.02, 4, 32), x.basic("#e8f6ff", { unique: !0, transparent: !0, opacity: 0.5, depthWrite: !1 }), o, [0.8, 0.06, -0.5], [Math.PI / 2, 0, 0]),
+    );
+    L.push((tt) => {
+      rip.forEach((m, k) => {
+        const a = (0.25 * tt + 0.5 * k) % 1;
+        m.scale.setScalar(0.3 + 2.2 * a), (m.material.opacity = 0.45 * (1 - a));
+      }),
+        water.material.color.setHSL(0.53, 0.48, 0.42 + 0.03 * Math.sin(1.1 * tt));
+    });
+    o.updateMatrixWorld(!0),
+      o.traverse((m) => {
+        m === o || m === water || rip.includes(m) || (m.matrixAutoUpdate = !1);
+      });
+  }
+
+  // Fire Blossom pickup: green stem and leaves, red flame-shaped petals. Returns the
+  // parts the blossom system animates (head sways, ember bobs above it).
+  function fireBlossom(o) {
+    const stemM = V.fbStemM || (V.fbStemM = new THREE.MeshLambertMaterial({ vertexColors: !0 })),
+      headM = V.fbHeadM || (V.fbHeadM = new THREE.MeshPhongMaterial({ vertexColors: !0, emissive: 3803136, shininess: 40 })),
+      g = "#3f8a2a",
+      stem = [
+        { geo: T.cyl(0.018, 0.026, 0.42, 6), matrix: S(0.015, 0.21, 0, 0, 0, -0.07), color: g },
+        { geo: T.cyl(0.016, 0.018, 0.36, 6), matrix: S(0.01, 0.57, 0, 0, 0, 0.06), color: g },
+      ];
+    [-1, 1].forEach((sd, k) =>
+      stem.push({ geo: T.sphere(1, 8, 6), matrix: S(0.11 * sd, 0.24 + 0.14 * k, 0.02, 0, k, -0.6 * sd, 0.13, 0.025, 0.055), color: k ? "#4f9a2a" : g }),
+    );
+    for (let k = 0; k < 5; k++) {
+      const a = (k / 5) * l;
+      stem.push({ geo: T.cone(0.03, 0.22, 4), matrix: S(0.06 * Math.cos(a), 0.09, 0.06 * Math.sin(a), 0.3 * Math.sin(a), 0, -0.3 * Math.cos(a)), color: "#5aa83a" });
+    }
+    R(v(stem), stemM, o);
+    const head = new THREE.Group();
+    (head.position.y = 0.75), o.add(head);
+    const fl = [],
+      petal = (a, ring, len, w, tiltA, col) =>
+        fl.push({ geo: T.cone(w, len, 5), matrix: S(ring * Math.cos(a), 0, ring * Math.sin(a), 0, -a, 0).multiply(S(0, 0, 0, 0, 0, -tiltA)).multiply(S(0, len / 2, 0)), color: col });
+    for (let k = 0; k < 7; k++) petal((k / 7) * l, 0.04, 0.24, 0.065, 0.75, "#e8301e");
+    for (let k = 0; k < 5; k++) petal((k / 5) * l + 0.4, 0.02, 0.2, 0.05, 0.35, "#ff6a1a");
+    for (let k = 0; k < 3; k++) petal((k / 3) * l + 0.9, 0.01, 0.14, 0.03, 0.15, "#ffc23a");
+    fl.push({ geo: T.sphere(0.05, 8, 6), matrix: S(0, 0.01, 0), color: "#a8200e" });
+    R(v(fl), headM, head);
+    const ember = R(T.sphere(0.035, 8, 6), x.basic("#ffb347", { transparent: !0, opacity: 0.85 }), o, [0, 1.05, 0]);
+    return { head, halo: ember };
+  }
+
   function swapWorld() {
     // keep the working stations (stage/concert, shop stump, pond, phone, sign)
     // and everything that is not scenery; drop the city architecture.
@@ -11656,6 +11821,7 @@ const JGP = (() => {
         [24.6, 0],
         [-7.2, 23.9],
         [4.6, 25.4],
+        [-21.8, -17.4], // black obelisk
       ],
       bx = new THREE.Box3(),
       cv = new THREE.Vector3(),
@@ -11721,80 +11887,139 @@ const JGP = (() => {
       return r < 52 ? 0 : 0.05 * hill + 0.0009 * hill * hill;
     };
 
-    // trees, ferns, rocks: merged per material for speed
+    // tropical plants and rocks: merged per material for speed (no collision on any of them)
     const parts = [],
-      add = (geo, color, m) => parts.push({ geo, color, matrix: m });
-    const conifer = (X, Z, s) => {
+      add = (geo, color, m) => parts.push({ geo, color, matrix: m }),
+      leafGreens = ["#3f8a2a", "#4f9a2a", "#5aa83a", "#2f7a2a"];
+    // a frond: flattened cone laid out from (X,Y,Z) at heading a, drooping by `droop`
+    const frond = (X, Y, Z, a, len, w, droop, col) =>
+      add(
+        T.cone(w, len, 4),
+        col,
+        S(X, Y, Z, 0, -a, 0).multiply(S(0, 0, 0, 0, 0, Math.PI / 2 + droop)).multiply(S(0, -len / 2, 0, 0, 0, 0, 1, 1, 0.22)),
+      );
+    const palm = (X, Z, s) => {
         const y = groundY(X, Z),
-          h = 9 * s;
-        add(T.cyl(0.22 * s, 0.4 * s, h, 7), "#5a3e26", S(X, y + h / 2, Z));
-        for (let k = 0; k < 5; k++) {
-          const yy = y + h * (0.35 + 0.15 * k),
-            rad = s * (2.6 - 0.45 * k);
-          add(T.cone(rad, 2.4 * s, 8), k % 2 ? "#2f6a2a" : "#28602a", S(X, yy, Z, 0, rnd() * l));
+          h = rr(4.2, 6) * s,
+          lean = rr(-0.22, 0.22),
+          la = rnd() * l,
+          segs = 5;
+        let px = X,
+          pz = Z,
+          py = y;
+        // segmented, slightly curving trunk with ring bands
+        for (let k = 0; k < segs; k++) {
+          const sl = h / segs,
+            tilt = lean * (0.4 + (0.6 * k) / segs),
+            dx = Math.sin(tilt) * Math.cos(la) * sl,
+            dz = Math.sin(tilt) * Math.sin(la) * sl;
+          add(
+            T.cyl(0.2 * s * (1 - 0.06 * k), 0.24 * s * (1 - 0.06 * k), sl * 1.05, 7),
+            k % 2 ? "#8a6a42" : "#7a5a36",
+            S(px + dx / 2, py + sl / 2, pz + dz / 2, Math.sin(la) * tilt, 0, -Math.cos(la) * tilt),
+          ),
+            (px += dx),
+            (pz += dz),
+            (py += sl * Math.cos(tilt));
+        }
+        for (let k = 0; k < 9; k++) frond(px, py, pz, (k / 9) * l + rnd() * 0.3, rr(2.4, 3.2) * s, 0.42 * s, rr(0.15, 0.55), leafGreens[k % 4]);
+        for (let k = 0; k < 3; k++) {
+          const a = rnd() * l;
+          add(T.sphere(0.16 * s, 8, 6), "#6a4a22", S(px + 0.22 * s * Math.cos(a), py - 0.25 * s, pz + 0.22 * s * Math.sin(a)));
         }
       },
-      palm = (X, Z, s) => {
+      treeFern = (X, Z, s) => {
         const y = groundY(X, Z),
-          h = 4.2 * s,
-          lean = rr(-0.18, 0.18);
-        add(T.cyl(0.2 * s, 0.32 * s, h, 7), "#7a5a36", S(X, y + h / 2, Z, lean, 0, lean * 0.5));
-        const tx = X + Math.sin(lean * 0.5) * -h * 0.5,
-          ty = y + h * 0.98;
-        for (let k = 0; k < 8; k++) {
-          const a = (k / 8) * l + rnd() * 0.3;
+          h = rr(2.2, 3.4) * s;
+        add(T.cyl(0.14 * s, 0.22 * s, h, 7), "#4a3a26", S(X, y + h / 2, Z));
+        for (let k = 0; k < 10; k++) frond(X, y + h, Z, (k / 10) * l + rnd() * 0.3, rr(1.8, 2.4) * s, 0.32 * s, rr(-0.1, 0.35), leafGreens[k % 4]);
+      },
+      banana = (X, Z, s) => {
+        const y = groundY(X, Z),
+          h = rr(1.4, 2.2) * s;
+        add(T.cyl(0.14 * s, 0.2 * s, h, 7), "#7a9a3a", S(X, y + h / 2, Z));
+        for (let k = 0; k < 6; k++) {
+          const a = (k / 6) * l + rnd() * 0.5,
+            up = rr(0.35, 0.8),
+            L2 = 1.3 * s;
+          // long paddle leaves
           add(
-            T.cone(0.55 * s, 3.2 * s, 4),
-            k % 2 ? "#4f9a2a" : "#3f8a2a",
-            S(tx + Math.cos(a) * 1.2 * s, ty - 0.2 * s, Z + Math.sin(a) * 1.2 * s, 0, -a, 0).multiply(S(0, 0, 0, 0, 0, 1.85, 1, 1, 0.25)),
+            T.sphere(1, 10, 6),
+            k % 2 ? "#4fa83a" : "#5ab842",
+            S(X + Math.cos(a) * L2 * 0.8 * Math.cos(up), y + h + Math.sin(up) * L2 * 0.8, Z + Math.sin(a) * L2 * 0.8 * Math.cos(up), 0, -a + Math.PI / 2, up).multiply(S(0, 0, 0, 0, 0, 0, 0.32 * s, 0.04 * s, L2)),
           );
+        }
+      },
+      cycad = (X, Z, s) => {
+        const y = groundY(X, Z),
+          h = rr(0.5, 1.1) * s;
+        add(T.cyl(0.32 * s, 0.38 * s, h, 8), "#6a5a3a", S(X, y + h / 2, Z));
+        for (let k = 0; k < 12; k++) frond(X, y + h, Z, (k / 12) * l, rr(1.3, 1.7) * s, 0.2 * s, rr(-0.45, -0.1), k % 2 ? "#2f6a2a" : "#3a7a2a");
+      },
+      hibiscus = (X, Z, s) => {
+        const y = groundY(X, Z),
+          fl = ["#e8301e", "#ff5fb0", "#ff8a1a", "#ffd23a"][Math.floor(4 * rnd())];
+        for (let k = 0; k < 5; k++) {
+          const a = rnd() * l,
+            r0 = rr(0, 0.5) * s;
+          add(T.ico(rr(0.45, 0.7) * s, 0), leafGreens[k % 4], S(X + Math.cos(a) * r0, y + rr(0.35, 0.7) * s, Z + Math.sin(a) * r0, rnd(), rnd(), rnd(), 1, 0.8, 1));
+        }
+        for (let k = 0; k < 7; k++) {
+          const a = rnd() * l,
+            r0 = rr(0.45, 0.75) * s;
+          add(T.cone(0.12 * s, 0.14 * s, 5), fl, S(X + Math.cos(a) * r0, y + rr(0.5, 0.95) * s, Z + Math.sin(a) * r0, Math.PI, 0, 0));
         }
       },
       fern = (X, Z, s) => {
         const y = groundY(X, Z);
-        for (let k = 0; k < 7; k++) {
-          const a = (k / 7) * l + rnd();
-          add(T.cone(0.32 * s, 1.5 * s, 4), k % 2 ? "#5aa83a" : "#4a9a32", S(X, y + 0.35 * s, Z, 0, -a, 0).multiply(S(0, 0, 0, 0, 0, 1.15, 1, 1, 0.3)));
-        }
+        for (let k = 0; k < 7; k++) frond(X, y + 0.08, Z, (k / 7) * l + rnd(), rr(0.9, 1.3) * s, 0.22 * s, rr(-0.75, -0.35), k % 2 ? "#5aa83a" : "#4a9a32");
       },
       rock = (X, Z, s) => {
         const y = groundY(X, Z);
-        add(T.dodeca(1, 0), rnd() < 0.5 ? "#8a8278" : "#9a9086", S(X, y + 0.25 * s, Z, rnd(), rnd() * l, rnd(), 1.3 * s, 0.8 * s, 1.1 * s));
+        add(T.dodeca(1, 0), rnd() < 0.5 ? "#6a6460" : "#7a726a", S(X, y + 0.25 * s, Z, rnd(), rnd() * l, rnd(), 1.3 * s, 0.8 * s, 1.1 * s));
+        rnd() < 0.6 && add(T.dodeca(1, 0), "#5a8a3a", S(X, y + 0.62 * s, Z, rnd(), rnd() * l, 0, 0.9 * s, 0.25 * s, 0.8 * s));
       };
 
-    // dense jungle wall around the clearing
-    for (let k = 0; k < 340; k++) {
+    // dense tropical jungle around the clearing
+    for (let k = 0; k < 360; k++) {
       const a = rnd() * l,
         r = rr(52, 115),
         X = Math.cos(a) * r,
         Z = Math.sin(a) * r,
         q = rnd();
-      q < 0.5 ? conifer(X, Z, rr(0.8, 1.5)) : q < 0.85 ? palm(X, Z, rr(0.9, 1.5)) : rock(X, Z, rr(1.5, 3.5));
+      q < 0.5 ? palm(X, Z, rr(0.9, 1.6)) : q < 0.7 ? treeFern(X, Z, rr(1, 1.6)) : q < 0.85 ? banana(X, Z, rr(1, 1.5)) : q < 0.93 ? cycad(X, Z, rr(1, 1.6)) : rock(X, Z, rr(1.5, 3.5));
     }
-    for (let k = 0; k < 120; k++) {
-      const a = rnd() * l;
-      fern(Math.cos(a) * rr(48, 60), Math.sin(a) * rr(48, 60), rr(0.9, 1.6));
+    for (let k = 0; k < 140; k++) {
+      const a = rnd() * l,
+        X = Math.cos(a) * rr(47, 60),
+        Z = Math.sin(a) * rr(47, 60),
+        q = rnd();
+      q < 0.5 ? fern(X, Z, rr(0.9, 1.6)) : q < 0.8 ? hibiscus(X, Z, rr(0.9, 1.4)) : cycad(X, Z, rr(0.7, 1));
     }
-    // a few props inside the clearing, kept away from stations and creatures
+    // a few props inside the clearing, kept away from stations, the NPC line-up and the spawn
     const busy = [...keepAt, ...Object.values(Object.assign({}, e, o, n)).filter((d) => d && d.at).map((d) => d.at), [0, 12]];
-    const freeSpot = (X, Z, r) => busy.every(([x0, z0]) => Math.hypot(X - x0, Z - z0) > r + 4) && E.clear(X, Z, r);
+    const freeSpot = (X, Z, r) =>
+      busy.every(([x0, z0]) => Math.hypot(X - x0, Z - z0) > r + 4) && Math.abs(Z - LINE_Z) > r + 3 && E.clear(X, Z, r);
     let placed = 0;
-    for (let k = 0; k < 400 && placed < 46; k++) {
+    for (let k = 0; k < 500 && placed < 50; k++) {
       const a = rnd() * l,
         r = rr(14, 46),
         X = Math.cos(a) * r,
         Z = Math.sin(a) * r,
         q = rnd();
-      if (q < 0.55) {
+      if (q < 0.4) {
         if (!freeSpot(X, Z, 1)) continue;
         fern(X, Z, rr(0.7, 1.2)), E.add(X, Z, 1, "fern");
-      } else if (q < 0.8) {
+      } else if (q < 0.6) {
+        if (!freeSpot(X, Z, 1.2)) continue;
+        hibiscus(X, Z, rr(0.7, 1.1)), E.add(X, Z, 1.2, "bush");
+      } else if (q < 0.78) {
         if (!freeSpot(X, Z, 1.6)) continue;
-        const s = rr(0.6, 1.4);
-        rock(X, Z, s), E.add(X, Z, 1.2 * s, "rock"), F.add(X, Z, 1.1 * s, !0), (F.list[F.list.length - 1].stage = !0);
+        const s = rr(0.6, 1.3);
+        rock(X, Z, s), E.add(X, Z, 1.2 * s, "rock");
       } else {
         if (r < 30 || !freeSpot(X, Z, 2)) continue;
-        palm(X, Z, rr(0.9, 1.3)), E.add(X, Z, 1.5, "palm"), F.add(X, Z, 0.4, !0), (F.list[F.list.length - 1].stage = !0);
+        rnd() < 0.6 ? palm(X, Z, rr(0.9, 1.3)) : treeFern(X, Z, rr(0.9, 1.2)), E.add(X, Z, 1.5, "tree");
       }
       placed++;
     }
@@ -11804,7 +12029,7 @@ const JGP = (() => {
       const a = (k / 16) * l + rr(-0.1, 0.1),
         r = rr(190, 240),
         h = rr(40, 80);
-      add(T.cone(rr(40, 65), h, 9), k % 2 ? "#5a6a4a" : "#4f5f44", S(Math.cos(a) * r, groundY(Math.cos(a) * r, Math.sin(a) * r) + h / 2 - 6, Math.sin(a) * r, 0, rnd() * l));
+      add(T.cone(rr(40, 65), h, 9), k % 2 ? "#4f7a3a" : "#5a8a42", S(Math.cos(a) * r, groundY(Math.cos(a) * r, Math.sin(a) * r) + h / 2 - 6, Math.sin(a) * r, 0, rnd() * l));
     }
     const vX = -60,
       vZ = -215;
@@ -11834,6 +12059,10 @@ const JGP = (() => {
     PLANS,
     CAST,
     BATTLES,
+    FREEZE_NPCS,
+    buildShop,
+    buildPond,
+    fireBlossom,
     beforeSpawn() {
       try {
         applyCast();
@@ -11845,6 +12074,8 @@ const JGP = (() => {
       } catch (err) {
         vo(err, "jgp-world");
       }
+      // no collision on anything in the play area except NPCs (and the player)
+      F.list.forEach((f) => (f.stage = !1));
     },
   };
 })();
@@ -16415,100 +16646,8 @@ if (
               C.add(o),
               F.add(t, e, 1.9),
               E.add(t, e, 3.8, "stump"),
-              R(T.cyl(3.1, 3.2, 0.18, 32), x.world("#ddd6c8"), o, [0, 0.09, 0]),
-              R(T.box(3.2, 0.92, 0.5), x.world("#7ec8c0"), o, [0, 0.6, 0.62]),
-              R(T.box(3.4, 0.1, 0.72), x.world("#f4efe4"), o, [0, 1.05, 0.6]),
-              R(T.box(3.3, 0.12, 0.6), x.world("#3e8a82"), o, [0, 0.2, 0.62]),
-              [-1, 1].forEach((t) => {
-                R(T.box(0.42, 0.92, 1.5), x.world("#7ec8c0"), o, [1.39 * t, 0.6, -0.38]),
-                  R(T.box(0.5, 0.1, 1.6), x.world("#f4efe4"), o, [1.39 * t, 1.05, -0.38]),
-                  R(T.box(0.5, 0.12, 1.5), x.world("#3e8a82"), o, [1.39 * t, 0.2, -0.38]);
-              });
-            for (let t = 0; t < 5; t++)
-              R(T.box(0.5, 0.7, 0.04), x.world(t % 2 ? "#ffffff" : "#ff8ac0"), o, [0.6 * t - 1.2, 0.6, 0.87]);
-            [
-              [-1.5, -1.02],
-              [1.5, -1.02],
-              [-1.5, 0.82],
-              [1.5, 0.82],
-            ].forEach(([t, e]) => R(T.cyl(0.06, 0.06, 2.4, 8), x.world("#f4efe4"), o, [t, 2.3, e]));
-            const a = new THREE.Group();
-            a.position.set(0, 3.5, -0.1), (a.rotation.x = 0.16), o.add(a);
-            for (let t = 0; t < 7; t++)
-              R(T.box(0.52, 0.08, 2.5), x.world(t % 2 ? "#ffffff" : "#ff5fb0"), a, [0.52 * t - 1.56, 0, 0]);
-            for (let t = 0; t < 7; t++)
-              R(
-                T.cone(0.26, 0.3, 3),
-                x.world(t % 2 ? "#ffffff" : "#ff5fb0"),
-                a,
-                [0.52 * t - 1.56, -0.16, 1.25],
-                [Math.PI, 0, 0],
-                [1, 1, 0.2],
-              );
-            (() => {
-              const t = new THREE.Group();
-              t.position.set(1.22, 1.1, 0.45),
-                o.add(t),
-                R(T.cyl(0.13, 0.11, 0.22, 14), x.clay("#2a2f3d", { shininess: 60 }), t, [0, 0.11, 0]),
-                R(T.torus(0.13, 0.015, 6, 18), x.clay("#3cff4a"), t, [0, 0.22, 0], [Math.PI / 2, 0, 0]),
-                [
-                  [0, 0, 0.05, -0.06],
-                  [0.05, 0.04, -0.12, 0.1],
-                  [-0.05, 0.03, 0.1, 0.12],
-                  [0.03, -0.05, -0.08, -0.14],
-                  [-0.04, -0.04, 0.14, -0.1],
-                ].forEach(([e, o, a, n]) => {
-                  const r = yt(0.42, 0.022);
-                  r.position.set(e, 0.04, o), r.rotation.set(a, 0, n), t.add(r);
-                });
-            })(),
-              [
-                [-0.7, "#ffd84a"],
-                [0, "#ff9ac8"],
-                [0.7, "#a8e830"],
-              ].forEach(([t, e]) => {
-                R(T.cyl(0.18, 0.18, 0.38, 10), x.basic("#e8f4ff", { transparent: !0, opacity: 0.45 }), o, [
-                  t,
-                  1.3,
-                  0.5,
-                ]),
-                  R(T.sphere(0.13, 8, 6), x.clay(e), o, [t, 1.24, 0.5]),
-                  R(T.cyl(0.19, 0.19, 0.06, 10), x.world("#8a5c32"), o, [t, 1.52, 0.5]);
-              });
-            for (let t = 0; t < 6; t++)
-              R(
-                T.ico(0.1, 0),
-                x.clay("#2f6fe0", { shininess: 110, specular: 12574975 }),
-                o,
-                [
-                  (t % 2 ? 1 : -1) * (1.39 + h(-0.08, 0.08)),
-                  1.18 + (t > 3 ? 0.12 : 0),
-                  0.3 * Math.floor(t / 2) - 0.95 + h(-0.05, 0.05),
-                ],
-                [t, 2 * t, 0],
-                [1, 1.2, 0.9],
-              );
-            const n = b(
-                256,
-                128,
-                (t) => {
-                  (t.fillStyle = "#fff8ec"),
-                    t.fillRect(8, 20, 240, 88),
-                    (t.strokeStyle = "#ff5fb0"),
-                    (t.lineWidth = 8),
-                    t.strokeRect(8, 20, 240, 88),
-                    (t.fillStyle = "#3e8a82"),
-                    (t.font = "bold 50px 'Trebuchet MS', Verdana, Arial, sans-serif"),
-                    (t.textAlign = "center"),
-                    (t.textBaseline = "middle"),
-                    t.fillText("SHOP", 128, 66);
-                },
-                { smooth: !0 },
-              ),
-              r = x.world(16777215, { map: n, transparent: !0, side: THREE.FrontSide });
-            R(T.plane(2, 1), r, o, [0, 4.15, 1.12], [-0.1, 0, 0]),
-              R(T.plane(2, 1), r, o, [0, 4.15, 1.1], [0.1, Math.PI, 0]),
-              H(o),
+              JGP.buildShop(o);
+                          H(o),
               (function (t) {
                 const e = new THREE.Group();
                 (e.userData.keepInFinale = !0), t.add(e), e.position.set(0, 0.2, -0.45), e.scale.setScalar(0.85);
@@ -16635,68 +16774,7 @@ if (
           (function (t, e) {
             const o = new THREE.Group();
             o.position.set(t, 0, 0), C.add(o), F.add(t, 0, 2.9), E.add(t, 0, 4.2, "pool");
-            const a = x.world("#e6e0d4"),
-              n = x.world("#b9b2a4");
-            R(T.cyl(4.3, 4.4, 0.06, 40), x.world("#e2a58e"), o, [0, 0.03, 0]),
-              R(new THREE.CylinderGeometry(3.35, 3.45, 0.56, 40, 1, !0), a, o, [0, 0.28, 0]),
-              R(new THREE.CylinderGeometry(3, 3, 0.5, 40, 1, !0), n, o, [0, 0.3, 0]);
-            const r = new THREE.RingGeometry(2.96, 3.4, 40, 1);
-            r.rotateX(-Math.PI / 2),
-              R(r, x.world("#f4efe4"), o, [0, 0.56, 0]),
-              R(T.circle(3, 40), n, o, [0, 0.06, 0], [-Math.PI / 2, 0, 0]);
-            const s = R(
-                T.circle(2.98, 40),
-                x.clay("#6ec6e6", {
-                  unique: !0,
-                  shininess: 90,
-                  specular: 12303291,
-                  polygonOffset: !0,
-                  polygonOffsetFactor: -2,
-                  polygonOffsetUnits: -2,
-                }),
-                o,
-                [0, 0.36, 0],
-                [-Math.PI / 2, 0, 0],
-              ),
-              i = x.basic("#e4f6ff", { unique: !0, transparent: !0, opacity: 0.6, depthWrite: !1 }),
-              c = [];
-            for (let t = 0; t < 8; t++) {
-              const e = (t / 8) * l + l / 16,
-                a = Math.cos(e),
-                n = Math.sin(e);
-              R(T.cyl(0.12, 0.16, 0.22, 8), x.world("#c9a84a"), o, [2.85 * a, 0.62, 2.85 * n]);
-              const r = [];
-              for (let t = 0; t <= 8; t++) {
-                const e = t / 8,
-                  o = 2.85 - 1.6 * e;
-                r.push([o * a, 0.7 + 1.9 * e * (1 - e) * 2 - 0.3 * e, o * n]);
-              }
-              c.push(R(ro(r, 0.045, 16, 5), i, o));
-            }
-            const h = [0, 0.5].map(() =>
-              R(
-                T.torus(1, 0.02, 4, 32),
-                x.basic("#f4fbff", { unique: !0, transparent: !0, opacity: 0.5, depthWrite: !1 }),
-                o,
-                [0, 0.38, 0],
-                [Math.PI / 2, 0, 0],
-              ),
-            );
-            L.push((t) => {
-              h.forEach((e, o) => {
-                const a = (0.3 * t + 0.5 * o) % 1;
-                e.scale.setScalar(1.2 + 1.7 * a), (e.material.opacity = 0.5 * (1 - a));
-              }),
-                (i.opacity = 0.5 + 0.12 * Math.sin(9 * t)),
-                s.material.color.setHSL(0.54, 0.62, 0.64 + 0.03 * Math.sin(1.1 * t));
-            }),
-              (function (t, e = []) {
-                t.updateMatrixWorld(!0);
-                const o = new Set(e);
-                t.traverse((e) => {
-                  e === t || o.has(e) || e.isLight || e.isPoints || (e.matrixAutoUpdate = !1);
-                });
-              })(o, [s, ...h]),
+            JGP.buildPond(o),
               z.add({ id: "pool", x: t, z: 0, r: 4.2, solidR: 2.9, waypointR: 4.6, label: () => null });
           })(24.6),
           (function (t, e) {

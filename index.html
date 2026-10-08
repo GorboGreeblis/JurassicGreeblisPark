@@ -11311,7 +11311,7 @@ const JGP = (() => {
     blinker: { name: "DILO", plan: "dilo", color: "#2fd4e6", accent: "#ff5fb0" },
     slugwerth: { name: "BRONTO", plan: "longneck", color: "#2c5fe0", accent: "#1a3a90", scale: 0.8 },
     jumper: { name: "SPINO", plan: "spino", color: "#c85a6a", accent: "#ffb84a" },
-    appterix: { name: "APPTERIX", plan: "rex", builder: "appterixRex", color: "#dc3322", accent: "#a8201a" },
+    appterix: { name: "APPTERIX", plan: "rex", builder: "g15_appteryx", color: "#e8322a", accent: "#a8201a" }, // original APPTERYX model
     // roaming creatures (respawn after battles)
     kingdino: { name: "REX", plan: "rex", color: "#b8402a", accent: "#f2c72e" },
     cutebex: { name: "PROTO", plan: "proto", color: "#e6c42e", accent: "#8a6a1a" },
@@ -11327,6 +11327,51 @@ const JGP = (() => {
   const COURIER = { name: "GALLI", plan: "raptor", color: "#ef7536", accent: "#ffffff", scale: 1.1 };
   // the shopkeeper uses the PTERO design at twice the cast size (its stand is scaled 0.85, hence 2 / 0.85)
   const KEEPER = { name: "PTERO", plan: "ptero", color: "#d8a050", accent: "#c8321e", scale: 2 / 0.85 };
+
+  // Creatures reconstructed from GREEBLIS v15: a second stationary row on the east side.
+  // [id, name, builder, colour, bodyR]
+  const V15 = [
+    ["v15_mont", "MONTGUMMERY", "g15_montgummery", "#3cc8b8", 0.8],
+    ["v15_montbak", "MONT.BAK", "g15_montbak", "#2a6a5a", 0.8],
+    ["v15_gorbo", "GORBO", "g15_gorbo", "#3ad8e8", 1.1],
+    ["v15_mama", "MAMA GORBO", "g15_mamagorbo", "#f2b06a", 1.1],
+    ["v15_spark", "SPARKAKUS", "g15_sparkakus", "#2f6fd8", 0.9],
+    ["v15_bobert", "BOBERT", "g15_bobert", "#c08050", 0.6],
+    ["v15_somnux", "SOMNUX", "g15_somnux", "#c9b96a", 0.6],
+    ["v15_kingdino", "KING DINO", "g15_kingdino", "#d8c41a", 0.8],
+    ["v15_immuto", "IMMUTO", "g15_immuto", "#f0a02a", 1.2],
+    ["v15_sealio", "SEALIO", "g15_sealio", "#5ac898", 1],
+    ["v15_decibelle", "DECIBELLE", "g15_decibelle", "#8a5ae8", 0.8],
+    ["v15_seedric", "SEEDRIC", "g15_seedric", "#3ab84a", 0.9],
+    ["v15_patchouli", "PATCHOULI", "g15_patchouli", "#9ab82a", 0.8],
+    ["v15_interstitia", "INTERSTITIA", "g15_interstitia", "#4ab83a", 0.8],
+    ["v15_etchelon", "ETCHELON", "g15_etchelon", "#d8a81a", 1.1],
+    ["v15_zorto", "ZORTO", "g15_zorto", "#8a8ae8", 0.7],
+    ["v15_gigglyph", "GIGGLYPH", "g15_gigglyph", "#2ab8c8", 1.1],
+    ["v15_gemwing", "GEMWING", "g15_gemwing", "#d83ab8", 1],
+    ["v15_auramel", "AURAMEL", "g15_auramel", "#e8888a", 0.8],
+  ];
+  const ROW2_X = 34,
+    ROW2_Z0 = -24,
+    ROW2_STEP = 3;
+  function addV15() {
+    V15.forEach(([id, name, builder, color, bodyR], k) => {
+      o[id] = {
+        name,
+        color,
+        builder,
+        bodyR,
+        at: [ROW2_X, ROW2_Z0 + k * ROW2_STEP],
+        pattern: ["post", { face: -Math.PI / 2 }],
+        stationary: !0,
+        emotes: ["!", "♥", "✿"],
+        lines: L3(),
+        gift: "Placeholder blossom line",
+        campfire: "Placeholder campfire line",
+      };
+      Zt[id] = { g: [-0.8, 1.2, 0.45], c: [0.8, 1.0, 0.45] };
+    });
+  }
 
   // dance-battle text (system unchanged, text is placeholder)
   const battleText = (n) => ({
@@ -11562,87 +11607,734 @@ const JGP = (() => {
   }
   so.dino = buildDino;
   // the shopkeeper is built from this hook during boot (see Se())
-  // APPTERIX: the Greeblis City archaeologist rebuilt on the REX body plan. Keeps his mottled
-  // red skin, boxy snout, big yellow eyes, fedora, coiled whip and purple crystal stalks.
-  let apptSkin = null;
-  function appterixRex(g, d, opts) {
-    if (!apptSkin) {
-      let sd = 23;
-      const r2 = () => ((sd = (16807 * sd) % 2147483647) / 2147483647),
-        tex = b(
-          256,
-          256,
-          (c) => {
-            (c.fillStyle = "#dc3322"), c.fillRect(0, 0, 256, 256);
-            for (let k = 0; k < 700; k++) {
-              const px = 256 * r2(),
-                py = 256 * r2(),
-                gr = c.createRadialGradient(px, py, 0, px, py, 6 + 14 * r2());
-              gr.addColorStop(0, r2() < 0.5 ? "rgba(120,10,6,.10)" : "rgba(240,90,70,.10)"), gr.addColorStop(1, "rgba(0,0,0,0)");
-              (c.fillStyle = gr), c.fillRect(px - 20, py - 20, 40, 40);
-            }
-            c.lineCap = "round";
-            for (let k = 0; k < 200; k++) {
-              const px = 256 * r2(),
-                py = 256 * r2(),
-                an = r2() * l,
-                ln = 2 + 8 * r2();
-              (c.strokeStyle = r2() < 0.6 ? "rgba(250,200,180,.32)" : "rgba(100,10,6,.28)"), (c.lineWidth = 0.5 + 0.6 * r2());
-              c.beginPath(), c.moveTo(px, py), c.lineTo(px + Math.cos(an) * ln, py + Math.sin(an) * ln), c.stroke();
-            }
-          },
-          { smooth: !0 },
-        );
-      (tex.wrapS = tex.wrapT = THREE.RepeatWrapping), tex.repeat.set(2, 2);
-      apptSkin = new THREE.MeshPhongMaterial({ map: tex, bumpMap: tex, bumpScale: 0.018, shininess: 45, specular: 6710886, emissive: "#3a0804" });
-    }
-    const res = buildDino(g, d, Object.assign({ plan: "rex", color: "#dc3322", accent: "#a8201a", skinMat: apptSkin }, opts)),
-      P = PLANS.rex,
-      [hw, hh, hl] = P.head,
-      cr = res.head,
-      yellow = x.clay("#f4d21c", { shininess: 90, specular: 16777215 }),
-      black = x.clay("#0c0c10", { shininess: 160, specular: 16777215 }),
-      hatM = x.clay("#7a5a3a", { shininess: 12 }),
-      bandM = x.clay("#3a2618", { shininess: 20 }),
-      gemM = new THREE.MeshPhongMaterial({ color: "#c77ae6", emissive: "#5a1d78", emissiveIntensity: 0.8, shininess: 180, specular: 16777215, flatShading: !0 });
-    // boxy snout over the round one
-    R(T.box(hw * 1.45, hh * 1.05, hl * 1.35), apptSkin, cr, [0, -hh * 0.18, hl * 0.78]);
-    R(T.box(hw * 1.5, hh * 0.08, hl * 1.37), x.clay("#a8201a"), cr, [0, -hh * 0.7, hl * 0.78]);
-    // big yellow eyes with black pupils
-    [-1, 1].forEach((sx) => {
-      R(T.sphere(hh * 0.42, 16, 12), yellow, cr, [sx * hw * 0.82, hh * 0.38, hl * 0.12]);
-      R(T.sphere(hh * 0.22, 12, 10), black, cr, [sx * hw * 1.12, hh * 0.42, hl * 0.26]);
-      R(T.sphere(hh * 0.06, 6, 4), x.basic("#ffffff"), cr, [sx * hw * 1.22, hh * 0.5, hl * 0.33]);
-    });
-    // explorer's fedora
-    const hat = new THREE.Group();
-    hat.position.set(0, hh * 0.85, -hl * 0.05), hat.rotation.set(-0.12, 0, 0.08), cr.add(hat);
-    R(T.cyl(hw * 1.55, hw * 1.55, 0.035, 20), hatM, hat, [0, 0, 0], null, [1, 1, 1.1]);
-    R(T.cyl(hw * 0.85, hw * 1, 0.24, 16), hatM, hat, [0, 0.13, 0]);
-    R(T.cyl(hw * 1.01, hw * 1.01, 0.06, 16), bandM, hat, [0, 0.05, 0]);
-    R(T.box(hw * 1.2, 0.05, hw * 0.25), hatM, hat, [0, 0.255, 0]);
-    // purple crystal stalks
-    [
-      [0.12, 0.75, -0.5, 0.35],
-      [-0.1, 0.45, -0.35, -0.3],
-    ].forEach(([px, len, tilt, side]) => {
-      const st = new THREE.Group();
-      st.position.set(px, hh * 0.8, -hl * 0.35), st.rotation.set(tilt, 0, side), cr.add(st);
-      R(T.cyl(0.025, 0.035, len, 6), x.clay("#a8201a"), st, [0, len / 2, 0]);
-      R(T.ico(0.09, 0), gemM, st, [0, len + 0.06, 0], [0.3, 0.6, 0], [0.8, 1.3, 0.8]);
-    });
-    // coiled whip at the hip
-    const whip = new THREE.Group();
-    whip.position.set(P.body[0] * 1.02, -P.body[1] * 0.15, -P.body[2] * 0.15), (whip.rotation.y = Math.PI / 2), res.body.add(whip);
-    for (let k = 0; k < 4; k++) R(T.torus(0.17 - 0.012 * k, 0.022, 6, 18), x.clay(k % 2 ? "#5a3418" : "#7a4a22"), whip, [0, 0, 0.02 * k]);
-    R(T.cyl(0.03, 0.035, 0.28, 6), bandM, whip, [0.18, -0.1, 0.05], [0, 0, 0.7]);
-    return res;
+  // ---- creatures reconstructed from GREEBLIS v15 -----------------------------
+  // New models built with this game's helpers (front faces +Z, ~2-3 m tall).
+  // Each builder returns the engine's {height, anim, onTalk, singing} contract.
+  const C15 = {};
+  const cm = (c, o) => x.clay(c, Object.assign({ shininess: 30 }, o)),
+    cb = (c, o) => x.basic(c, o),
+    tex = (w, h, draw) => b(w, h, draw, { smooth: !0 }),
+    textTex = (w, h, bg, fg, txt, font, extra) =>
+      tex(w, h, (c) => {
+        (c.fillStyle = bg), c.fillRect(0, 0, w, h);
+        extra && extra(c, w, h);
+        (c.fillStyle = fg), (c.font = font), (c.textAlign = "center"), (c.textBaseline = "middle"), c.fillText(txt, w / 2, h / 2 + 2);
+      });
+  // shared life-cycle wrapper: talk/sing timers and a walk factor
+  function life(g, fn) {
+    let talk = 0,
+      sing = 0,
+      wk = 0;
+    g.updateMatrixWorld(!0);
+    const h = new THREE.Box3().setFromObject(g).max.y;
+    return {
+      height: Math.max(1, h),
+      onTalk() {
+        talk = 1.3;
+      },
+      singing(d) {
+        sing = Math.max(sing, d || 1.5);
+      },
+      anim(t, dt, ent) {
+        (dt = dt || 0.016), (wk += ((ent && ent.moving ? 1 : 0) - wk) * Math.min(1, 6 * dt));
+        (talk = Math.max(0, talk - dt)), (sing = Math.max(0, sing - dt));
+        fn(t, dt, { talk, sing, wk, tk: talk > 0 || sing > 0 ? 1 : 0 });
+      },
+    };
   }
-  so.appterixRex = appterixRex;
+  const eyes = (p, x0, y0, z0, r, white, pupil, gap) =>
+    [-1, 1].map((sx) => {
+      const e = new THREE.Group();
+      e.position.set(sx * (gap || x0), y0, z0), p.add(e);
+      R(T.sphere(r, 12, 10), cm(white || "#ffffff", { shininess: 60 }), e);
+      R(T.sphere(r * 0.55, 10, 8), cb(pupil || "#14141e"), e, [0, 0, r * 0.62]);
+      return e;
+    });
+  const legsPair = (p, xs, y, len, r, col, shoe) =>
+    xs.map((x0) => {
+      const g = new THREE.Group();
+      g.position.set(x0, y, 0), p.add(g);
+      R(T.cyl(r, r * 0.9, len, 8), cm(col), g, [0, -len / 2, 0]);
+      shoe && R(T.box(r * 2.6, r * 1.2, r * 3.4), cm(shoe), g, [0, -len, r * 0.6]);
+      return g;
+    });
+  const floatSign = (p, txt, col, pos, sides) => {
+    const sg = new THREE.Group();
+    sg.position.set(...pos), p.add(sg);
+    R(T.cyl(0.3, 0.3, 0.06, sides || 8), cm(col), sg, null, [Math.PI / 2, 0, 0]);
+    R(T.circle(0.27, sides || 8), cb("#ffffff", { map: textTex(128, 128, col, "#ffffff", txt, "bold 64px Arial") }), sg, [0, 0, 0.035]);
+    return sg;
+  };
+
+  // MONTGUMMERY / MONT.BAK: CRT-headed synthetic with a circuit body
+  function montLike(g, bak) {
+    const teal = bak ? "#1f4a40" : "#3cc8b8",
+      bodyC = bak ? "#0f2420" : "#14302c",
+      scr = tex(256, 192, (c) => {
+        (c.fillStyle = "#5a2ac8"), c.fillRect(0, 0, 256, 192);
+        (c.fillStyle = "#ffd23a"), (c.font = "bold 22px monospace"), (c.textAlign = "center"), c.fillText(bak ? "gfxinfo.bak" : "gfxinfo gfxinfo", 128, 34);
+        (c.strokeStyle = "#ffffff"), (c.lineWidth = 8), c.beginPath(), c.arc(128, 100, 40, 0.2 * Math.PI, 0.8 * Math.PI), c.stroke();
+        (c.fillStyle = "#ffffff"), c.fillRect(98, 76, 12, 18), c.fillRect(146, 76, 12, 18);
+      }),
+      circ = tex(128, 256, (c) => {
+        (c.fillStyle = bodyC), c.fillRect(0, 0, 128, 256);
+        for (let k = 0; k < 400; k++) (c.fillStyle = Math.random() < 0.8 ? "rgba(60,200,140,.35)" : "rgba(255,90,200,.6)"), c.fillRect(128 * Math.random(), 256 * Math.random(), 2, 2);
+        const gr = c.createRadialGradient(64, 150, 4, 64, 150, 50);
+        gr.addColorStop(0, "rgba(80,255,190,.5)"), gr.addColorStop(1, "rgba(80,255,190,0)"), (c.fillStyle = gr), c.fillRect(0, 0, 128, 256);
+      }),
+      rootG = new THREE.Group();
+    g.add(rootG);
+    const legs = legsPair(rootG, [-0.2, 0.2], 0.7, 0.55, 0.09, teal, "#e8402e");
+    R(T.box(0.85, 1.05, 0.48), cm("#ffffff", { map: circ }), rootG, [0, 1.22, 0]);
+    if (!bak) for (let k = 0; k < 6; k++) R(T.box(0.12, 0.04, 0.02), cb(["#ff5fb0", "#ffd23a", "#35d0c5"][k % 3]), rootG, [-0.2 + 0.08 * k, 1.45 - 0.07 * k, 0.25]);
+    const head = new THREE.Group();
+    head.position.set(0, 2.05, 0), rootG.add(head);
+    R(T.box(0.95, 0.75, 0.62), cm(teal), head);
+    R(T.plane(0.78, 0.58), cb("#ffffff", { map: scr }), head, [0, 0, 0.315]);
+    R(T.cyl(0.02, 0.02, 0.45, 5), cm("#8a9aa0"), head, [0.3, 0.6, 0]);
+    for (let k = 0; k < 4; k++) R(T.box(0.04, 0.04 + 0.04 * k, 0.03), cm(teal), head, [0.25 + 0.06 * k, 0.86 + 0.02 * k, 0]);
+    const arms = [-1, 1].map((sx) => {
+      const a = new THREE.Group();
+      a.position.set(sx * 0.42, 1.55, 0), rootG.add(a);
+      R(T.cyl(0.03, 0.03, 0.75, 6), cm("#2a3a3a"), a, [sx * 0.38, 0, 0], [0, 0, Math.PI / 2]);
+      R(T.torus(0.07, 0.02, 6, 12), cm(teal), a, [sx * 0.78, 0, 0], [0, Math.PI / 2, 0]);
+      return a;
+    });
+    if (!bak) {
+      const bag = new THREE.Group();
+      bag.position.set(0.8, -0.18, 0), arms[1].add(bag);
+      R(T.box(0.22, 0.24, 0.12), cm("#f4f4ec"), bag), R(T.box(0.23, 0.05, 0.13), cm("#8a3ffc"), bag, [0, -0.06, 0]);
+    }
+    return life(g, (t, dt, s) => {
+      const sw = Math.sin(4 * t) * s.wk;
+      (legs[0].rotation.x = 0.5 * sw), (legs[1].rotation.x = -0.5 * sw);
+      arms.forEach((a, k) => (a.rotation.z = (k ? -1 : 1) * (0.08 * Math.sin(1.3 * t + k) + 0.3 * s.tk * Math.abs(Math.sin(8 * t)))));
+      (head.rotation.z = 0.06 * Math.sin(0.9 * t)), (rootG.position.y = 0.03 * Math.abs(Math.sin(4 * t)) * s.wk);
+    });
+  }
+  C15.montgummery = (g) => montLike(g, !1);
+  C15.montbak = (g) => montLike(g, !0);
+
+  // GORBO / MAMA GORBO: goo blob on a ring base, purple eye-spots, octagon signs
+  function gooLike(g, mama) {
+    const bodyC = mama ? "#f2b06a" : "#3ad8e8",
+      top = mama ? "#f8c888" : "#5ae8f0",
+      blob = new THREE.Group();
+    g.add(blob);
+    R(T.torus(1.05, 0.22, 10, 28), cm("#c8f03a", { shininess: 60 }), g, [0, 0.22, 0], [Math.PI / 2, 0, 0]);
+    R(T.cyl(1.05, 1.1, 0.12, 24), cm("#c83ad8"), g, [0, 0.06, 0]);
+    const geo = new THREE.SphereGeometry(1, 28, 20),
+      ps = geo.attributes.position;
+    for (let k = 0; k < ps.count; k++) {
+      const X = ps.getX(k),
+        Y = ps.getY(k),
+        Z = ps.getZ(k),
+        n = 1 + 0.07 * Math.sin(5 * X + 3 * Y) * Math.cos(4 * Z);
+      ps.setXYZ(k, X * n, Y * n, Z * n);
+    }
+    geo.computeVertexNormals();
+    R(geo, cm(bodyC, { shininess: 70, specular: 8947848 }), blob, [0, 1.05, 0], null, [0.95, 0.95, 0.9]);
+    mama && R(T.sphere(0.45, 14, 10), cm(top, { shininess: 70 }), blob, [0.2, 1.85, -0.1]);
+    [
+      [0.55, 1.2, 0.62, 0.32],
+      [-0.75, 0.75, 0.45, 0.2],
+      [0.15, 0.6, 0.85, 0.16],
+    ].forEach(([px, py, pz, r]) => {
+      const sp = new THREE.Group();
+      sp.position.set(px, py, pz), sp.lookAt(px * 3, py, pz * 3), blob.add(sp);
+      R(T.torus(r, r * 0.22, 8, 20), cm("#e84fd0"), sp), R(T.circle(r, 18), cm("#8a3ffc"), sp, [0, 0, 0.01]);
+    });
+    const signs = [floatSign(g, "AP", "#e8302e", [1.05, 1.5, 0.3]), floatSign(g, "IP", "#e8302e", [1.15, 0.85, 0.45])];
+    const drops = [];
+    for (let k = 0; k < 4; k++) drops.push(R(T.sphere(0.07, 8, 6), cm(k % 2 ? "#a8e830" : "#f4f4ec"), blob, [0.4 * Math.cos(2 * k), 2.05, 0.4 * Math.sin(2 * k)]));
+    if (mama)
+      for (let k = 0; k < 3; k++) {
+        const rb = R(T.torus(1.15, 0.03, 4, 32, 1.4), cm("#f4f4f8", { transparent: !0, opacity: 0.8 }), g, [0, 0.8 + 0.25 * k, 0], [Math.PI / 2, 0, k * 2]);
+        drops.push(rb), (rb.userData.ring = !0);
+      }
+    return life(g, (t, dt, s) => {
+      const q = 1 + 0.05 * Math.sin(3 * t) + 0.12 * s.tk * Math.sin(14 * t);
+      blob.scale.set(1 / Math.sqrt(q), q, 1 / Math.sqrt(q));
+      signs.forEach((sg, k) => ((sg.position.y = (k ? 0.85 : 1.5) + 0.06 * Math.sin(2 * t + k)), (sg.rotation.y = 0.3 * Math.sin(t + k))));
+      drops.forEach((d, k) => (d.userData.ring ? (d.rotation.z = 0.4 * t + k * 2) : (d.position.y = 2.05 + 0.08 * Math.sin(3 * t + k))));
+    });
+  }
+  C15.gorbo = (g) => gooLike(g, !1);
+  C15.mamagorbo = (g) => gooLike(g, !0);
+
+  // SPARKAKUS: blue mist-tailed wolf with APR patches and a pink tail flower
+  C15.sparkakus = (g) => {
+    const blue = cm("#2f6fd8"),
+      white = cm("#f4f6ff"),
+      apr = textTex(128, 128, "rgba(0,0,0,0)", "#8a2a10", "APR", "bold 40px Arial", (c) => {
+        (c.fillStyle = "#ff9a2a"), c.beginPath(), c.arc(64, 64, 58, 0, l), c.fill();
+      }),
+      body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 18, 14), blue, body, [0, 1.05, -0.1], null, [0.5, 0.48, 0.85]);
+    R(T.sphere(1, 16, 12), white, body, [0, 1.08, 0.42], null, [0.47, 0.46, 0.38]);
+    [-1, 1].forEach((sx) => R(T.circle(0.22, 16), cb("#ffffff", { map: apr, transparent: !0 }), body, [sx * 0.51, 1.05, -0.35], [0, (sx * Math.PI) / 2, 0]));
+    const legs = [
+      [-0.28, 0.45],
+      [0.28, 0.45],
+      [-0.28, -0.55],
+      [0.28, -0.55],
+    ].map(([px, pz], k) => {
+      const lg = new THREE.Group();
+      lg.position.set(px, 0.85, pz), body.add(lg);
+      R(T.cyl(0.11, 0.09, 0.85, 8), blue, lg, [0, -0.42, 0]), (lg.userData.ph = k === 0 || k === 3 ? 0 : Math.PI);
+      return lg;
+    });
+    const head = new THREE.Group();
+    head.position.set(0, 1.55, 0.7), body.add(head);
+    R(T.sphere(0.36, 16, 12), blue, head);
+    R(T.cone(0.2, 0.55, 10), blue, head, [0, -0.05, 0.42], [Math.PI / 2, 0, 0]);
+    R(T.sphere(0.07, 8, 6), cb("#0c0c10"), head, [0, -0.05, 0.7]);
+    [-1, 1].forEach((sx) => R(T.cone(0.12, 0.35, 4), blue, head, [sx * 0.2, 0.38, -0.05], [0, 0, -sx * 0.25]));
+    eyes(head, 0.17, 0.1, 0.27, 0.07, "#ffe23a", "#14141e");
+    const tail = new THREE.Group();
+    tail.position.set(0, 1.25, -0.9), (tail.rotation.x = -0.9), body.add(tail);
+    R(T.cyl(0.05, 0.08, 0.7, 6), blue, tail, [0, 0.35, 0]);
+    for (let k = 0; k < 5; k++) R(T.sphere(0.07, 6, 4), cm("#ff6ac0"), tail, [0.08 * Math.cos(k * 1.3), 0.12, 0.08 * Math.sin(k * 1.3)]);
+    const mist = [];
+    for (let k = 0; k < 14; k++) mist.push(R(T.box(0.09, 0.09, 0.09), cb("#e8f8ff", { transparent: !0, opacity: 0.8 }), tail, [0, 0.7, 0]));
+    return life(g, (t, dt, s) => {
+      legs.forEach((lg) => (lg.rotation.x = 0.55 * Math.sin(7 * t + lg.userData.ph) * s.wk));
+      (head.rotation.x = -0.2 * s.tk * Math.abs(Math.sin(10 * t))), (head.rotation.y = 0.15 * Math.sin(0.7 * t));
+      (tail.rotation.z = 0.25 * Math.sin(3 * t)),
+        mist.forEach((m, k) => {
+          const u = (k / 14 + 0.35 * t) % 1;
+          m.position.set(0.12 * Math.sin(9 * u + k), 0.7 + 1.4 * u, 0.1 * Math.cos(7 * u + k)), m.scale.setScalar(1 - 0.6 * u);
+        });
+    });
+  };
+
+  // BOBERT: stuffed-rabbit park ranger
+  C15.bobert = (g) => {
+    const fur = cm("#c08050"),
+      pale = cm("#f2d8b8"),
+      rootG = new THREE.Group();
+    g.add(rootG);
+    R(T.sphere(1, 16, 12), fur, rootG, [0, 0.75, 0], null, [0.55, 0.62, 0.5]);
+    R(T.sphere(1, 12, 10), pale, rootG, [0, 0.72, 0.28], null, [0.36, 0.42, 0.25]);
+    R(T.sphere(0.16, 10, 8), cm("#f8f4ec"), rootG, [0, 0.45, -0.5]);
+    [-1, 1].forEach((sx) => R(T.sphere(1, 10, 8), fur, rootG, [sx * 0.25, 0.12, 0.15], null, [0.16, 0.1, 0.26]));
+    const head = new THREE.Group();
+    head.position.set(0, 1.55, 0.05), rootG.add(head);
+    R(T.sphere(0.4, 16, 12), fur, head);
+    R(T.sphere(0.18, 12, 8), pale, head, [0, -0.08, 0.3]);
+    R(T.sphere(0.05, 8, 6), cm("#e86a8a"), head, [0, 0.0, 0.45]);
+    eyes(head, 0.15, 0.1, 0.32, 0.06, "#14141e", "#14141e");
+    const ears = [-1, 1].map((sx) => {
+      const e = new THREE.Group();
+      e.position.set(sx * 0.16, 0.32, -0.05), head.add(e);
+      R(T.sphere(1, 10, 8), fur, e, [0, 0.35, 0], null, [0.1, 0.38, 0.06]), R(T.sphere(1, 8, 6), cm("#f2b8b0"), e, [0, 0.35, 0.03], null, [0.06, 0.3, 0.04]);
+      return e;
+    });
+    const hat = new THREE.Group();
+    hat.position.set(0, 0.32, 0), head.add(hat);
+    R(T.cyl(0.5, 0.5, 0.04, 20), cm("#8a5a2a"), hat), R(T.cyl(0.24, 0.3, 0.26, 14), cm("#8a5a2a"), hat, [0, 0.14, 0]), R(T.cyl(0.31, 0.31, 0.06, 14), cm("#3a2614"), hat, [0, 0.05, 0]);
+    const arm = new THREE.Group();
+    arm.position.set(0.45, 0.95, 0.15), rootG.add(arm);
+    R(T.sphere(1, 8, 6), fur, arm, [0, -0.15, 0.05], null, [0.1, 0.2, 0.1]), R(T.box(0.22, 0.28, 0.02), cm("#e8d8a8"), arm, [0, -0.3, 0.16], [0.3, 0, 0]);
+    return life(g, (t, dt, s) => {
+      ears.forEach((e, k) => (e.rotation.z = (k ? -1 : 1) * (0.12 + 0.08 * Math.sin(2 * t + k) + 0.3 * s.tk * Math.abs(Math.sin(9 * t)))));
+      (rootG.position.y = 0.08 * Math.abs(Math.sin(6 * t)) * s.wk), (arm.rotation.x = -0.2 + 0.1 * Math.sin(1.5 * t));
+    });
+  };
+
+  // SOMNUX: sleepy cube-headed dream spirit in a nightcap, red roots dangling
+  C15.somnux = (g) => {
+    const pale = cm("#e8ecb8"),
+      face = tex(128, 128, (c) => {
+        (c.fillStyle = "#e8ecb8"), c.fillRect(0, 0, 128, 128), (c.strokeStyle = "#3a3a2a"), (c.lineWidth = 5);
+        c.beginPath(), c.arc(42, 58, 12, 0.1 * Math.PI, 0.9 * Math.PI), c.stroke(), c.beginPath(), c.arc(86, 58, 12, 0.1 * Math.PI, 0.9 * Math.PI), c.stroke();
+        c.beginPath(), c.arc(64, 84, 8, 0, Math.PI), c.stroke();
+      }),
+      fl = new THREE.Group();
+    g.add(fl);
+    for (let k = 0; k < 4; k++) R(T.sphere(0.24 - 0.02 * k, 12, 10), pale, fl, [0.08 * Math.sin(k), 0.85 + 0.3 * k, 0]);
+    [-1, 1].forEach((sx) => R(T.sphere(1, 8, 6), pale, fl, [sx * 0.3, 1.25, 0.05], null, [0.09, 0.22, 0.09]));
+    const head = new THREE.Group();
+    head.position.set(0, 2.15, 0), fl.add(head);
+    R(T.box(0.75, 0.68, 0.68), cm("#ffffff", { map: face }), head);
+    R(T.cone(0.42, 0.75, 14), cm("#d8e0f8"), head, [0.05, 0.62, 0], [0, 0, -0.25]);
+    R(T.sphere(0.09, 8, 6), cm("#ffffff"), head, [0.22, 0.98, 0]);
+    const roots = [];
+    for (let k = 0; k < 6; k++) roots.push(R(T.cyl(0.012, 0.008, 0.5, 4), cm("#c8302a"), fl, [0.15 * Math.cos(k), 0.45, 0.15 * Math.sin(k)], [0.2 * Math.sin(k), 0, 0.2 * Math.cos(k)]));
+    const zs = [0, 1, 2].map((k) => R(T.plane(0.22, 0.22), cb("#ffffff", { map: textTex(64, 64, "rgba(0,0,0,0)", "#ffffff", "z", "bold 52px Arial"), transparent: !0, depthWrite: !1 }), fl, [0.3, 2.7, 0]));
+    return life(g, (t, dt, s) => {
+      (fl.position.y = 0.12 * Math.sin(0.9 * t)), (head.rotation.z = 0.08 * Math.sin(0.6 * t) + 0.15 * s.tk * Math.sin(5 * t));
+      roots.forEach((r, k) => (r.rotation.x = 0.2 * Math.sin(1.4 * t + k)));
+      zs.forEach((z, k) => {
+        const u = (0.25 * t + k / 3) % 1;
+        z.position.set(0.35 + 0.25 * u, 2.6 + 0.8 * u, 0.1), z.scale.setScalar(0.6 + 0.8 * u), (z.material.opacity = 1 - u);
+      });
+    });
+  };
+
+  // KING DINO: round yellow dino with a crown, purple cap and red cape
+  C15.kingdino = (g) => {
+    const y = cm("#f2e02a", { shininess: 50 }),
+      teal = cm("#35d0c5"),
+      rootG = new THREE.Group();
+    g.add(rootG);
+    R(T.sphere(1, 18, 14), y, rootG, [0, 1.1, 0], null, [0.75, 0.95, 0.72]);
+    R(T.sphere(1, 12, 10), y, rootG, [0, 1.3, 0.72], null, [0.3, 0.22, 0.32]);
+    R(T.sphere(0.05, 6, 4), cb("#14141e"), rootG, [0.18, 1.5, 0.78]), R(T.sphere(0.05, 6, 4), cb("#14141e"), rootG, [-0.18, 1.5, 0.78]);
+    for (let k = 0; k < 5; k++) R(T.box(0.14, 0.14, 0.14), teal, rootG, [0, 1.75 - 0.25 * k, -0.68 + 0.02 * k], [0.4, 0, 0.4]);
+    const legs = legsPair(rootG, [-0.3, 0.3], 0.35, 0.35, 0.12, "#f2e02a", "#e8b82a");
+    const tail = R(T.torus(0.25, 0.07, 8, 16, 4), teal, rootG, [0.25, 0.45, -0.6], [0, Math.PI / 2, 0]);
+    const crown = new THREE.Group();
+    crown.position.set(0, 2.0, 0), rootG.add(crown);
+    R(T.sphere(0.32, 14, 8), cm("#8a3ffc"), crown, [0, 0, 0], null, [1, 0.5, 1]);
+    R(T.cyl(0.3, 0.32, 0.18, 10, !0), teal, crown, [0, 0.16, 0]);
+    for (let k = 0; k < 5; k++) {
+      const a = (k / 5) * l;
+      R(T.cone(0.07, 0.2, 4), teal, crown, [0.3 * Math.cos(a), 0.33, 0.3 * Math.sin(a)]);
+      R(T.sphere(0.04, 6, 4), cm(["#ff5fb0", "#ffd23a", "#35d0c5"][k % 3]), crown, [0.3 * Math.cos(a), 0.45, 0.3 * Math.sin(a)]);
+    }
+    const cape = R(T.box(0.95, 1.2, 0.04), cm("#a8202a"), rootG, [0, 1.25, -0.72], [0.15, 0, 0]);
+    return life(g, (t, dt, s) => {
+      const w = Math.sin(6 * t) * s.wk;
+      (legs[0].rotation.x = 0.5 * w), (legs[1].rotation.x = -0.5 * w), (rootG.rotation.z = 0.06 * Math.sin(3 * t) * (s.wk + 0.3));
+      (crown.rotation.z = 0.06 * Math.sin(1.7 * t) + 0.12 * s.tk * Math.sin(10 * t)), (cape.rotation.x = 0.15 + 0.06 * Math.sin(2 * t)), (tail.rotation.x = 0.2 * Math.sin(2.5 * t));
+    });
+  };
+
+  // IMMUTO: small orange dog guarding a ring of chain links
+  C15.immuto = (g) => {
+    const o2 = cm("#f0a02a"),
+      dog = new THREE.Group();
+    g.add(dog);
+    R(T.sphere(1, 16, 12), o2, dog, [0, 0.95, 0], null, [0.42, 0.38, 0.6]);
+    const legs = [
+      [-0.22, 0.32],
+      [0.22, 0.32],
+      [-0.22, -0.35],
+      [0.22, -0.35],
+    ].map(([px, pz], k) => {
+      const lg = new THREE.Group();
+      lg.position.set(px, 0.75, pz), dog.add(lg), R(T.cyl(0.08, 0.07, 0.6, 6), o2, lg, [0, -0.3, 0]), (lg.userData.ph = k % 3 ? Math.PI : 0);
+      return lg;
+    });
+    const head = new THREE.Group();
+    head.position.set(0, 1.35, 0.55), dog.add(head);
+    R(T.sphere(0.3, 14, 10), o2, head), R(T.box(0.26, 0.2, 0.25), cm("#e8902a"), head, [0, -0.06, 0.28]), R(T.sphere(0.05, 6, 4), cb("#3a2010"), head, [0, -0.02, 0.42]);
+    const ears = [-1, 1].map((sx) => R(T.sphere(1, 8, 6), cm("#c87a1a"), head, [sx * 0.28, 0.02, -0.02], [0, 0, sx * 0.4], [0.07, 0.2, 0.12]));
+    eyes(head, 0.12, 0.1, 0.24, 0.05, "#14141e", "#14141e");
+    const tail = new THREE.Group();
+    tail.position.set(0, 1.1, -0.6), dog.add(tail), R(T.cyl(0.03, 0.05, 0.4, 5), o2, tail, [0, 0.2, 0], [-0.4, 0, 0]);
+    const chain = new THREE.Group();
+    g.add(chain);
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * l;
+      R(T.torus(0.2, 0.05, 6, 14), cm("#c8782a", { shininess: 90, specular: 13421772 }), chain, [1.1 * Math.cos(a), 0.12, 1.1 * Math.sin(a)], [k % 2 ? Math.PI / 2 : 0, -a, 0]);
+    }
+    return life(g, (t, dt, s) => {
+      legs.forEach((lg) => (lg.rotation.x = 0.5 * Math.sin(8 * t + lg.userData.ph) * s.wk));
+      (tail.rotation.z = 0.5 * Math.sin(10 * t)), (chain.rotation.y = 0.1 * t), (head.rotation.x = -0.15 * s.tk * Math.abs(Math.sin(9 * t)));
+      ears.forEach((e, k) => (e.rotation.z = (k ? -1 : 1) * (0.4 + 0.1 * Math.sin(3 * t))));
+    });
+  };
+
+  // SEALIO: mint-condition seal sealed in a bubble, trading cards orbiting
+  C15.sealio = (g) => {
+    const mint = cm("#9af0c8", { shininess: 80 }),
+      card = tex(96, 128, (c) => {
+        (c.fillStyle = "#e870c8"), c.fillRect(0, 0, 96, 128), (c.fillStyle = "#ffd8e8"), c.fillRect(8, 8, 80, 112);
+        (c.fillStyle = "#e85a5a"), c.beginPath(), c.arc(48, 60, 26, 0, l), c.fill(), (c.fillStyle = "#ffffff"), c.fillRect(36, 52, 7, 9), c.fillRect(54, 52, 7, 9);
+      }),
+      body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 18, 14), mint, body, [0, 0.75, 0], null, [0.6, 0.62, 0.7]);
+    R(T.sphere(0.42, 16, 12), mint, body, [0, 1.45, 0.25]);
+    eyes(body, 0.15, 1.52, 0.6, 0.06, "#14141e", "#14141e");
+    [-1, 1].forEach((sx) => R(T.sphere(1, 8, 6), mint, body, [sx * 0.55, 0.45, 0.3], [0, 0, sx * 0.6], [0.32, 0.08, 0.16]));
+    R(T.sphere(1.05, 20, 16), cm("#e8fff4", { transparent: !0, opacity: 0.25, depthWrite: !1, shininess: 120 }), g, [0, 1.0, 0.05]);
+    R(T.box(0.5, 0.2, 0.02), cm("#f4f8e0"), g, [0, 2.15, 0], [0, 0, 0.1]);
+    const cards = [0, 1].map((k) => {
+      const cg = new THREE.Group();
+      g.add(cg), R(T.plane(0.48, 0.64), cb("#ffffff", { map: card }), cg);
+      return cg;
+    });
+    return life(g, (t, dt, s) => {
+      (body.position.y = 0.05 * Math.sin(2 * t)), (body.rotation.y = 0.2 * Math.sin(0.8 * t) + 0.3 * s.tk * Math.sin(8 * t));
+      cards.forEach((cg, k) => {
+        const a = 0.6 * t + k * Math.PI;
+        cg.position.set(1.4 * Math.cos(a), 1.2 + 0.15 * Math.sin(2 * t + k), 1.4 * Math.sin(a)), (cg.rotation.y = -a + Math.PI / 2);
+      });
+    });
+  };
+
+  // DECIBELLE: grape-cluster song-sprite on a rock, green crystals, signal arcs
+  C15.decibelle = (g) => {
+    const rock = new THREE.Group();
+    g.add(rock);
+    R(T.dodeca(0.6, 0), cm("#6a6a6e"), rock, [0, 0.45, 0], null, [1.1, 0.8, 1]);
+    R(T.dodeca(0.38, 0), cm("#5a5a60"), rock, [0.45, 0.3, -0.25]);
+    const cl = new THREE.Group();
+    cl.position.set(0, 0.95, 0), g.add(cl);
+    for (let k = 0; k < 14; k++) {
+      const yy = 0.15 * Math.floor(k / 4),
+        a = k * 2.2;
+      R(T.sphere(0.24, 12, 10), cm(k % 2 ? "#9a6ae8" : "#7a4ad8", { shininess: 70 }), cl, [0.28 * Math.cos(a) * (1 - yy), 0.25 + 0.38 * yy * 2.6, 0.28 * Math.sin(a) * (1 - yy)]);
+    }
+    eyes(cl, 0.13, 0.75, 0.42, 0.06, "#ffffff", "#14141e");
+    [-1, 1].forEach((sx) => R(T.ico(0.16, 0), cm("#8adf3a", { shininess: 90 }), cl, [sx * 0.42, 0.7, 0.05], [0.3, 0, sx * 0.4], [0.7, 1.4, 0.7]));
+    const feel = [-1, 1].map((sx) => {
+      const f = new THREE.Group();
+      f.position.set(sx * 0.12, 1.4, 0), cl.add(f), R(T.cyl(0.012, 0.012, 0.45, 4), cm("#3a2a5a"), f, [0, 0.22, 0], [0, 0, sx * 0.2]), R(T.sphere(0.04, 6, 4), cm("#3a2a5a"), f, [sx * 0.05, 0.45, 0]);
+      return f;
+    });
+    const sig = new THREE.Group();
+    sig.position.set(0, 2.85, 0), g.add(sig);
+    [0.12, 0.22, 0.32].forEach((r) => R(T.torus(r, 0.025, 4, 16, Math.PI / 2), cb("#ffb83a"), sig, [0, -0.15, 0], [0, 0, Math.PI / 4]));
+    return life(g, (t, dt, s) => {
+      cl.scale.y = 1 + 0.04 * Math.sin(2.4 * t) + 0.08 * s.tk * Math.sin(12 * t);
+      feel.forEach((f, k) => (f.rotation.z = 0.2 * Math.sin(3 * t + k * 2)));
+      sig.scale.setScalar(1 + 0.1 * Math.sin(4 * t)), (sig.rotation.y = 0.3 * t);
+    });
+  };
+
+  // SEEDRIC: round green chance-spirit with forehead dice
+  C15.seedric = (g) => {
+    const gr = cm("#5ae86a", { shininess: 60 }),
+      die = tex(64, 64, (c) => {
+        (c.fillStyle = "#e8fbff"), c.fillRect(0, 0, 64, 64), (c.fillStyle = "#2a6ae8");
+        [
+          [16, 16],
+          [48, 16],
+          [32, 32],
+          [16, 48],
+          [48, 48],
+        ].forEach(([px, py]) => (c.beginPath(), c.arc(px, py, 6, 0, l), c.fill()));
+      }),
+      rootG = new THREE.Group();
+    g.add(rootG);
+    R(T.sphere(0.85, 18, 14), gr, rootG, [0, 0.95, 0]);
+    const head = new THREE.Group();
+    head.position.set(0, 1.85, 0.05), rootG.add(head);
+    R(T.sphere(0.5, 16, 12), gr, head, [0, 0, 0], null, [1, 0.85, 0.95]);
+    [-1, 1].forEach((sx) => {
+      R(T.cone(0.16, 0.5, 6), gr, head, [sx * 0.5, 0.15, -0.05], [0, 0, -sx * 1.2]);
+      R(T.circle(0.08, 10), cm("#ff6ab0"), head, [sx * 0.27, -0.05, 0.42], [0, sx * 0.4, 0]);
+    });
+    eyes(head, 0.14, 0.1, 0.38, 0.06, "#ffffff", "#14141e");
+    const dice = [0, 1].map((k) => R(T.box(0.22, 0.22, 0.22), cm("#ffffff", { map: die }), head, [-0.12 + 0.24 * k, 0.48, 0.1], [0.3, 0.5 * k, 0.2]));
+    [-1, 1].forEach((sx) => R(T.sphere(1, 10, 8), gr, rootG, [sx * 0.4, 0.12, 0.25], null, [0.26, 0.12, 0.34]));
+    [-1, 1].forEach((sx) => R(T.sphere(1, 10, 8), gr, rootG, [sx * 0.85, 1.0, 0.15], null, [0.22, 0.12, 0.14]));
+    return life(g, (t, dt, s) => {
+      (rootG.position.y = 0.07 * Math.abs(Math.sin(2.5 * t)) + 0.15 * Math.abs(Math.sin(6 * t)) * s.wk);
+      dice.forEach((d, k) => ((d.rotation.x += dt * (0.4 + 6 * s.tk)), (d.rotation.y += dt * (0.3 + 4 * s.tk) * (k ? -1 : 1))));
+    });
+  };
+
+  // PATCHOULI: lime mender with a monitor head showing "adb", backpack button
+  C15.patchouli = (g) => {
+    const lime = cm("#c8e84a", { shininess: 50 }),
+      scr = tex(128, 96, (c) => {
+        (c.fillStyle = "#1a2a3a"), c.fillRect(0, 0, 128, 96), (c.fillStyle = "#5ab4ff");
+        for (let k = 0; k < 3; k++) c.fillRect(10, 10 + 12 * k, 60 + 20 * Math.sin(k), 6);
+        (c.fillStyle = "#ffffff"), (c.font = "bold 26px monospace"), c.fillText("adb", 60, 80);
+      }),
+      side = textTex(96, 96, "#1a2a3a", "#5af0ff", ":)", "bold 48px monospace"),
+      rootG = new THREE.Group();
+    g.add(rootG);
+    R(T.sphere(1, 16, 12), lime, rootG, [0, 0.85, -0.1], null, [0.55, 0.5, 0.6]);
+    const legs = legsPair(rootG, [-0.28, 0.28], 0.55, 0.55, 0.1, "#d8e84a", null);
+    R(T.box(0.4, 0.2, 0.3), cm("#7a7a82"), rootG, [0, 1.3, -0.45]), R(T.sphere(0.17, 12, 8), cm("#3a9ae8", { shininess: 90 }), rootG, [0, 1.42, -0.45], null, [1, 0.6, 1]);
+    const neck = new THREE.Group();
+    neck.position.set(0, 1.15, 0.25), (neck.rotation.x = 0.45), rootG.add(neck);
+    R(T.cyl(0.13, 0.2, 0.9, 10), lime, neck, [0, 0.45, 0]);
+    const head = new THREE.Group();
+    head.position.set(0, 0.95, 0.05), (head.rotation.x = -0.45), neck.add(head);
+    R(T.box(0.7, 0.52, 0.46), cm("#8a8e96"), head);
+    R(T.plane(0.6, 0.42), cb("#ffffff", { map: scr }), head, [0, 0, 0.235]);
+    R(T.plane(0.36, 0.36), cb("#ffffff", { map: side }), head, [0.355, 0, 0], [0, Math.PI / 2, 0]);
+    for (let k = 0; k < 4; k++) R(T.box(0.06, 0.06, 0.03), cm("#f4f4f4"), head, [-0.12 + 0.08 * k, -0.33, 0.2]);
+    const arms = [-1, 1].map((sx) => {
+      const a = new THREE.Group();
+      a.position.set(sx * 0.48, 1.0, 0.15), rootG.add(a), R(T.cyl(0.05, 0.04, 0.6, 6), lime, a, [sx * 0.15, -0.25, 0.1], [0.3, 0, sx * 0.5]);
+      return a;
+    });
+    return life(g, (t, dt, s) => {
+      const w = Math.sin(6 * t) * s.wk;
+      (legs[0].rotation.x = 0.5 * w), (legs[1].rotation.x = -0.5 * w);
+      (neck.rotation.x = 0.45 + 0.08 * Math.sin(1.2 * t)), (head.rotation.z = 0.15 * s.tk * Math.sin(8 * t));
+      arms.forEach((a, k) => (a.rotation.x = 0.25 * Math.sin(2 * t + k * 2)));
+    });
+  };
+
+  // INTERSTITIA: green sprite peeking over a pop-up window panel on legs
+  C15.interstitia = (g) => {
+    const win = tex(256, 200, (c) => {
+        (c.fillStyle = "#f4f8ff"), c.fillRect(0, 0, 256, 200), (c.fillStyle = "#5a8ae8"), c.fillRect(0, 0, 256, 26);
+        (c.fillStyle = "#9ab8f0");
+        for (let k = 0; k < 4; k++) c.fillRect(18, 44 + 22 * k, 150 + 40 * Math.sin(k), 10);
+        (c.strokeStyle = "#3a5ab8"), (c.lineWidth = 4), c.strokeRect(24, 148, 70, 34), c.strokeRect(150, 148, 86, 34);
+        (c.fillStyle = "#3a5ab8"), (c.font = "bold 20px monospace"), c.fillText("OK", 46, 172), c.fillText("CLOSE", 160, 172);
+      }),
+      panel = new THREE.Group();
+    g.add(panel);
+    R(T.box(1.5, 1.2, 0.08), cm("#e8f0ff"), panel, [0, 1.25, 0]);
+    R(T.plane(1.44, 1.14), cb("#ffffff", { map: win }), panel, [0, 1.25, 0.045]);
+    const legs = [-0.45, 0.45].map((px) => {
+      const lg = new THREE.Group();
+      lg.position.set(px, 0.65, 0), panel.add(lg), R(T.cyl(0.07, 0.07, 0.65, 8), cm("#f2c22e"), lg, [0, -0.32, 0]);
+      [0.15, 0.4].forEach((yy) => R(T.torus(0.08, 0.025, 6, 12), cm("#5ad84a"), lg, [0, -yy, 0], [Math.PI / 2, 0, 0]));
+      return lg;
+    });
+    R(T.sphere(1, 10, 8), cm("#f2c22e"), panel, [0.7, 0.12, -0.3], [0, 0.5, 0], [0.45, 0.07, 0.15]);
+    const sprite = new THREE.Group();
+    sprite.position.set(0.1, 1.88, -0.05), g.add(sprite);
+    R(T.sphere(0.32, 14, 12), cm("#6ad84a"), sprite);
+    [-1, 0, 1].forEach((k) => R(T.cone(0.05, 0.16, 4), cm("#f2a02a"), sprite, [0.1 * k, 0.32, 0], [0, 0, -0.3 * k]));
+    eyes(sprite, 0.13, 0.08, 0.26, 0.08, "#ffffff", "#14141e");
+    const hands = [-1, 1].map((sx) => R(T.sphere(0.08, 8, 6), cm("#6ad84a"), sprite, [sx * 0.42, -0.2, 0.12]));
+    return life(g, (t, dt, s) => {
+      const peek = 0.5 + 0.5 * Math.sin(0.8 * t);
+      (sprite.position.y = 1.7 + 0.22 * peek + 0.1 * s.tk * Math.abs(Math.sin(9 * t))), (sprite.rotation.z = 0.2 * Math.sin(0.8 * t));
+      legs.forEach((lg, k) => (lg.rotation.x = 0.4 * Math.sin(7 * t + k * Math.PI) * s.wk));
+      hands.forEach((hd, k) => (hd.position.y = -0.2 + 0.05 * Math.sin(3 * t + k)));
+    });
+  };
+
+  // ETCHELON: segmented yellow record-bearer in a stone ring, shield and medallions
+  C15.etchelon = (g) => {
+    const yl = cm("#f2c82a", { shininess: 60 }),
+      shield = textTex(96, 112, "rgba(0,0,0,0)", "#c8302a", "R", "bold 64px Georgia", (c) => {
+        (c.fillStyle = "#ffb83a"), c.beginPath(), c.moveTo(8, 8), c.lineTo(88, 8), c.lineTo(88, 60), c.quadraticCurveTo(48, 112, 8, 60), c.closePath(), c.fill();
+      }),
+      medal = tex(96, 96, (c) => {
+        (c.fillStyle = "#8a3ae8"), c.fillRect(0, 0, 96, 96), (c.fillStyle = "#ffffff"), c.beginPath(), c.arc(48, 48, 30, 0, l), c.fill();
+        (c.fillStyle = "#e8502a"), c.beginPath(), c.arc(48, 48, 22, 0, l), c.fill(), (c.fillStyle = "#ffd23a"), c.fillRect(44, 30, 8, 36);
+      });
+    R(T.torus(1.0, 0.22, 10, 28), cm("#c8ccd4", { shininess: 90 }), g, [0, 0.22, 0], [Math.PI / 2, 0, 0]);
+    const body = new THREE.Group();
+    g.add(body);
+    const segs = [
+      [0, 0.65, 0.55],
+      [0.05, 1.3, 0.45],
+      [0.1, 1.85, 0.36],
+    ].map(([px, py, r]) => R(T.sphere(r, 16, 12), yl, body, [px, py, 0]));
+    R(T.plane(0.42, 0.5), cb("#ffffff", { map: shield, transparent: !0 }), body, [0.05, 1.3, 0.46]);
+    eyes(body, 0.13, 1.95, 0.3, 0.06, "#14141e", "#14141e");
+    const md = [-1, 1].map((sx) => R(T.plane(0.42, 0.42), cb("#ffffff", { map: medal }), g, [sx * 0.95, 2.35, 0]));
+    return life(g, (t, dt, s) => {
+      segs.forEach((sg, k) => (sg.position.x = 0.05 * k + 0.05 * Math.sin(1.5 * t + k)));
+      body.rotation.z = 0.04 * Math.sin(1.2 * t) + 0.1 * s.tk * Math.sin(12 * t);
+      md.forEach((m, k) => ((m.position.y = 2.35 + 0.1 * Math.sin(1.7 * t + 2 * k)), (m.rotation.y = 0.4 * Math.sin(t + k))));
+    });
+  };
+
+  // ZORTO: lavender kite-sized wind spirit with four long wings and trailing tendrils
+  C15.zorto = (g) => {
+    const lav = cm("#c8c8f8", { shininess: 60 }),
+      fl = new THREE.Group();
+    g.add(fl);
+    R(T.sphere(1, 16, 12), lav, fl, [0, 1.35, 0], null, [0.32, 0.45, 0.3]);
+    R(T.torus(0.3, 0.05, 6, 18), cm("#a83ae8"), fl, [0, 1.15, 0], [Math.PI / 2, 0, 0]);
+    eyes(fl, 0.1, 1.55, 0.24, 0.05, "#ffffff", "#14141e");
+    const wings = [0, 1, 2, 3].map((k) => {
+      const w = new THREE.Group();
+      w.position.set(0, 1.65, 0), (w.rotation.z = (k - 1.5) * 0.5), (w.rotation.y = k % 2 ? 0.3 : -0.3), fl.add(w);
+      R(T.sphere(1, 10, 8), lav, w, [0, 0.55, 0], null, [0.1, 0.6, 0.04]);
+      return w;
+    });
+    const tend = [];
+    for (let k = 0; k < 4; k++) {
+      const tg = new THREE.Group();
+      tg.position.set(0.15 * Math.cos(k * 1.6), 1.0, 0.15 * Math.sin(k * 1.6)), fl.add(tg);
+      R(T.cyl(0.03, 0.015, 0.8, 5), lav, tg, [0, -0.4, 0]), tend.push(tg);
+    }
+    R(T.sphere(0.13, 10, 8), cm("#c8f03a"), tend[0], [0, -0.85, 0]);
+    const conf = [];
+    for (let k = 0; k < 8; k++) conf.push(R(T.box(0.06, 0.06, 0.01), cb(["#ff5fb0", "#ffd23a", "#a83ae8"][k % 3]), fl, [0, 1.5, 0]));
+    return life(g, (t, dt, s) => {
+      (fl.position.y = 0.2 + 0.15 * Math.sin(1.4 * t)), (fl.rotation.y = 0.2 * Math.sin(0.5 * t));
+      wings.forEach((w, k) => (w.rotation.z = (k - 1.5) * (0.5 + 0.15 * Math.sin(2 * t) + 0.25 * s.tk * Math.abs(Math.sin(10 * t)))));
+      tend.forEach((tg, k) => ((tg.rotation.x = 0.3 * Math.sin(2 * t + k)), (tg.rotation.z = 0.3 * Math.cos(1.7 * t + k))));
+      conf.forEach((c, k) => {
+        const a = 0.8 * t + k;
+        c.position.set(0.9 * Math.cos(a), 1.4 + 0.5 * Math.sin(1.3 * a), 0.9 * Math.sin(a)), (c.rotation.z = 3 * t + k);
+      });
+    });
+  };
+
+  // GIGGLYPH: cyan joker blob standing in a little pink-rimmed pool
+  C15.gigglyph = (g) => {
+    const cy = cm("#3ad8e8", { shininess: 70 });
+    R(T.circle(1.1, 28), cm("#e8f8ff", { shininess: 90 }), g, [0, 0.03, 0], [-Math.PI / 2, 0, 0]);
+    R(T.torus(1.1, 0.07, 6, 32), cm("#ff7ac8"), g, [0, 0.05, 0], [Math.PI / 2, 0, 0]);
+    const body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 16, 12), cy, body, [0, 0.85, 0], null, [0.48, 0.65, 0.45]);
+    R(T.sphere(1, 12, 10), cm("#e8f0a8"), body, [0, 0.7, 0.28], null, [0.28, 0.35, 0.2]);
+    R(T.sphere(0.4, 14, 12), cy, body, [0, 1.6, 0.05]);
+    R(T.box(0.34, 0.14, 0.05), cb("#14141e"), body, [0, 1.48, 0.38]);
+    for (let k = 0; k < 4; k++) R(T.box(0.06, 0.06, 0.02), cb("#ffffff"), body, [-0.12 + 0.08 * k, 1.53, 0.41]);
+    eyes(body, 0.14, 1.72, 0.33, 0.06, "#ffffff", "#14141e");
+    for (let k = 0; k < 5; k++) R(T.cone(0.04, 0.12, 4), cy, body, [0.25 * Math.cos(k), 1.98, 0.2 * Math.sin(k)]);
+    const tail = R(T.box(0.5, 0.06, 0.18), cy, body, [0.35, 0.3, -0.35], [0, 0.6, 0]);
+    const sq = [0, 1].map((k) => R(T.box(0.2, 0.2, 0.02), cm("#f2a02a"), g, [0, 2.3, 0]));
+    return life(g, (t, dt, s) => {
+      (body.position.y = 0.05 * Math.sin(3 * t)), (body.rotation.z = 0.08 * Math.sin(2 * t) + 0.15 * s.tk * Math.sin(14 * t));
+      sq.forEach((q, k) => {
+        const a = t + k * Math.PI;
+        q.position.set(0.8 * Math.cos(a), 2.3 + 0.15 * Math.sin(2 * a), 0.4 * Math.sin(a)), (q.rotation.z = 2 * t);
+      });
+      tail.rotation.y = 0.6 + 0.3 * Math.sin(4 * t);
+    });
+  };
+
+  // GEMWING: magenta gem-guardian with four wide wing-tentacles and pink fronds
+  C15.gemwing = (g) => {
+    const mg = cm("#e83ab8", { shininess: 60 }),
+      pr = cm("#7a3ae8", { shininess: 60 }),
+      body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 16, 12), mg, body, [0, 1.0, 0], null, [0.35, 0.4, 0.32]);
+    R(T.sphere(0.32, 14, 12), mg, body, [0, 1.55, 0.05]);
+    eyes(body, 0.12, 1.6, 0.27, 0.05, "#ffffff", "#14141e");
+    for (let k = 0; k < 3; k++) R(T.cone(0.05, 0.2, 4), mg, body, [0.1 * (k - 1), 1.9, 0], [0, 0, -0.3 * (k - 1)]);
+    const fr = [];
+    for (let k = 0; k < 8; k++) {
+      const f = new THREE.Group();
+      f.position.set(0, 1.85, -0.05), (f.rotation.z = (k - 3.5) * 0.28), body.add(f), R(T.sphere(1, 8, 6), cm("#ff6ad0"), f, [0, 0.4, 0], null, [0.05, 0.4, 0.03]), fr.push(f);
+    }
+    const wings = [0, 1, 2, 3].map((k) => {
+      const w = new THREE.Group();
+      w.position.set(0, 0.95, 0), (w.rotation.y = (k / 4) * l + l / 8), body.add(w);
+      const seg = new THREE.Group();
+      (seg.rotation.z = -1.25), w.add(seg);
+      R(T.sphere(1, 10, 8), pr, seg, [0, 0.75, 0], null, [0.16, 0.8, 0.07]);
+      R(T.sphere(0.06, 6, 4), cm("#ff6ad0"), seg, [0, 1.2, 0.07]);
+      return seg;
+    });
+    const pod = new THREE.Group();
+    pod.position.set(0.95, 0, 0.6), g.add(pod);
+    R(T.cyl(0.25, 0.3, 0.1, 14), cm("#e8e8ec"), pod, [0, 0.05, 0]), R(T.ico(0.16, 0), cm("#3ae86a", { shininess: 120 }), pod, [0, 0.25, 0], null, [1, 1.3, 1]);
+    const gems = [];
+    for (let k = 0; k < 5; k++) gems.push(R(T.ico(0.05, 0), cm(["#3ae86a", "#ff5fb0", "#5ab4ff"][k % 3], { shininess: 120 }), g, [0, 0.5, 0]));
+    return life(g, (t, dt, s) => {
+      wings.forEach((w, k) => (w.rotation.z = -1.25 + 0.12 * Math.sin(1.6 * t + k) + 0.3 * s.tk * Math.sin(8 * t)));
+      fr.forEach((f, k) => (f.rotation.x = 0.15 * Math.sin(2 * t + k)));
+      (body.position.y = 0.04 * Math.sin(2 * t)),
+        gems.forEach((gm, k) => {
+          const a = 0.7 * t + (k / 5) * l;
+          gm.position.set(1.1 * Math.cos(a), 0.4 + 0.2 * Math.sin(3 * t + k), 1.1 * Math.sin(a)), (gm.rotation.y = 2 * t);
+        });
+    });
+  };
+
+  // AURAMEL: pink segmented kindness-sensor with a yellow tuft, PK cards and a bead trail
+  C15.auramel = (g) => {
+    const pk = cm("#f2a8a0", { shininess: 40 }),
+      card = textTex(96, 128, "#f2e85a", "#ffffff", "PK", "bold 30px Arial", (c) => {
+        (c.fillStyle = "#3ab84a"), c.beginPath(), c.arc(48, 66, 26, 0, l), c.fill();
+      }),
+      body = new THREE.Group();
+    g.add(body);
+    const segs = [];
+    for (let k = 0; k < 4; k++) segs.push(R(T.sphere(0.4 - 0.05 * k, 14, 12), pk, body, [0, 0.55 + 0.42 * k, 0], null, [1, 0.8, 0.9]));
+    for (let k = 0; k < 3; k++) R(T.torus(0.33 - 0.04 * k, 0.025, 6, 20), cm("#ffffff"), body, [0, 0.75 + 0.42 * k, 0], [Math.PI / 2, 0, 0]);
+    R(T.sphere(0.32, 14, 12), pk, body, [0, 2.15, 0.02]);
+    eyes(body, 0.11, 2.2, 0.27, 0.05, "#14141e", "#14141e");
+    for (let k = 0; k < 5; k++) R(T.cone(0.04, 0.3, 4), cm("#ffd23a"), body, [0.06 * (k - 2), 2.55, 0], [0, 0, -0.2 * (k - 2)]);
+    [-1, 1].forEach((sx) => R(T.sphere(1, 8, 6), cm("#ffffff"), body, [sx * 0.2, 0.15, 0.1], null, [0.14, 0.08, 0.2]));
+    const cards = [0, 1].map((k) => {
+      const cg = new THREE.Group();
+      g.add(cg), R(T.box(0.5, 0.66, 0.04), cm("#f2e85a"), cg), R(T.plane(0.46, 0.62), cb("#ffffff", { map: card }), cg, [0, 0, 0.022]);
+      return cg;
+    });
+    const beads = [];
+    for (let k = 0; k < 12; k++) beads.push(R(T.sphere(0.06, 8, 6), cm(k % 2 ? "#5ae8e8" : "#ff8ac8"), g, [0, 0.08, 0]));
+    return life(g, (t, dt, s) => {
+      segs.forEach((sg, k) => (sg.position.x = 0.04 * Math.sin(2 * t - k)));
+      body.rotation.z = 0.12 * s.tk * Math.sin(10 * t);
+      cards.forEach((cg, k) => {
+        const sx = k ? 1 : -1;
+        cg.position.set(sx * 1.05, 1.2 + 0.15 * Math.sin(1.5 * t + k), 0.2), (cg.rotation.y = -sx * 0.4 + 0.2 * Math.sin(t + k));
+      });
+      beads.forEach((bd, k) => {
+        const u = k / 12;
+        bd.position.set(-0.6 + 1.4 * u, 0.08, 0.8 + 0.3 * Math.sin(5 * u + 1.5 * t));
+      });
+    });
+  };
+  for (const k in C15) so["g15_" + k] = C15[k];
+  // APPTERYX (original model from GREEBLIS v15): red four-legged winged creature with back
+  // spikes, boxy snout, glowing sigils, and wing frames tipped with purple gems
+  so.g15_appteryx = (g) => {
+    const red = cm("#e8322a", { shininess: 45 }),
+      dark = cm("#a8201a"),
+      sig = tex(256, 128, (c) => {
+        (c.fillStyle = "#e8322a"), c.fillRect(0, 0, 256, 128);
+        for (let k = 0; k < 40; k++) (c.fillStyle = "rgba(90,8,6,.75)"), c.beginPath(), c.ellipse(256 * Math.random(), 128 * Math.random(), 3 + 3 * Math.random(), 6 + 4 * Math.random(), Math.random() * 3, 0, l), c.fill();
+      }),
+      skin = cm("#ffffff", { map: sig, shininess: 45 }),
+      body = new THREE.Group();
+    g.add(body);
+    R(T.sphere(1, 20, 14), skin, body, [0, 1.05, 0], null, [0.62, 0.5, 0.85]);
+    for (let k = 0; k < 7; k++) R(T.cone(0.07, 0.22, 5), cm("#f4f0e4"), body, [0, 1.52 - 0.02 * Math.abs(k - 3), -0.6 + 0.2 * k]);
+    const legs = [
+      [-0.35, 0.45],
+      [0.35, 0.45],
+      [-0.35, -0.45],
+      [0.35, -0.45],
+    ].map(([px, pz], k) => {
+      const lg = new THREE.Group();
+      lg.position.set(px, 0.75, pz), body.add(lg);
+      R(T.cyl(0.13, 0.12, 0.75, 10), red, lg, [0, -0.37, 0]), R(T.cyl(0.14, 0.14, 0.04, 10), dark, lg, [0, -0.74, 0]);
+      lg.userData.ph = k === 0 || k === 3 ? 0 : Math.PI;
+      return lg;
+    });
+    const head = new THREE.Group();
+    head.position.set(0, 1.35, 0.85), body.add(head);
+    R(T.sphere(0.36, 16, 12), red, head);
+    R(T.box(0.42, 0.3, 0.42), red, head, [0, -0.04, 0.38]);
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(0.1, 10, 8), cm("#f4d21c", { shininess: 90 }), head, [sx * 0.24, 0.12, 0.22]);
+      R(T.sphere(0.05, 8, 6), cb("#14141e"), head, [sx * 0.3, 0.13, 0.27]);
+      R(T.cone(0.06, 0.2, 4), cm("#f4f0e4"), head, [sx * 0.18, 0.36, -0.05], [0, 0, -sx * 0.4]);
+    });
+    const tail = new THREE.Group();
+    tail.position.set(0, 1.0, -0.85), (tail.rotation.x = -0.5), body.add(tail);
+    R(T.cyl(0.05, 0.12, 0.6, 8), red, tail, [0, 0.0, -0.25], [Math.PI / 2 + 0.3, 0, 0]);
+    const gemM = new THREE.MeshPhongMaterial({ color: "#c77ae6", emissive: "#5a1d78", emissiveIntensity: 0.8, shininess: 180, specular: 16777215, flatShading: !0 });
+    const wings = [-1, 1].map((sx) => {
+      const w = new THREE.Group();
+      w.position.set(sx * 0.3, 1.45, -0.2), body.add(w);
+      const pts = [
+        [0, 0, 0],
+        [sx * 0.35, 0.6, -0.25],
+        [sx * 0.65, 1.3, -0.35],
+        [sx * 0.75, 1.75, -0.2],
+      ].map((p) => new THREE.Vector3(...p));
+      R(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.045, 6), dark, w);
+      const pts2 = [
+        [0, 0, 0.05],
+        [sx * 0.15, 0.7, 0.05],
+        [sx * 0.35, 1.4, 0.1],
+        [sx * 0.45, 1.85, 0.15],
+      ].map((p) => new THREE.Vector3(...p));
+      R(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts2), 16, 0.04, 6), dark, w);
+      R(T.ico(0.11, 0), gemM, w, [sx * 0.75, 1.88, -0.2], [0.4, 0.6, 0]);
+      R(T.ico(0.09, 0), gemM, w, [sx * 0.45, 1.98, 0.15], [0.2, 0.3, 0]);
+      return w;
+    });
+    return life(g, (t, dt, s) => {
+      legs.forEach((lg) => (lg.rotation.x = 0.5 * Math.sin(7 * t + lg.userData.ph) * s.wk));
+      wings.forEach((w, k) => (w.rotation.z = (k ? -1 : 1) * (0.05 * Math.sin(1.5 * t) + 0.35 * s.tk * Math.abs(Math.sin(9 * t)))));
+      (head.rotation.x = -0.15 * s.tk * Math.abs(Math.sin(10 * t))), (head.rotation.y = 0.15 * Math.sin(0.6 * t)), (tail.rotation.y = 0.3 * Math.sin(2.5 * t));
+    });
+  };
   so.larryBiped = (g, d) => buildDino(g, d || {}, KEEPER);
 
   // ---- apply cast / text over the engine's defs (runs just before spawn) ----
   function applyCast() {
+    addV15();
     const all = Object.assign({}, e, o, n);
     if (FREEZE_NPCS) {
       const row = Object.keys(CAST).filter((id) => all[id]);
@@ -12034,6 +12726,25 @@ const JGP = (() => {
     cutebex: ["dig", 3, 0.8],
     orson: ["hop", 2, 1.2, 1],
     keeper: ["pat", 1.6, 1],
+    v15_mont: ["dig", 2.2, 0.9, 0.2],
+    v15_montbak: ["dig", 1.5, 1.1, -0.2],
+    v15_gorbo: ["wiggle", 2.6, 1.3],
+    v15_mama: ["wiggle", 1.4, 0.9],
+    v15_spark: ["scatter", 3.2, 0.8],
+    v15_bobert: ["hop", 2.4, 0.8],
+    v15_somnux: ["sniff", 0.8, 1.2],
+    v15_kingdino: ["stomp", 1.9, 1.1, 0.2],
+    v15_immuto: ["dig", 3.4, 0.6],
+    v15_sealio: ["twirl", 1.3, 1],
+    v15_decibelle: ["wiggle", 3.2, 0.7],
+    v15_seedric: ["hop", 1.6, 1.4],
+    v15_patchouli: ["pat", 2.6, 1.1],
+    v15_interstitia: ["sniff", 2.2, 0.8],
+    v15_etchelon: ["stomp", 0.9, 0.8],
+    v15_zorto: ["twirl", 1.7, 1.2],
+    v15_gigglyph: ["scatter", 2.2, 1.1, 0.2],
+    v15_gemwing: ["pat", 1.1, 1.3],
+    v15_auramel: ["hop", 2.9, 0.6, 1],
   };
   function plantMove(key, t) {
     const [type, w, a, extra = 0] = MOVES[key] || MOVES.mont,

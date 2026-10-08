@@ -145,7 +145,7 @@ const t = {
     orson: {},
   },
   r = [
-    { id: "wateringcan", slot: null, name: "Watering Can", cost: 5, reward: "wateringCan" },
+    { id: "wateringcan", slot: null, name: "Watering Cans", cost: 5, reward: "wateringCan" },
     { id: "floppyhat", slot: "hat", name: "Floppy Disk Hat", cost: 3 },
     { id: "synthshoes", slot: "shoes", name: "Synthetic Shoes", cost: 3 },
     { id: "chargedress", slot: "dress", name: "Charge Dress", cost: 3 },
@@ -7969,7 +7969,7 @@ const ee = (function () {
         log:
           "Seeds " +
           t(e.seeds) +
-          "\nWatering Can " +
+          "\nWatering Cans " +
           t(e.wateringCan) +
           "\nSnacks " +
           t(e.snacks) +
@@ -8032,7 +8032,7 @@ const ee = (function () {
       if (t.reward)
         return (
           Kt.owned.has(t.id)
-            ? (e = "You already have a Watering Can.")
+            ? (e = "You already have the Watering Cans.")
             : Kt.acorns < t.cost
               ? ((e = "You need " + (t.cost - Kt.acorns) + " more flint for the " + t.name + "."), G.bump())
               : ((Kt.acorns -= t.cost),
@@ -8045,7 +8045,7 @@ const ee = (function () {
                   } catch (e) {}
                 }, 250),
                 (e =
-                  "You bought a Watering Can! Everyone will water the garden with it. WATERING CAN reward earned!")),
+                  "You bought the Watering Cans! Everyone will water the garden with them. WATERING CANS reward earned!")),
           void _t.update({ log: e, items: this.items(), sub: this.sub() })
         );
       Kt.owned.has(t.id)
@@ -10770,7 +10770,7 @@ const xe = (() => {
                   },
                   o = (t) => (t ? "☑" : "☐");
                 e(36, "SEEDS", o(n.seeds), M.lime),
-                  e(88, "WATERING CAN", o(n.wateringCan), "#5ab4ff"),
+                  e(88, "WATERING CANS", o(n.wateringCan), "#5ab4ff"),
                   e(140, "SNACKS", o(n.snacks), "#f2c42e");
               }));
           })(0, v);
@@ -11311,7 +11311,7 @@ const JGP = (() => {
     blinker: { name: "DILO", plan: "dilo", color: "#2fd4e6", accent: "#ff5fb0" },
     slugwerth: { name: "BRONTO", plan: "longneck", color: "#2c5fe0", accent: "#1a3a90", scale: 0.8 },
     jumper: { name: "SPINO", plan: "spino", color: "#c85a6a", accent: "#ffb84a" },
-    appterix: { name: "PARA", plan: "para", color: "#a8c84a", accent: "#4a7a2a" },
+    appterix: { name: "APPTERIX", plan: "rex", builder: "appterixRex", color: "#dc3322", accent: "#a8201a" },
     // roaming creatures (respawn after battles)
     kingdino: { name: "REX", plan: "rex", color: "#b8402a", accent: "#f2c72e" },
     cutebex: { name: "PROTO", plan: "proto", color: "#e6c42e", accent: "#8a6a1a" },
@@ -11356,7 +11356,7 @@ const JGP = (() => {
   function buildDino(root, def, opts) {
     const P = PLANS[opts.plan] || PLANS.raptor,
       col = opts.color || def.color || "#6fa33a",
-      skin = x.clay(col, { shininess: 22 }),
+      skin = opts.skinMat || x.clay(col, { shininess: 22 }),
       belly = x.clay("#" + tint(col, 0.45).getHexString(), { shininess: 16 }),
       dark = x.clay("#" + tint(col, -0.35).getHexString(), { shininess: 16 }),
       acc = x.clay(opts.accent || "#" + tint(col, -0.45).getHexString(), { shininess: 30 }),
@@ -11530,6 +11530,7 @@ const JGP = (() => {
       height,
       carry,
       head: crown,
+      body,
       crownY: hh * 0.92,
       onTalk() {
         talkT = 1.4;
@@ -11561,6 +11562,83 @@ const JGP = (() => {
   }
   so.dino = buildDino;
   // the shopkeeper is built from this hook during boot (see Se())
+  // APPTERIX: the Greeblis City archaeologist rebuilt on the REX body plan. Keeps his mottled
+  // red skin, boxy snout, big yellow eyes, fedora, coiled whip and purple crystal stalks.
+  let apptSkin = null;
+  function appterixRex(g, d, opts) {
+    if (!apptSkin) {
+      let sd = 23;
+      const r2 = () => ((sd = (16807 * sd) % 2147483647) / 2147483647),
+        tex = b(
+          256,
+          256,
+          (c) => {
+            (c.fillStyle = "#dc3322"), c.fillRect(0, 0, 256, 256);
+            for (let k = 0; k < 700; k++) {
+              const px = 256 * r2(),
+                py = 256 * r2(),
+                gr = c.createRadialGradient(px, py, 0, px, py, 6 + 14 * r2());
+              gr.addColorStop(0, r2() < 0.5 ? "rgba(120,10,6,.10)" : "rgba(240,90,70,.10)"), gr.addColorStop(1, "rgba(0,0,0,0)");
+              (c.fillStyle = gr), c.fillRect(px - 20, py - 20, 40, 40);
+            }
+            c.lineCap = "round";
+            for (let k = 0; k < 200; k++) {
+              const px = 256 * r2(),
+                py = 256 * r2(),
+                an = r2() * l,
+                ln = 2 + 8 * r2();
+              (c.strokeStyle = r2() < 0.6 ? "rgba(250,200,180,.32)" : "rgba(100,10,6,.28)"), (c.lineWidth = 0.5 + 0.6 * r2());
+              c.beginPath(), c.moveTo(px, py), c.lineTo(px + Math.cos(an) * ln, py + Math.sin(an) * ln), c.stroke();
+            }
+          },
+          { smooth: !0 },
+        );
+      (tex.wrapS = tex.wrapT = THREE.RepeatWrapping), tex.repeat.set(2, 2);
+      apptSkin = new THREE.MeshPhongMaterial({ map: tex, bumpMap: tex, bumpScale: 0.018, shininess: 45, specular: 6710886, emissive: "#3a0804" });
+    }
+    const res = buildDino(g, d, Object.assign({ plan: "rex", color: "#dc3322", accent: "#a8201a", skinMat: apptSkin }, opts)),
+      P = PLANS.rex,
+      [hw, hh, hl] = P.head,
+      cr = res.head,
+      yellow = x.clay("#f4d21c", { shininess: 90, specular: 16777215 }),
+      black = x.clay("#0c0c10", { shininess: 160, specular: 16777215 }),
+      hatM = x.clay("#7a5a3a", { shininess: 12 }),
+      bandM = x.clay("#3a2618", { shininess: 20 }),
+      gemM = new THREE.MeshPhongMaterial({ color: "#c77ae6", emissive: "#5a1d78", emissiveIntensity: 0.8, shininess: 180, specular: 16777215, flatShading: !0 });
+    // boxy snout over the round one
+    R(T.box(hw * 1.45, hh * 1.05, hl * 1.35), apptSkin, cr, [0, -hh * 0.18, hl * 0.78]);
+    R(T.box(hw * 1.5, hh * 0.08, hl * 1.37), x.clay("#a8201a"), cr, [0, -hh * 0.7, hl * 0.78]);
+    // big yellow eyes with black pupils
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(hh * 0.42, 16, 12), yellow, cr, [sx * hw * 0.82, hh * 0.38, hl * 0.12]);
+      R(T.sphere(hh * 0.22, 12, 10), black, cr, [sx * hw * 1.12, hh * 0.42, hl * 0.26]);
+      R(T.sphere(hh * 0.06, 6, 4), x.basic("#ffffff"), cr, [sx * hw * 1.22, hh * 0.5, hl * 0.33]);
+    });
+    // explorer's fedora
+    const hat = new THREE.Group();
+    hat.position.set(0, hh * 0.85, -hl * 0.05), hat.rotation.set(-0.12, 0, 0.08), cr.add(hat);
+    R(T.cyl(hw * 1.55, hw * 1.55, 0.035, 20), hatM, hat, [0, 0, 0], null, [1, 1, 1.1]);
+    R(T.cyl(hw * 0.85, hw * 1, 0.24, 16), hatM, hat, [0, 0.13, 0]);
+    R(T.cyl(hw * 1.01, hw * 1.01, 0.06, 16), bandM, hat, [0, 0.05, 0]);
+    R(T.box(hw * 1.2, 0.05, hw * 0.25), hatM, hat, [0, 0.255, 0]);
+    // purple crystal stalks
+    [
+      [0.12, 0.75, -0.5, 0.35],
+      [-0.1, 0.45, -0.35, -0.3],
+    ].forEach(([px, len, tilt, side]) => {
+      const st = new THREE.Group();
+      st.position.set(px, hh * 0.8, -hl * 0.35), st.rotation.set(tilt, 0, side), cr.add(st);
+      R(T.cyl(0.025, 0.035, len, 6), x.clay("#a8201a"), st, [0, len / 2, 0]);
+      R(T.ico(0.09, 0), gemM, st, [0, len + 0.06, 0], [0.3, 0.6, 0], [0.8, 1.3, 0.8]);
+    });
+    // coiled whip at the hip
+    const whip = new THREE.Group();
+    whip.position.set(P.body[0] * 1.02, -P.body[1] * 0.15, -P.body[2] * 0.15), (whip.rotation.y = Math.PI / 2), res.body.add(whip);
+    for (let k = 0; k < 4; k++) R(T.torus(0.17 - 0.012 * k, 0.022, 6, 18), x.clay(k % 2 ? "#5a3418" : "#7a4a22"), whip, [0, 0, 0.02 * k]);
+    R(T.cyl(0.03, 0.035, 0.28, 6), bandM, whip, [0.18, -0.1, 0.05], [0, 0, 0.7]);
+    return res;
+  }
+  so.appterixRex = appterixRex;
   so.larryBiped = (g, d) => buildDino(g, d || {}, KEEPER);
 
   // ---- apply cast / text over the engine's defs (runs just before spawn) ----
@@ -11586,7 +11664,7 @@ const JGP = (() => {
       }
       d.name = c.name;
       d.color = c.color;
-      d.builder = "dino";
+      d.builder = c.builder || "dino";
       d.builderOpts = { plan: c.plan, color: c.color, accent: c.accent, scale: c.scale };
       delete d.modelScale;
       // props they used to sit/lie on (kennel posts, repair bed) are gone with the city
@@ -11748,9 +11826,11 @@ const JGP = (() => {
       leafBed(1.39 * sx, 1.0, -0.75, 0.3), pile(1.39 * sx, 1.0, -0.75, sx < 0 ? ["#ff8a1a", "#ffa83a"] : ["#e8303e", "#c8203a"], sx < 0 ? 0.07 : 0.05);
       sx < 0 ? watermelon(1.39 * sx - 0.15, 1.0, -0.05) : leafBed(1.39, 1.0, -0.05, 0.25), sx > 0 && mangoes(1.39, 1.0, -0.05);
     });
-    // the Watering Can for sale sits on the counter
+    // the Watering Cans for sale sit on the counter
     const can = wateringCan(1.6);
     can.position.set(1.15, 1.12, 0.5), (can.rotation.y = -0.6), o.add(can);
+    const can2 = wateringCan(1.3);
+    can2.position.set(1.45, 1.12, 0.25), (can2.rotation.y = 0.9), o.add(can2);
   }
 
   // A natural pond (replaces the city fountain); o sits at the pool station.
@@ -11922,7 +12002,7 @@ const JGP = (() => {
     const p = { g, grow: 0, water: 0 };
     return (slot.plant = p), garden.plants.push(p), p;
   }
-  // watering can held by creatures once the Watering Can quest is done
+  // watering can held by creatures once the Watering Cans quest is done
   function wateringCan(h) {
     const g = new THREE.Group(),
       clay = x.clay("#b0643a", { shininess: 30 }),

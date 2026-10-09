@@ -7583,111 +7583,75 @@ function te(t, e) {
   t.onTalk && t.onTalk(t), qt.open(o.name, o.color, n, r || void 0);
 }
 const ee = (function () {
-    const e = 60 / 132,
+    // "Backpacka's Rain Strut": FORTIZMO's horn tune for the garden's climax. A slow, sultry swing
+    // at 88 bpm in C minor, 24 bars timed to BACKPACKA's visit: a brushed intro as he flies in, the
+    // head (muted-sounding trumpet over sax harmony and trombone pads) while he drinks, a rising
+    // bridge as he flies heavily to the garden, a full shout chorus while he sprays that lifts a
+    // whole step half way through, and a tag that ends on a long high D.
+    const e = 60 / 88,
       o = 4 * e,
       a = (e) => 440 * Math.pow(2, (e - 69) / 12),
-      n = { 7: [0, 4, 7, 10], m7: [0, 3, 7, 10], d7: [0, 3, 6, 9] },
+      n = { 7: [0, 4, 7, 10], m7: [0, 3, 7, 10], d7: [0, 3, 6, 9], M7: [0, 4, 7, 11], h: [0, 3, 6, 10], m6: [0, 3, 7, 9] },
+      // chords per bar: [root pitch class, quality], a second chord from beat 3
       r = [
-        [[5, 7]],
-        [[10, 7]],
-        [[5, 7]],
-        [
-          [0, "m7"],
-          [5, 7],
-        ],
-        [[10, 7]],
-        [[11, "d7"]],
-        [[5, 7]],
-        [[2, 7]],
-        [[7, "m7"]],
-        [[0, 7]],
-        [
-          [5, 7],
-          [2, 7],
-        ],
-        [
-          [7, "m7"],
-          [0, 7],
-        ],
+        [[8, 7]],
+        [[7, 7]],
+        [[0, "m7"]],
+        [[0, "m7"], [5, 7]],
+        [[10, "m7"], [3, 7]],
+        [[8, "M7"]],
+        [[2, "h"], [7, 7]],
+        [[0, "m7"]],
+        [[3, "m7"], [8, 7]],
+        [[1, "M7"]],
+        [[2, "m7"], [7, 7]],
+        [[8, "M7"], [7, 7]],
+        [[0, "m7"], [5, 7]],
+        [[10, "m7"], [3, 7]],
+        [[8, "M7"], [1, 7]],
+        [[7, 7]],
+        [[2, "m7"], [7, 7]],
+        [[0, "m7"], [5, 7]],
+        [[10, "M7"], [3, 7]],
+        [[9, 7]],
+        [[2, "m7"]],
+        [[3, 7]],
+        [[2, "m6"]],
+        [[2, "m6"]],
       ],
-      s = [
-        [
-          [0, 72, 1],
-          [1, 75, 1],
-          [2, 77, 2],
-          [4, 75, 1],
-          [5, 72, 1],
-          [6, 68, 1],
-          [7, 69, 1],
-        ],
-        [
-          [0, 65, 3, "v"],
-          [4, 72, 1],
-          [5, 70, 1],
-          [6, 69, 1],
-          [7, 68, 1],
-        ],
+      BARS = r.length,
+      // the lead line per bar: [eighth slot, midi note, length in eighths, "v" vibrato | "f" fall]
+      shout = [
+        [[0, 79, 1], [1, 79, 1], [2, 82, 2], [4, 79, 1], [5, 77, 1], [6, 75, 2]],
+        [[0, 77, 1], [1, 77, 1], [2, 80, 2], [4, 77, 1], [5, 75, 1], [6, 73, 2]],
+        [[0, 72, 1], [1, 75, 1], [2, 79, 1], [3, 84, 3, "v"], [6, 82, 1], [7, 79, 1]],
       ],
+      up2 = (bar) => bar.map(([s0, m0, l0, f0]) => [s0, m0 + 2, l0, f0]),
       i = [
-        s[0],
-        s[1],
-        s[0],
-        [
-          [0, 65, 2],
-          [3, 67, 1],
-          [4, 70, 1],
-          [5, 72, 1],
-          [6, 75, 2, "f"],
-        ],
-        s[0].map(([e, o, a]) => [e, o + 5, a]),
-        [
-          [0, 70, 3, "v"],
-          [4, 77, 1],
-          [5, 75, 1],
-          [6, 74, 1],
-          [7, 73, 1],
-        ],
-        s[0],
-        [
-          [0, 65, 2],
-          [2, 69, 1],
-          [3, 72, 1],
-          [4, 74, 1],
-          [5, 78, 1],
-          [6, 77, 2],
-        ],
-        [
-          [0, 74, 1],
-          [1, 72, 1],
-          [2, 70, 1],
-          [3, 69, 1],
-          [4, 67, 2],
-          [6, 70, 1],
-          [7, 74, 1],
-        ],
-        [
-          [0, 76, 3, "v"],
-          [3, 74, 1],
-          [4, 72, 1],
-          [5, 70, 1],
-          [6, 67, 2],
-        ],
-        [
-          [0, 65, 2],
-          [2, 69, 1],
-          [3, 72, 1],
-          [4, 74, 1],
-          [5, 72, 1],
-          [6, 69, 1],
-          [7, 66, 1],
-        ],
-        [
-          [0, 67, 2],
-          [2, 70, 1],
-          [3, 74, 1],
-          [4, 76, 2],
-          [6, 77, 2, "f"],
-        ],
+        [[4, 63, 2], [6, 65, 1], [7, 66, 1]],
+        [[0, 67, 4, "v"], [5, 63, 1], [6, 65, 1], [7, 66, 1]],
+        [[0, 67, 1], [1, 70, 1], [2, 72, 3, "v"], [5, 75, 1], [6, 74, 1], [7, 72, 1]],
+        [[0, 70, 2], [2, 67, 1], [3, 69, 1], [4, 72, 2], [6, 75, 2]],
+        [[0, 77, 3, "v"], [3, 75, 1], [4, 73, 1], [5, 70, 1], [6, 67, 2]],
+        [[0, 72, 2], [2, 68, 1], [3, 70, 1], [4, 72, 4, "v"]],
+        [[0, 74, 1], [1, 72, 1], [2, 71, 1], [3, 68, 1], [4, 67, 2], [6, 65, 1], [7, 66, 1]],
+        [[0, 67, 5, "f"], [6, 70, 1], [7, 72, 1]],
+        [[0, 73, 1], [1, 75, 1], [2, 78, 2], [4, 77, 1], [5, 75, 1], [6, 73, 2]],
+        [[0, 77, 3, "v"], [3, 80, 1], [4, 77, 1], [5, 72, 1], [6, 73, 2]],
+        [[0, 74, 1], [1, 77, 1], [2, 79, 1], [3, 81, 2], [5, 79, 1], [6, 77, 1], [7, 74, 1]],
+        [[0, 75, 2], [2, 72, 1], [3, 79, 3, "v"], [6, 77, 1], [7, 79, 1]],
+        shout[0],
+        shout[1],
+        shout[2],
+        [[0, 83, 2], [2, 82, 1], [3, 79, 1], [4, 77, 1], [5, 74, 1], [6, 71, 2, "f"]],
+        up2(shout[0]),
+        up2(shout[1]),
+        up2(shout[2]),
+        [[0, 85, 2], [2, 84, 1], [3, 81, 1], [4, 79, 1], [5, 76, 1], [6, 73, 2, "f"]],
+        [[0, 74, 1], [1, 77, 1], [2, 81, 3, "v"], [5, 79, 1], [6, 77, 2]],
+        [[0, 79, 1], [1, 82, 1], [2, 85, 3, "v"], [5, 82, 1], [6, 79, 2]],
+        [[0, 86, 8, "v"]],
+        [],
       ],
       l = [0, 3, 5, 6, 7, 10];
     let c = !1,
@@ -7927,88 +7891,73 @@ const ee = (function () {
       return r;
     }
     function W(o, a) {
-      const n = o % 12,
-        s = Math.floor(o / 12) % 4,
+      if (o >= BARS) return void (c = !1);
+      const n = o,
+        sec = o < 2 ? "intro" : o < 8 ? "A" : o < 12 ? "B" : o < 20 ? "S" : "T",
         l = (function (e) {
           return () => (
             (e = (e + 1831565813) | 0),
             (e = Math.imul(e ^ (e >>> 15), 1 | e)),
             (((e ^= e + Math.imul(e ^ (e >>> 7), 61 | e)) ^ (e >>> 14)) >>> 0) / 4294967296
           );
-        })(97 * Math.floor(o / 12) + n + 1),
-        c = (o) => a + e * (Math.floor(o / 2) + (o % 2 ? 2 / 3 : 0)),
-        h = (e, o) => c(e + o) - c(e),
-        p = r[(n + 1) % 12][0][0];
-      for (let o = 0; o < 4; o++) {
-        const a = A(n, 2 * o),
-          s = P(a);
-        let i;
-        (i =
-          0 === o || (r[n].length > 1 && 2 === o)
-            ? z([a[0]], 34, 45, 40)
-            : 3 === o
-              ? z([p], 34, 45, 40) + (l() < 0.5 ? 1 : -1)
-              : z(s, 34, 47, 40 + Math.round(6 * (l() - 0.5)))),
-          R(c(2 * o), i, 0.92 * e);
+        })(131 * o + 7),
+        c2 = (o) => a + e * (Math.floor(o / 2) + (o % 2 ? 2 / 3 : 0)),
+        h = (e, o) => c2(e + o) - c2(e),
+        nextRoot = r[Math.min(BARS - 1, n + 1)][0][0],
+        loud = { intro: 0.55, A: 0.72, B: 0.95, S: 1.5, T: 1.5 }[sec];
+      // bass: a pedal in the intro, a walking line after, a held root to finish
+      if ("intro" === sec) for (const k of [0, 2]) R(c2(4 * k), z([A(n, 0)[0]], 34, 45, 38), 1.8 * e);
+      else if (o >= 22) R(c2(0), z([2], 34, 45, 38), 3.8 * e);
+      else
+        for (let k = 0; k < 4; k++) {
+          const ch = A(n, 2 * k),
+            pcs = P(ch);
+          R(c2(2 * k), 0 === k || (r[n].length > 1 && 2 === k) ? z([ch[0]], 34, 45, 40) : 3 === k ? z([nextRoot], 34, 45, 40) + (l() < 0.5 ? 1 : -1) : z(pcs, 34, 47, 40 + Math.round(6 * (l() - 0.5))), 0.92 * e);
+        }
+      // drums: brushes, then ride and hats, crashes into the shout and the tag, a roll into each section
+      for (let k = 0; k < 4; k++) {
+        const g0 = ("intro" === sec ? 0.03 : 0.058) * loud;
+        H(c2(2 * k), "intro" === sec ? 3200 : 6800, "intro" === sec ? 0.7 : 0, k % 2 ? 1.25 * g0 : g0, "intro" === sec ? 0.5 : 0.32);
+        "intro" !== sec && k % 2 && (H(c2(2 * k + 1), 6800, 0, 0.04 * loud, 0.2), H(c2(2 * k), 9e3, 0, 0.045, 0.045));
+        "intro" !== sec && ("S" === sec || "T" === sec || 0 === k || 2 === k) && v(c2(2 * k), 95, 48, ("S" === sec ? 0.07 : 0.05) * loud, 0.14);
       }
-      for (let e = 0; e < 4; e++)
-        H(c(2 * e), 6800, 0, e % 2 ? 0.075 : 0.058, 0.32),
-          e % 2 && (H(c(2 * e + 1), 6800, 0, 0.04, 0.2), H(c(2 * e), 9e3, 0, 0.045, 0.045)),
-          v(c(2 * e), 95, 48, 0.05, 0.14);
-      l() < 0.45 && (H(c(7), 1800, 0.9, 0.06, 0.12), v(c(7), 210, 180, 0.03, 0.08, "triangle")),
-        11 === n &&
-          [4, 5, 6, 7].forEach((e) => {
-            H(c(e), 1800, 0.9, 0.09, 0.14), v(c(e), 220, 170, 0.04, 0.09, "triangle");
-          });
-      const f = (e) => {
-        const o = e[0],
-          a = e[1];
-        return ("m7" === a ? [3, 10, 14] : "d7" === a ? [3, 6, 9] : [4, 10, 14]).map((e) =>
-          z([(o + e) % 12], 52, 67, 58 + e / 2),
-        );
+      (12 === o || 16 === o || 20 === o || 22 === o) && H(c2(0), 5200, 0, 0.13, 1.6);
+      (1 === o || 7 === o || 11 === o || 15 === o || 19 === o) && [4, 5, 6, 7].forEach((k) => (H(c2(k), 1800, 0.9, 0.05 + 0.012 * (k - 4), 0.12), v(c2(k), 220, 170, 0.035, 0.09, "triangle")));
+      // piano: a pad under the intro and the last chord, comping in between
+      const f = (ch) => {
+        const q = ch[1],
+          iv = "m7" === q ? [3, 10, 14] : "d7" === q ? [3, 6, 9] : "M7" === q ? [4, 11, 14] : "h" === q ? [3, 6, 10] : "m6" === q ? [3, 9, 14] : [4, 10, 14];
+        return iv.map((x0) => z([(ch[0] + x0) % 12], 52, 67, 58 + x0 / 2));
       };
-      if ((S(c(0), f(A(n, 0)), 0.8 * h(0, 2), 0.026), S(c(3), f(A(n, 4)), 0.8 * h(3, 2), 0.024), 0 === s || 3 === s)) {
-        for (const [e, o, a, r] of i[n]) {
-          const i = A(n, e),
-            l = 0.9 * h(e, a);
-          T("tpt", c(e), o, l, 0.07, r),
-            T("sax", c(e), k(P(i), o), l, 0.05, r),
-            3 === s && T("tbn", c(e), k(P(i), k(P(i), o)) - 12, l, 0.045, r);
+      if ("intro" === sec || o >= 22) S(c2(0), f(A(n, 0)), 0.95 * h(0, 8), 0.022);
+      else S(c2(0), f(A(n, 0)), 0.8 * h(0, 2), 0.024), S(c2(3), f(A(n, 4)), 0.8 * h(3, 2), 0.022), r[n].length > 1 && S(c2(5), f(A(n, 4)), 0.6 * h(5, 1), 0.018);
+      // horns
+      const lead = i[n] || [];
+      if ("intro" === sec) {
+        for (const [s0, m0, l0, fl] of lead) T("tpt", c2(s0), m0, 0.9 * h(s0, l0), 0.05, fl);
+        const ch = A(n, 0);
+        T("sax", c2(0), z([(ch[0] + 4) % 12], 58, 68, 63), 0.95 * h(0, 8), 0.022), T("tbn", c2(0), z([(ch[0] + 10) % 12], 50, 60, 55), 0.95 * h(0, 8), 0.022);
+      } else
+        for (const [s0, m0, l0, fl] of lead) {
+          const ch = A(n, s0),
+            d0 = 0.9 * h(s0, l0);
+          T("tpt", c2(s0), m0, d0, 0.064 * loud, fl);
+          T("sax", c2(s0), k(P(ch), m0), d0, ("A" === sec ? 0.036 : 0.048) * loud, fl);
+          ("B" === sec || "S" === sec || "T" === sec) && T("tbn", c2(s0), k(P(ch), k(P(ch), m0)) - 12, d0, 0.042 * loud, fl);
         }
-        if (0 === s)
-          for (const e of [0, 4])
-            if (0 === e || r[n].length > 1) {
-              const o = A(n, e);
-              T(
-                "tbn",
-                c(e),
-                z([(o[0] + ("m7" === o[1] ? 3 : 4)) % 12], 50, 60, 55),
-                0.95 * h(e, r[n].length > 1 ? 4 : 8),
-                0.03,
-              );
-            }
-        if (3 === s)
-          for (const e of [3, 7]) {
-            const o = A(n, 7 === e ? 4 : 0);
-            P(o), T("tbn", c(e), z([o[0]], 41, 52, 46), 0.8 * h(e, 1), 0.06);
-          }
-      } else if (1 === s) {
-        for (const [e, o, a, r] of V(l, n, 65, 84)) T("tpt", c(e), o, 0.9 * h(e, a), 0.068, r);
-        const e = A(n, 0),
-          o = e[0];
-        T("sax", c(0), z([(o + ("m7" === e[1] ? 3 : 4)) % 12], 58, 68, 63), 0.95 * h(0, 8), 0.03),
-          T("tbn", c(0), z([(o + 10) % 12], 50, 60, 55), 0.95 * h(0, 8), 0.028);
-      } else {
-        for (const [e, o, a, r] of V(l, n, 55, 75)) T("sax", c(e), o, 0.9 * h(e, a), 0.062, r);
-        for (const [e, o] of [
-          [0, 2],
-          [3, 1],
-        ]) {
-          const a = A(n, e),
-            r = a[0];
-          T("tpt", c(e), z([(r + ("m7" === a[1] ? 3 : 4)) % 12], 67, 76, 71), 0.85 * h(e, o), 0.04),
-            T("tbn", c(e), z([(r + 10) % 12], 50, 60, 55), 0.85 * h(e, o), 0.038);
+      // trombone pads under the head, and stabs on 2-and and 4-and in the shout
+      if ("A" === sec && o % 2 === 0) {
+        const ch = A(n, 0);
+        T("tbn", c2(0), z([(ch[0] + 10) % 12], 50, 60, 55), 0.95 * h(0, 8), 0.024);
+      }
+      if ("S" === sec)
+        for (const s0 of [3, 7]) {
+          const ch = A(n, 7 === s0 ? 4 : 0);
+          T("tbn", c2(s0), z([ch[0]], 41, 52, 46), 0.8 * h(s0, 1), 0.06);
         }
+      // the last bar: everyone holds the final chord
+      if (23 === o) {
+        T("tpt", c2(0), 81, 3.2 * e, 0.05, "v"), T("sax", c2(0), 77, 3.2 * e, 0.045, "v"), T("tbn", c2(0), 65, 3.2 * e, 0.045, "v");
       }
     }
     return y;
@@ -9474,7 +9423,7 @@ const le = (() => {
             Kt.rewards.seeds
               ? ((bt.live = !0), (bt.t0 = t), JGP.beginPlanting(s, t))
               : ((bt.t0 = t - (o.durationS - JGP.NO_SEEDS_S)), s.forEach((t) => Ut.above(t, "?", M.white)));
-        if (t - bt.t0 > o.durationS && "dialogue" !== jt.top) return void this.wrap();
+        if (t - bt.t0 > o.durationS && "dialogue" !== jt.top && !JGP.backpacka.busy()) return void this.wrap();
         s.forEach((o) => {
           const a = o.finaleSlot;
           if (!a) return;
@@ -11610,6 +11559,8 @@ const JGP = (() => {
         ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [-34, 31.99]],
         ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [-34, 36.24]],
         ["t_nextessa", "NEXTESSA", "born_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [-34, 40.43]],
+        // for testing: the garden event's BACKPACKA
+        ["t_backpacka", "BACKPACKA", "born_backpacka", {"color": "#d48e64", "bodyR": 1.4}, [-34, 45.6]],
       ],
     },
   };
@@ -12254,6 +12205,20 @@ const JGP = (() => {
     const m = R(geo, mat, p, pos, rot, sc);
     return (m.userData.keep = !0), m;
   };
+  // give a model's plain-coloured parts a tactile surface of the given kind (texture maps, vertex
+  // colours, glass, glows and small parts such as eyes keep their own materials)
+  function texturize(g, kind, o = {}) {
+    g.updateMatrixWorld(!0);
+    const sc = new THREE.Vector3();
+    g.traverse((m) => {
+      if (!m.isMesh || !m.material || Array.isArray(m.material) || !m.geometry) return;
+      const mt = m.material;
+      if (!mt.isMeshPhongMaterial || mt.map || mt.vertexColors || mt.transparent || (mt.emissive && mt.emissive.getHex()) || mt.side === THREE.DoubleSide) return;
+      m.geometry.boundingSphere || m.geometry.computeBoundingSphere(), m.getWorldScale(sc);
+      if (m.geometry.boundingSphere.radius * Math.max(sc.x, sc.y, sc.z) < 0.09) return;
+      m.material = KIT.surf(kind, "#" + mt.color.getHexString(), Object.assign({ rep: 2, bump: 0.025, shine: Math.min(70, mt.shininess || 30) }, o));
+    });
+  }
   let _starGeo = null;
   const starGeo = () => {
     if (_starGeo) return _starGeo;
@@ -12300,12 +12265,31 @@ const JGP = (() => {
     const root = new THREE.Group(),
       body = new THREE.Group();
     g.add(root), (body.position.y = 0.55), root.add(body);
-    const goo = gradMat("goo", { rep: 2, bump: 0.012, shine: 90, spec: 10083839 }),
+    const goo = gradMat("goo", { rep: 3, bump: 0.03, shine: 75, spec: 10083839 }),
       stops = [[-0.3, "#f2a274"], [0.45, "#f6b48c"], [0.95, "#62c8ea"], [1.6, "#34b6ea"], [2.4, "#2a9ee0"]];
     keepR(gradient(latheGeo([[0, 0], [0.55, 0.04], [0.95, 0.3], [1.12, 0.75], [1.1, 1.25], [0.95, 1.7], [0.65, 2.05], [0.3, 2.22], [0, 2.25]], 40), stops), goo, body);
     [[-0.95, 0.78, 0.18, 0.55], [0.95, 0.82, 0.12, 0.52], [-0.72, 1.55, -0.12, 0.5], [0.76, 1.6, -0.16, 0.47], [0, 0.5, 0.55, 0.58], [-0.48, 0.5, -0.55, 0.5], [0.52, 0.52, -0.5, 0.5], [0, 1.95, -0.35, 0.45]].forEach(
       ([px, py, pz, r]) => keepR(gradient(new THREE.SphereGeometry(r, 22, 16).translate(px, py, pz), stops), goo, body),
     );
+    // little bubbles caught in the jelly, and goo drips hanging off the lower blobs
+    const bub = x.clay("#e8faff", { transparent: !0, opacity: 0.55, shininess: 140, specular: 16777215 }),
+      rb = srand(19);
+    for (let k = 0; k < 22; k++) {
+      const a = l * rb(),
+        y = 0.35 + 1.7 * rb(),
+        rr0 = Math.max(0.3, 1.12 * Math.sin(Math.min(Math.PI, ((y + 0.1) / 2.35) * Math.PI)));
+      if (Math.abs(Math.sin(a)) > 0.75 && y > 0.9 && y < 1.9 && Math.cos(a) > 0) continue;
+      R(T.sphere(1, 10, 8), bub, body, [rr0 * Math.cos(a), y, rr0 * Math.sin(a)], null, 0.035 + 0.05 * rb());
+    }
+    [
+      [-0.95, 0.42, 0.18, 0.16],
+      [0.55, 0.22, 0.75, 0.13],
+      [0.55, 0.24, -0.5, 0.15],
+      [-0.5, 0.22, -0.55, 0.12],
+    ].forEach(([px, py, pz, sz]) => {
+      keepR(gradient(new THREE.SphereGeometry(sz, 14, 10).scale(1, 1.6, 1).translate(px, py - sz, pz), stops), goo, body);
+      keepR(gradient(new THREE.SphereGeometry(sz * 0.55, 12, 8).translate(px, py - sz * 2.5, pz), stops), goo, body);
+    });
     // face: HOWARD's white "+" eyes (they squint instead of blinking), cheek spots, smile and tongue
     const eyes = new THREE.Group();
     (eyes.position.y = 1.36), body.add(eyes);
@@ -12349,9 +12333,11 @@ const JGP = (() => {
       pg.position.set(0.86 * sx, 1.62, 0.58), (pg.rotation.y = sx * 0.95), (pg.rotation.x = -0.25), body.add(pg);
       R(T.cyl(0.26, 0.26, 0.08, 8), purple, pg, [0, 0, 0], [Math.PI / 2, 0, Math.PI / 8]);
       R(T.torus(0.27, 0.055, 6, 8), rim, pg, [0, 0, 0.03], [0, 0, Math.PI / 8]);
+      R(T.circle(0.19, 8), x.clay("#c8a8ff", { shininess: 140, specular: 16777215, emissive: "#2a1050" }), pg, [0, 0, 0.045], [0, 0, Math.PI / 8]);
+      for (let k = 0; k < 8; k++) R(T.sphere(0.022, 6, 4), x.clay("#f0d0ff", { shininess: 90 }), pg, [0.27 * Math.cos((k * Math.PI) / 4), 0.27 * Math.sin((k * Math.PI) / 4), 0.07]);
     });
     // MAMA's crystal wings
-    const crystal = x.clay("#e8f6ff", { shininess: 120, specular: 16777215 }),
+    const crystal = x.clay("#d8f0ff", { transparent: !0, opacity: 0.78, shininess: 140, specular: 16777215, emissive: "#203848", flatShading: !0 }),
       wings = [];
     [-1, 1].forEach((sx) => {
       const w = new THREE.Group();
@@ -12361,7 +12347,9 @@ const JGP = (() => {
     // the float ring GORBO and MAMA both sit in, with GORBO's AP tag
     const ring = new THREE.Group();
     (ring.position.y = 0.42), root.add(ring);
-    R(T.torus(1.28, 0.26, 12, 40), x.clay("#c8f03a", { shininess: 70 }), ring, [0, 0, 0], [Math.PI / 2, 0, 0]);
+    R(T.torus(1.28, 0.26, 14, 48), KIT.surf("rubber", "#c8f03a", { rep: 2, bump: 0.015, shine: 70 }), ring, [0, 0, 0], [Math.PI / 2, 0, 0]);
+    for (let k = 0; k < 8; k++) R(T.torus(1.28, 0.265, 14, 6, Math.PI / 10), KIT.surf("rubber", "#fbf8f0", { rep: 1, bump: 0.01, shine: 70 }), ring, [0, 0, 0], [Math.PI / 2, 0, (k * Math.PI) / 4]);
+    R(T.cyl(0.05, 0.06, 0.1, 10), x.clay("#e040c8", { shininess: 60 }), ring, [-1.28 * Math.cos(0.4), 0.27, 1.28 * Math.sin(0.4)]), R(T.cyl(0.035, 0.035, 0.05, 8), x.clay("#fbf8f0"), ring, [-1.28 * Math.cos(0.4), 0.33, 1.28 * Math.sin(0.4)]);
     R(T.torus(1.28, 0.2, 10, 40), x.clay("#e040c8", { shininess: 50 }), ring, [0, -0.1, 0], [Math.PI / 2, 0, 0]);
     const tag = b(128, 128, (c) => {
       (c.fillStyle = "#e83a2a"), c.beginPath();
@@ -12910,6 +12898,7 @@ const JGP = (() => {
         R(ao([[0.24 * sx, 0.42, 0], [0.24 * sx + 0.12 * dx, 0.2, 0.12 * dz], [0.24 * sx + 0.32 * dx, 0.04, 0.32 * dz], [0.24 * sx + 0.45 * dx, 0.02, 0.4 * dz]], 0.05, 0.012, 10, 5), vine, root);
       }
     });
+    texturize(g, "skin", { rep: 3, bump: 0.025 });
     return born(g, {
       height: 2.9,
       step(t, dt, tk) {
@@ -12925,37 +12914,69 @@ const JGP = (() => {
   // gold at the crown to deep orange at the rim; a cream stem with City's grain, Woods' collar skirt,
   // City's little feet and brows, and the blush both share.
   BORN.mushroom = (g) => {
-    const cream = KIT.surf("wood", "#f6eed4", { rep: 1, bump: 0.012, shine: 25 }),
+    const cream = KIT.surf("wood", "#f6eed4", { rep: 1, bump: 0.014, shine: 25 }),
+      gillM = KIT.surf("fabric", "#ead6a8", { rep: 1, bump: 0.01, shine: 10 }),
       root = new THREE.Group(),
       cap = new THREE.Group(),
       stem = new THREE.Group();
     g.add(root), root.add(stem), (cap.position.y = 1.3), stem.add(cap);
-    R(latheGeo([[0, 0.04], [0.55, 0.06], [0.62, 0.25], [0.55, 0.6], [0.5, 1.0], [0.46, 1.3], [0, 1.32]], 30), cream, stem);
-    R(latheGeo([[0.45, 1.13], [0.58, 1.06], [0.68, 0.97], [0.66, 0.94]], 30), KIT.surf("soft", "#fbf6e4", { rep: 1, bump: 0.01, shine: 30 }), stem);
+    R(latheGeo(smoothProfile([[0, 0.04], [0.55, 0.06], [0.62, 0.25], [0.55, 0.6], [0.5, 1.0], [0.46, 1.3], [0, 1.32]], 40), 36), cream, stem);
+    // Woods' collar skirt, now a frilled ring of drooping scallops
+    const frill = KIT.surf("soft", "#fbf6e4", { rep: 1, bump: 0.015, shine: 30 });
+    R(latheGeo([[0.45, 1.13], [0.58, 1.07], [0.62, 1.04]], 30), frill, stem);
+    for (let k = 0; k < 18; k++) {
+      const a = (k / 18) * l;
+      R(T.sphere(1, 10, 6), frill, stem, [0.64 * Math.cos(a), 0.98, 0.64 * Math.sin(a)], [0, -a, 0.55], [0.07, 0.1, 0.035]);
+    }
+    // the cap, glowing gold at the crown to deep orange at the rim, with a soft dimpled skin
     keepR(
-      gradient(latheGeo([[0, 0.66], [0.55, 0.63], [0.95, 0.46], [1.2, 0.16], [1.26, 0.02], [1.18, -0.02], [0.6, 0.01], [0.3, 0.03], [0, 0.05]], 40), [[0, "#e46a14"], [0.25, "#f08a22"], [0.66, "#f8b83a"]]),
-      gradMat("soft", { rep: 2, bump: 0.012, shine: 50 }),
+      gradient(latheGeo(smoothProfile([[0, 0.66], [0.55, 0.63], [0.95, 0.46], [1.2, 0.16], [1.26, 0.02], [1.18, -0.02], [0.6, 0.01], [0.3, 0.03], [0, 0.05]], 48), 48), [[0, "#e46a14"], [0.25, "#f08a22"], [0.66, "#f8b83a"]]),
+      gradMat("skin", { rep: 3, bump: 0.025, shine: 55 }),
       cap,
     );
-    R(T.torus(1.2, 0.06, 8, 40), x.clay("#d0600e", { shininess: 40 }), cap, [0, 0.03, 0], [Math.PI / 2, 0, 0]);
-    R(latheGeo([[0.25, 0.04], [1.15, 0.0]], 30), x.clay("#e8d8b0", { shininess: 10 }), cap);
-    const spot = x.clay("#fffaf0", { shininess: 30 }),
-      r7 = srand(3);
-    for (let k = 0; k < 13; k++) {
-      const a = l * r7(),
-        ph = 0.25 + 0.95 * r7();
-      onEllipsoid(cap, T.sphere(1, 12, 8), spot, [0, 0.02, 0], [1.22, 0.64, 1.22], [Math.sin(ph) * Math.cos(a), Math.cos(ph), Math.sin(ph) * Math.sin(a)], [0.07 + 0.12 * r7(), 0.06 + 0.1 * r7(), 0.025], 0.995);
+    R(T.torus(1.2, 0.065, 10, 48), KIT.surf("soft", "#d0600e", { rep: 2, bump: 0.02, shine: 40 }), cap, [0, 0.03, 0], [Math.PI / 2, 0, 0]);
+    // gills fanning out under the cap
+    R(latheGeo([[0.25, 0.035], [1.12, -0.005]], 36), x.clay("#d8c090", { shininess: 10 }), cap);
+    for (let k = 0; k < 60; k++) {
+      const a = (k / 60) * l,
+        r0 = k % 2 ? 0.6 : 0.36;
+      R(T.box(1.1 - r0, 0.07, 0.012), gillM, cap, [((r0 + 1.12) / 2) * Math.cos(a), -0.0, ((r0 + 1.12) / 2) * Math.sin(a)], [0, -a, 0.03]);
     }
-    // City's little feet
-    [-1, 1].forEach((sx) => R(T.sphere(1, 12, 8), cream, root, [0.32 * sx, 0.06, 0.38], null, [0.22, 0.1, 0.18]));
-    // face: eyes, City's brows, blush
+    // raised white warts in both sizes, each with a few freckles
+    const spot = KIT.surf("sand", "#fffaf0", { rep: 1, bump: 0.03, shine: 30 }),
+      r7 = srand(3);
+    for (let k = 0; k < 17; k++) {
+      const a = l * r7(),
+        ph = 0.2 + 1.0 * r7(),
+        sz = 0.06 + 0.12 * r7();
+      onEllipsoid(cap, T.sphere(1, 14, 10), spot, [0, 0.02, 0], [1.22, 0.64, 1.22], [Math.sin(ph) * Math.cos(a), Math.cos(ph), Math.sin(ph) * Math.sin(a)], [sz, sz * 0.85, 0.045 + 0.03 * r7()], 0.985);
+    }
+    // City's little feet, with threads of mycelium trailing off them
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 14, 10), cream, root, [0.32 * sx, 0.06, 0.38], null, [0.22, 0.1, 0.18]);
+      for (let k = 0; k < 3; k++) {
+        const a = sx > 0 ? -0.6 + 0.6 * k : Math.PI - 0.6 + 0.6 * k;
+        R(ao([[0.4 * sx, 0.03, 0.3], [0.4 * sx + 0.25 * Math.cos(a), 0.01, 0.3 + 0.25 * Math.sin(a)], [0.4 * sx + 0.4 * Math.cos(a + 0.3), 0.005, 0.3 + 0.4 * Math.sin(a + 0.3)]], 0.016, 0.004, 8, 4), x.clay("#fbf6ec", { shininess: 10 }), root);
+      }
+    });
+    // two baby mushrooms clinging to the stem
+    [
+      [-0.4, 0.3, -0.36, 0.32, "#f08a22"],
+      [0.44, 0.18, -0.3, 0.24, "#f8b83a"],
+    ].forEach(([px, py, pz, sz, cc]) => {
+      R(T.cyl(0.05 * sz * 4, 0.06 * sz * 4, 0.3 * sz * 2, 10), cream, stem, [px, py + 0.15 * sz * 2, pz], [0, 0, -0.4 * Math.sign(px)]);
+      R(new THREE.SphereGeometry(0.22 * sz * 2.6, 16, 8, 0, l, 0, Math.PI / 2), KIT.surf("skin", cc, { rep: 1, bump: 0.02, shine: 50 }), stem, [px + 0.14 * sz * Math.sign(px), py + 0.33 * sz * 2, pz], [0, 0, -0.4 * Math.sign(px)], [1, 0.75, 1]);
+      R(T.sphere(0.035 * sz * 3, 8, 6), spot, stem, [px + 0.14 * sz * Math.sign(px), py + 0.33 * sz * 2 + 0.11 * sz * 2.6, pz]);
+    });
+    // face: eyes, City's brows, blush, and a little smile
     const lids = [];
     [-1, 1].forEach((sx) => {
-      lids.push(KIT.eye(stem, [0.2 * sx, 0.78, 0.47], 0.09, { iris: "#1a1a20", lid: "#f6eed4", open: -0.3, rot: [0, 0.35 * sx, 0] }).lid);
+      lids.push(KIT.eye(stem, [0.2 * sx, 0.78, 0.47], 0.095, { iris: "#1a1a20", lid: "#f6eed4", open: -0.3, rot: [0, 0.35 * sx, 0] }).lid);
       R(T.box(0.15, 0.035, 0.03), x.clay("#7a4a24"), stem, [0.21 * sx, 0.93, 0.48], [0, 0.35 * sx, 0.18 * sx]);
-      R(T.sphere(1, 10, 8), x.clay("#ffaac4", { shininess: 10 }), stem, [0.36 * sx, 0.6, 0.44], [0, 0.6 * sx, 0], [0.09, 0.06, 0.02]);
+      R(T.sphere(1, 12, 8), x.clay("#ffaac4", { shininess: 10 }), stem, [0.36 * sx, 0.6, 0.44], [0, 0.6 * sx, 0], [0.09, 0.06, 0.02]);
+      for (let k = 0; k < 3; k++) R(T.sphere(0.012, 6, 4), x.clay("#c88a5a"), stem, [0.34 * sx + 0.04 * (k - 1), 0.62 + 0.02 * (k % 2), 0.47]);
     });
-    KIT.mouth(stem, [0, 0.58, 0.52], 0.07);
+    KIT.mouth(stem, [0, 0.58, 0.52], 0.075);
     return born(g, {
       height: 2.0,
       lids,
@@ -13230,59 +13251,116 @@ const JGP = (() => {
   // band on Park's purple base, ringed with Park's cyan spikes and topped with Woods' coloured gem pins;
   // Park's cyan scale tiles down the spine; a curled cyan tail (Woods) ending in Park's ring.
   BORN.kingdino = (g) => {
-    const yellow = KIT.surf("felt", "#f6e21a", { rep: 3, bump: 0.035, shine: 30 }),
-      cyanM = x.clay("#2ad8e0", { shininess: 70 }),
-      root = new THREE.Group(),
+    const root = new THREE.Group(),
       body = new THREE.Group();
     g.add(root), root.add(body);
-    // smooth egg, a little wider low down
+    // the egg, a little wider low down: fine scales going from warm gold at the crown to butter yellow
     const rAt = (y) => {
         const th = Math.acos(Math.max(-1, Math.min(1, 1 - (y - 0.22) / 1.02)));
         return 0.9 * Math.sin(th) * (1 + 0.08 * Math.cos(th));
       },
       egg = [];
-    for (let k = 0; k <= 28; k++) {
-      const th = (k / 28) * Math.PI;
+    for (let k = 0; k <= 36; k++) {
+      const th = (k / 36) * Math.PI;
       egg.push([0.9 * Math.sin(th) * (1 + 0.08 * Math.cos(th)), 0.22 + 1.02 * (1 - Math.cos(th))]);
     }
-    R(latheGeo(egg, 40), yellow, body);
-    R(T.sphere(1, 18, 12), KIT.surf("felt", "#f2c81a", { rep: 2, bump: 0.03, shine: 30 }), body, [0, 1.42, 0.8], null, [0.4, 0.13, 0.34]);
+    keepR(gradient(latheGeo(egg, 48), [[0.25, "#f6dc2a"], [1.1, "#f8e436"], [2.2, "#f0c818"]]), gradMat("scale", { rep: 7, bump: 0.018, shine: 40 }), body);
+    const yellow = KIT.surf("scale", "#f6de2a", { rep: 3, bump: 0.02, shine: 40 }),
+      gold = KIT.surf("metal", "#e8b830", { rep: 1, bump: 0.01, shine: 90, spec: 16777215 }),
+      cyan = KIT.surf("scale", "#2ad8e0", { rep: 2, bump: 0.02, shine: 70 }),
+      bill = KIT.surf("rubber", "#f4a01c", { rep: 1, bump: 0.01, shine: 50 }),
+      claw = x.clay("#fbf2d8", { shininess: 60 }),
+      dark = x.clay("#3a1a10", { shininess: 20 });
+    // cream belly plates down the front
+    onEllipsoid(body, T.sphere(1, 24, 16), KIT.surf("scute", "#fbeeb0", { rep: 1, bump: 0.02, shine: 30 }), [0, 1.0, 0], [0.92, 1.0, 0.92], [0, -0.15, 1], [0.44, 0.58, 0.1], 0.9);
+    // the duck bill: a broad upper bill with nostrils over a lower bill, the mouth open a little
+    const billG = new THREE.Group();
+    billG.position.set(0, 1.44, rAt(1.44) - 0.12), body.add(billG);
+    R(T.sphere(1, 24, 14), bill, billG, [0, 0.03, 0.2], [-0.08, 0, 0], [0.42, 0.11, 0.36]);
+    R(T.sphere(1, 20, 12), KIT.surf("rubber", "#e8901a", { rep: 1, bump: 0.01, shine: 40 }), billG, [0, -0.08, 0.16], [0.1, 0, 0], [0.36, 0.07, 0.3]);
+    R(T.sphere(1, 16, 10), dark, billG, [0, -0.03, 0.17], null, [0.3, 0.035, 0.24]);
+    R(T.sphere(1, 12, 8), x.clay("#ff7a8a", { shininess: 30 }), billG, [0, -0.05, 0.2], null, [0.14, 0.03, 0.12]);
+    [-1, 1].forEach((sx) => R(T.sphere(1, 8, 6), dark, billG, [0.09 * sx, 0.12, 0.42], [0.4, 0, 0], [0.03, 0.015, 0.02]));
+    // the square pixel eyes both games share, with a pixel glint and a little pixel brow
     const eyes = new THREE.Group();
     body.add(eyes);
     [-1, 1].forEach((sx) => {
       const ez = Math.sqrt(rAt(1.74) ** 2 - 0.09) + 0.005;
-      R(T.box(0.18, 0.18, 0.04), x.basic("#141418"), eyes, [0.3 * sx, 1.74, ez], [0, 0.4 * sx, 0]);
-      R(T.box(0.06, 0.06, 0.02), x.basic("#ffffff"), eyes, [0.3 * sx - 0.03, 1.78, ez + 0.03], [0, 0.4 * sx, 0]);
-      // little stubby arms
-      R(T.sphere(1, 12, 10), yellow, body, [0.86 * sx, 1.05, 0.25], [0, 0, -0.5 * sx], [0.12, 0.22, 0.12]);
+      R(T.box(0.2, 0.2, 0.05), x.basic("#141418"), eyes, [0.3 * sx, 1.74, ez], [0, 0.4 * sx, 0]);
+      R(T.box(0.065, 0.065, 0.02), x.basic("#ffffff"), eyes, [0.3 * sx - 0.035, 1.785, ez + 0.03], [0, 0.4 * sx, 0]);
+      R(T.box(0.03, 0.03, 0.02), x.basic("#ffffff"), eyes, [0.3 * sx + 0.045, 1.69, ez + 0.03], [0, 0.4 * sx, 0]);
+      R(T.box(0.22, 0.05, 0.05), x.basic("#141418"), body, [0.3 * sx, 1.92, Math.sqrt(rAt(1.92) ** 2 - 0.09) + 0.01], [-0.2, 0.4 * sx, -0.12 * sx]);
     });
-    // crown
+    // stubby arms with three little claws
+    const arms = [-1, 1].map((sx) => {
+      const a = new THREE.Group();
+      a.position.set(0.82 * sx, 1.12, 0.28), (a.rotation.z = -0.5 * sx), body.add(a);
+      R(T.sphere(1, 14, 10), yellow, a, [0.06 * sx, -0.1, 0], null, [0.13, 0.24, 0.13]);
+      for (let k = 0; k < 3; k++) R(T.cone(0.028, 0.09, 6), claw, a, [0.06 * sx + 0.05 * (k - 1), -0.33, 0.05], [0.3, 0, 0]);
+      return a;
+    });
+    // feet: three toes with claws
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 16, 10), yellow, body, [0.35 * sx, 0.12, 0.22], null, [0.26, 0.12, 0.32]);
+      for (let k = 0; k < 3; k++) {
+        const a = (k - 1) * 0.45;
+        R(T.sphere(1, 10, 8), yellow, body, [0.35 * sx + 0.2 * Math.sin(a), 0.08, 0.42 + 0.14 * Math.cos(a)], [0, a, 0], [0.08, 0.07, 0.12]);
+        R(T.cone(0.035, 0.1, 6), claw, body, [0.35 * sx + 0.27 * Math.sin(a), 0.07, 0.53 + 0.14 * Math.cos(a)], [Math.PI / 2, 0, -a]);
+      }
+    });
+    // the crown: a purple velvet cushion with an ermine trim, the teal band, cyan spikes and gem pins
     const crown = new THREE.Group();
-    (crown.position.y = 2.16), body.add(crown);
-    R(T.cyl(0.46, 0.46, 0.08, 24), x.clay("#8a3ae0", { shininess: 60 }), crown, [0, 0.02, 0]);
-    R(T.cyl(0.42, 0.42, 0.24, 24), x.clay("#2ac8a0", { shininess: 50 }), crown, [0, 0.18, 0]);
+    (crown.position.y = 2.14), body.add(crown);
+    R(T.sphere(1, 24, 12), KIT.surf("plush", "#8a3ae0", { rep: 2, bump: 0.03, shine: 20 }), crown, [0, 0.12, 0], null, [0.4, 0.2, 0.4]);
+    R(T.torus(0.45, 0.07, 10, 32), KIT.surf("fur", "#fbfaf4", { rep: 2, bump: 0.03, shine: 10 }), crown, [0, 0.03, 0], [Math.PI / 2, 0, 0]);
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * l;
+      R(T.sphere(1, 6, 4), dark, crown, [0.5 * Math.sin(a), 0.05, 0.5 * Math.cos(a)], null, [0.022, 0.04, 0.022]);
+    }
+    R(latheGeo([[0.42, 0.06], [0.43, 0.3], [0.41, 0.31], [0.4, 0.07]], 32), KIT.surf("metal", "#2ac8a0", { rep: 1, bump: 0.01, shine: 80 }), crown);
     const gemCols = ["#e8302a", "#2a6ae8", "#ffd21a"];
     for (let k = 0; k < 6; k++) {
       const a = (k / 6) * l;
-      R(T.cone(0.07, 0.24, 6), cyanM, crown, [0.36 * Math.sin(a), 0.42, 0.36 * Math.cos(a)]);
-      k % 2 || R(T.sphere(0.07, 10, 8), x.clay(gemCols[k / 2], { shininess: 90 }), crown, [0.36 * Math.sin(a), 0.58, 0.36 * Math.cos(a)]);
+      R(T.cone(0.075, 0.26, 8), cyan, crown, [0.38 * Math.sin(a), 0.43, 0.38 * Math.cos(a)]);
+      R(T.sphere(0.035, 8, 6), gold, crown, [0.38 * Math.sin(a), 0.57, 0.38 * Math.cos(a)]);
+      k % 2 || R(new THREE.OctahedronGeometry(0.08, 0), x.clay(gemCols[k / 2], { shininess: 120, specular: 16777215 }), crown, [0.43 * Math.sin(a), 0.2, 0.43 * Math.cos(a)], [0, a, 0], [0.8, 1.2, 0.5]);
     }
-    // spine tiles
-    for (let k = 0; k < 4; k++) {
-      const yy = 1.85 - 0.33 * k;
-      R(T.box(0.18, 0.18, 0.1), cyanM, body, [0, yy, -rAt(yy) + 0.02], [0.35 - 0.2 * k, 0, Math.PI / 4]);
+    R(T.sphere(0.07, 12, 8), gold, crown, [0, 0.33, 0]);
+    R(new THREE.OctahedronGeometry(0.06, 0), x.clay("#e8302a", { shininess: 120, specular: 16777215 }), crown, [0, 0.43, 0]);
+    // a royal cape with an ermine hem, draped over the back and following the egg's curve
+    const cape = new THREE.Group();
+    body.add(cape);
+    const capeP = [];
+    for (let k = 0; k <= 12; k++) {
+      const y = 1.78 - (1.2 * k) / 12;
+      capeP.push([rAt(y) + 0.05 + 0.1 * (k / 12) ** 2, y]);
     }
-    // feet and tail
-    [-1, 1].forEach((sx) => R(T.sphere(1, 14, 10), yellow, body, [0.35 * sx, 0.1, 0.25], null, [0.24, 0.11, 0.3]));
+    R(latheGeo(capeP, 24, Math.PI - 0.95, 1.9), Object.assign(KIT.surf("plush", "#7a2ad0", { rep: 2, bump: 0.03, shine: 20 }).clone(), { side: THREE.DoubleSide }), cape);
+    const ermine = KIT.surf("fur", "#fbfaf4", { rep: 2, bump: 0.03, shine: 10 });
+    [capeP[0], capeP[12]].forEach(([rr0, y]) => R(T.torus(rr0, 0.06, 8, 30, 1.9), ermine, cape, [0, y, 0], [Math.PI / 2, 0, -Math.PI / 2 - 0.95]));
+    for (let k = 0; k < 7; k++) {
+      const a = Math.PI - 0.8 + (1.6 * k) / 6,
+        rr0 = capeP[12][0] + 0.01;
+      R(T.sphere(1, 6, 4), dark, cape, [rr0 * Math.sin(a), capeP[12][1] + 0.01, rr0 * Math.cos(a)], null, [0.022, 0.04, 0.022]);
+    }
+    // cyan scale tiles down the spine, getting smaller toward the tail
+    for (let k = 0; k < 6; k++) {
+      const yy = 1.95 - 0.27 * k,
+        sz = 0.2 - 0.018 * k;
+      R(T.box(sz, sz, 0.1), cyan, body, [0, yy, -rAt(yy) - 0.1 - 0.012 * k], [0.35 - 0.16 * k, 0, Math.PI / 4]);
+    }
+    // the curled tail with its ring
     const tail = new THREE.Group();
     tail.position.set(0, 0.6, -0.78), body.add(tail);
-    R(ao([[0, 0, 0], [0, -0.22, -0.32], [0, -0.05, -0.62], [0, 0.25, -0.58]], 0.13, 0.08, 16, 10), cyanM, tail);
-    R(T.torus(0.15, 0.06, 10, 20), cyanM, tail, [0, 0.38, -0.55], [0, Math.PI / 2, 0]);
+    R(ao([[0, 0.05, 0.12], [0, -0.22, -0.32], [0, -0.05, -0.62], [0, 0.25, -0.58]], 0.16, 0.08, 20, 12), cyan, tail);
+    [0.3, 0.55].forEach((f, k) => R(T.cone(0.05, 0.14, 6), cyan, tail, [0, 0.0 + 0.1 * k, -0.25 - 0.3 * f], [-0.6, 0, 0]));
+    R(T.torus(0.15, 0.06, 10, 24), gold, tail, [0, 0.38, -0.55], [0, Math.PI / 2, 0]);
     return born(g, {
       height: 2.9,
       step(t, dt, tk, wk) {
         (body.rotation.z = 0.05 * Math.sin(1.6 * t) + 0.08 * wk * Math.sin(8 * t)), (tail.rotation.y = 0.3 * Math.sin(1.9 * t));
-        (crown.position.y = 2.16 + 0.02 * Math.sin(3.2 * t)), (eyes.scale.y = (((t % 3.9) + 3.9) % 3.9) < 0.15 && t > 1 ? 0.15 : 1);
+        (crown.position.y = 2.14 + 0.02 * Math.sin(3.2 * t)), (eyes.scale.y = (((t % 3.9) + 3.9) % 3.9) < 0.15 && t > 1 ? 0.15 : 1);
+        (cape.rotation.x = 0.02 * Math.sin(1.3 * t)), arms.forEach((a, k) => (a.rotation.x = 0.15 * Math.sin(2 * t + k)));
       },
     });
   };
@@ -13404,6 +13482,7 @@ const JGP = (() => {
     // the pizza rides on her head, balanced on the tips of her antennae
     const carry = new THREE.Group();
     carry.position.set(0, 0.68, -0.02), head.add(carry);
+    texturize(g, "soft", { rep: 2, bump: 0.02 });
     return born(g, {
       height: 2.9,
       carry,
@@ -13432,17 +13511,34 @@ const JGP = (() => {
         latheGeo(etchP, 44),
         [[0.3, "#6ad8b0"], [1.2, "#9ee09a"], [1.9, "#d4cc5a"], [2.8, "#eebf34"]],
       ),
-      gradMat("plastic", { rep: 2, bump: 0.006, shine: 80 }),
+      gradMat("skin", { rep: 4, bump: 0.022, shine: 55 }),
       body,
     );
-    const silver = x.clay("#c8ccd4", { shininess: 120, specular: 16777215 }),
-      cyan = x.clay("#3ae0e8", { shininess: 90 });
+    const silver = KIT.surf("metal", "#c8ccd4", { rep: 1, bump: 0.01, shine: 110, spec: 16777215 }),
+      cyan = x.clay("#3ae0e8", { shininess: 90 }),
+      goldM = KIT.surf("metal", "#e8b830", { rep: 1, bump: 0.01, shine: 90, spec: 16777215 });
+    // gold collars where the stacked segments meet, each with a row of rivets
+    [1.45, 2.12].forEach((y) => {
+      const rr0 = profileR(etchP, y) + 0.01;
+      R(T.torus(rr0, 0.035, 8, 40), goldM, body, [0, y, 0], [Math.PI / 2, 0, 0]);
+      for (let k = 0; k < 10; k++) R(T.sphere(0.018, 6, 4), silver, body, [(rr0 + 0.03) * Math.cos((k / 10) * l), y, (rr0 + 0.03) * Math.sin((k / 10) * l)]);
+    });
+    // freckles of gold on the lower segment
+    const rf = srand(23);
+    for (let k = 0; k < 14; k++) {
+      const a = l * rf(),
+        y = 0.45 + 0.85 * rf();
+      if (Math.cos(a - Math.PI / 2) > 0.6 && y > 0.8) continue;
+      onEllipsoid(body, T.sphere(1, 8, 6), x.clay("#c8d070", { shininess: 30 }), [0, y, 0], [profileR(etchP, y), 0.01, profileR(etchP, y)], [Math.cos(a), 0, Math.sin(a)], [0.03 + 0.02 * rf(), 0.03 + 0.02 * rf(), 0.01], 1.0);
+    }
     // ETCHELON's ring as a belt, SEALIO's struts as a tripod with spiked feet
-    R(T.torus(0.74, 0.07, 10, 36), silver, body, [0, 0.95, 0], [Math.PI / 2, 0, 0]);
+    R(T.torus(0.75, 0.075, 12, 48), silver, body, [0, 0.95, 0], [Math.PI / 2, 0, 0]);
+    for (let k = 0; k < 16; k++) R(T.sphere(0.025, 6, 4), goldM, body, [0.83 * Math.cos((k / 16) * l), 0.95, 0.83 * Math.sin((k / 16) * l)]);
     [Math.PI / 2 + 0.5, Math.PI / 2 - 0.5 + Math.PI, -0.05].forEach((a) => {
       const c = Math.cos(a),
         sn = Math.sin(a);
       R(ao([[0.32 * c, 0.5, 0.32 * sn], [0.7 * c, 0.3, 0.7 * sn], [1.0 * c, 0.08, 1.0 * sn]], 0.07, 0.06, 10, 8), silver, root);
+      R(T.sphere(0.09, 12, 8), goldM, root, [0.66 * c, 0.32, 0.66 * sn]);
       R(T.cone(0.07, 0.22, 8), cyan, root, [1.08 * c, 0.06, 1.08 * sn], [0, 0, 0]).quaternion.setFromUnitVectors(new c0(0, 1, 0), new c0(c, -0.25, sn).normalize());
     });
     // face, curly antenna with a bulb
@@ -13450,7 +13546,16 @@ const JGP = (() => {
     head.position.y = 2.45, body.add(head);
     const onHead = (px, py, out = 0) => Math.sqrt(Math.max(0, profileR(etchP, 2.45 + py) ** 2 - px * px)) + out;
     const lids = [-1, 1].map((sx) => KIT.eye(head, [0.16 * sx, 0.06, onHead(0.16, 0.06, -0.03)], 0.095, { iris: "#1a1a20", lid: "#eebf34", open: -0.3, rot: [0, 0.38 * sx, 0] }).lid);
-    KIT.mouth(head, [0, -0.12, onHead(0, -0.12, -0.01)], 0.08);
+    // SEALIO's seal muzzle: two whisker pads, a black nose, whiskers, and the smile under them
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 14, 10), KIT.surf("skin", "#f6dc70", { rep: 1, bump: 0.02, shine: 40 }), head, [0.075 * sx, -0.08, onHead(0.075, -0.08, -0.04)], null, [0.1, 0.075, 0.08]);
+      for (let k = 0; k < 3; k++) {
+        R(T.sphere(0.008, 4, 3), x.clay("#6a4a20"), head, [0.06 * sx + 0.025 * (k - 1) * sx, -0.07 + 0.02 * (k - 1), onHead(0.075, -0.08, 0.035)]);
+        R(ao([[0.12 * sx, -0.07 + 0.025 * (k - 1), onHead(0.12, -0.07, -0.01)], [0.3 * sx, -0.05 + 0.05 * (k - 1), onHead(0.12, -0.07, -0.06)]], 0.005, 0.002, 4, 3), x.clay("#fbf8f0"), head);
+      }
+    });
+    R(T.sphere(1, 12, 8), x.clay("#1a1418", { shininess: 90 }), head, [0, -0.03, onHead(0, -0.03, 0.03)], null, [0.05, 0.035, 0.03]);
+    KIT.mouth(head, [0, -0.17, onHead(0, -0.17, -0.0)], 0.07);
     const ant = new THREE.Group();
     ant.position.set(0.05, 0.36, 0), head.add(ant);
     R(ao([[0, 0, 0], [0.05, 0.2, 0], [0.18, 0.34, 0.02], [0.28, 0.3, 0.04], [0.26, 0.2, 0.05]], 0.03, 0.022, 16, 6), x.clay("#d8a82a", { shininess: 60 }), ant);
@@ -13474,7 +13579,11 @@ const JGP = (() => {
     const flips = [-1, 1].map((sx) => {
       const f = new THREE.Group();
       f.position.set(0.66 * sx, 1.15, 0.12), (f.rotation.z = -0.5 * sx), body.add(f);
-      R(T.sphere(1, 14, 10), x.clay("#7ee0b8", { shininess: 80 }), f, [0.12 * sx, -0.12, 0], null, [0.11, 0.26, 0.1]);
+      const fm = KIT.surf("skin", "#7ee0b8", { rep: 1, bump: 0.02, shine: 50 });
+      R(T.sphere(1, 16, 12), fm, f, [0.12 * sx, -0.12, 0], null, [0.11, 0.26, 0.1]);
+      // the flipper's fingers show as ridges, and a pale palm
+      for (let k = 0; k < 3; k++) R(T.sphere(1, 8, 6), fm, f, [0.12 * sx + 0.045 * (k - 1), -0.33, 0.02], null, [0.03, 0.07, 0.04]);
+      R(T.sphere(1, 10, 8), x.clay("#c8f4dc", { shininess: 30 }), f, [0.12 * sx, -0.14, 0.07], null, [0.07, 0.16, 0.04]);
       return f;
     });
     const held = new THREE.Group();
@@ -13506,16 +13615,34 @@ const JGP = (() => {
     g.add(root), root.add(body);
     keepR(
       gradient(latheGeo(gemP, 44), [[1.2, "#a8a0ec"], [1.85, "#c870d0"], [2.7, "#ec3aa8"]]),
-      gradMat("plastic", { rep: 2, bump: 0.006, shine: 80 }),
+      gradMat("soft", { rep: 3, bump: 0.025, shine: 60 }),
       body,
     );
-    const purple = x.clay("#5a2a9a", { shininess: 60 });
-    R(T.torus(0.58, 0.07, 10, 36), x.clay("#8a3ae8", { shininess: 60 }), body, [0, 1.42, 0], [Math.PI / 2, 0, 0]);
+    const purple = KIT.surf("rubber", "#5a2a9a", { rep: 2, bump: 0.02, shine: 60 }),
+      silverG = KIT.surf("metal", "#d8dce0", { rep: 1, bump: 0.01, shine: 120, spec: 16777215 });
+    // the belt, studded with silver
+    R(T.torus(0.58, 0.075, 12, 48), KIT.surf("rubber", "#8a3ae8", { rep: 2, bump: 0.015, shine: 60 }), body, [0, 1.42, 0], [Math.PI / 2, 0, 0]);
+    for (let k = 0; k < 14; k++) R(T.sphere(0.028, 8, 6), silverG, body, [0.65 * Math.cos((k / 14) * l), 1.42, 0.65 * Math.sin((k / 14) * l)]);
+    // tiny gems grown into the skin, as GEMWING's are
+    const rg = srand(31),
+      gcs = ["#ff7ad8", "#b8a8ff", "#ffffff", "#ff4ab0"];
+    for (let k = 0; k < 18; k++) {
+      const a = l * rg(),
+        y = 1.65 + 1.0 * rg();
+      if (Math.cos(a - Math.PI / 2) > 0.55 && y < 2.35) continue;
+      const rr0 = profileR(gemP, y);
+      R(new THREE.OctahedronGeometry(0.035 + 0.025 * rg(), 0), x.clay(gcs[k % 4], { shininess: 140, specular: 16777215 }), body, [rr0 * Math.cos(a), y, rr0 * Math.sin(a)], [rg(), a, rg()]);
+    }
     // white cloud collar under the face
     [[0, 0.5], [-0.28, 0.42], [0.28, 0.42], [-0.45, 0.2], [0.45, 0.2]].forEach(([px, pz], k) => R(T.sphere(1, 14, 10), x.clay("#f8f6ff", { shininess: 50 }), body, [px, 1.55 + 0.03 * k, pz], null, [0.2, 0.15, 0.17]));
     // face
-    const lids = [-1, 1].map((sx) => KIT.eye(body, [0.2 * sx, 2.16, onEgg(0.2, 2.16, -0.04)], 0.125, { iris: "#c8202a", lid: "#d060c0", open: -0.25, rot: [0, 0.36 * sx, 0] }).lid);
-    KIT.mouth(body, [0, 1.9, onEgg(0, 1.9, -0.01)], 0.1);
+    const lids = [-1, 1].map((sx) => KIT.eye(body, [0.21 * sx, 2.17, onEgg(0.21, 2.17, -0.045)], 0.14, { iris: "#c8202a", lid: "#d060c0", open: -0.25, rot: [0, 0.36 * sx, 0] }).lid);
+    // lashes over each eye
+    [-1, 1].forEach((sx) => {
+      for (let k = 0; k < 3; k++) R(T.cone(0.012, 0.09, 4), x.clay("#2a0a2a"), body, [0.21 * sx + 0.06 * (k - 1), 2.33 - 0.02 * Math.abs(k - 1), onEgg(0.21, 2.3, 0.0)], [-0.3, 0, -0.4 * (k - 1)]);
+    });
+    KIT.mouth(body, [0, 1.9, onEgg(0, 1.9, -0.01)], 0.12);
+    R(T.cone(0.022, 0.06, 6), x.clay("#fbf8f0", { shininess: 60 }), body, [0.05, 1.87, onEgg(0.05, 1.87, 0.0)], [Math.PI, 0, 0]);
     // gem-pink cheeks
     [-1, 1].forEach((sx) => R(T.sphere(1, 12, 8), x.clay("#ff7ac8", { shininess: 30 }), body, [0.36 * sx, 1.97, onEgg(0.36, 1.97, -0.035)], [0, 0.6 * sx, 0], [0.09, 0.055, 0.04]));
     // crown: GEMWING's spikes and the spinning petal fan
@@ -13526,7 +13653,8 @@ const JGP = (() => {
       const a = (k / 6) * l,
         pg = new THREE.Group();
       (pg.rotation.y = a), fan.add(pg);
-      R(T.sphere(1, 14, 8), x.clay(k % 2 ? "#a8a0ec" : "#f06ac8", { shininess: 50 }), pg, [0.55, 0.22, 0], [0, 0, 0.35], [0.55, 0.06, 0.16]);
+      R(T.sphere(1, 18, 10), KIT.surf("leaf", k % 2 ? "#a8a0ec" : "#f06ac8", { rep: 1, bump: 0.02, shine: 50 }), pg, [0.55, 0.22, 0], [0, 0, 0.35], [0.55, 0.06, 0.16]);
+      R(T.box(1.0, 0.012, 0.012), x.clay(k % 2 ? "#7a6ad0" : "#c8389a"), pg, [0.55, 0.255, 0], [0, 0, 0.35]);
     }
     R(T.sphere(0.09, 10, 8), purple, fan, [0, 0.12, 0]);
     // loop legs ending in gem toes set in silver rings
@@ -13537,10 +13665,15 @@ const JGP = (() => {
         c = Math.cos(a),
         sn = Math.sin(a),
         P = (r, y) => [r * c, y, r * sn];
-      R(ao([P(0.3, 1.2), P(0.75, 0.95), P(1.15, 0.45), P(1.35, 0.15), P(1.6, 0.12), P(1.7, 0.3), P(1.5, 0.42), P(1.3, 0.3)], 0.08, 0.07, 30, 8), purple, root);
+      R(ao([P(0.3, 1.2), P(0.75, 0.95), P(1.15, 0.45), P(1.35, 0.15), P(1.6, 0.12), P(1.7, 0.3), P(1.5, 0.42), P(1.3, 0.3)], 0.085, 0.07, 40, 10), purple, root);
+      // knuckle rings along the leg
+      [
+        [0.75, 0.95],
+        [1.15, 0.45],
+      ].forEach(([r0, y]) => R(T.torus(0.085, 0.025, 6, 16), silverG, root, P(r0, y), [Math.PI / 2 - 0.9, a, 0]));
       const toe = new THREE.Group();
       toe.position.set(1.85 * c, 0.2, 1.85 * sn), root.add(toe), toes.push(toe);
-      R(T.torus(0.2, 0.04, 8, 20), x.clay("#d8dce0", { shininess: 120, specular: 16777215 }), toe, [0, -0.1, 0], [Math.PI / 2, 0, 0]);
+      R(T.torus(0.2, 0.045, 10, 28), silverG, toe, [0, -0.1, 0], [Math.PI / 2, 0, 0]);
       R(new THREE.OctahedronGeometry(0.22, 0), x.clay(gemCols[k], { shininess: 140, specular: 16777215 }), toe, [0, 0.06, 0], [0, a, 0], [1, 1.3, 1]);
       R(ao([P(1.62, 0.13), P(1.78, 0.14)], 0.06, 0.05, 4, 6), purple, root);
     }
@@ -13563,7 +13696,7 @@ const JGP = (() => {
     const root = new THREE.Group(),
       body = new THREE.Group();
     g.add(root), root.add(body);
-    const gm = gradMat("plastic", { rep: 2, bump: 0.006, shine: 70 });
+    const gm = gradMat("soft", { rep: 3, bump: 0.025, shine: 55 });
     const glyP = smoothProfile([[0, 0.3], [0.46, 0.38], [0.64, 0.8], [0.68, 1.3], [0.6, 1.78], [0.42, 2.02], [0, 2.08]], 56);
     keepR(gradient(latheGeo(glyP, 44), [[0.3, "#3aa8d8"], [1.1, "#78a8c8"], [1.9, "#e88a8a"]]), gm, body);
     const head = new THREE.Group();
@@ -13573,7 +13706,12 @@ const JGP = (() => {
     R(T.box(0.42, 0.16, 0.12), x.clay("#141418", { shininess: 30 }), head, [0, -0.12, 0.42], [-0.15, 0, 0]);
     for (let k = 0; k < 5; k++) R(T.box(0.06, 0.07, 0.04), x.clay("#fbf8f0", { shininess: 60 }), head, [-0.16 + 0.08 * k, -0.075, 0.48], [-0.15, 0, 0]);
     [-0.08, 0.08].forEach((px) => R(T.box(0.06, 0.06, 0.04), x.clay("#fbf8f0", { shininess: 60 }), head, [px, -0.17, 0.47], [-0.15, 0, 0]));
-    const lids = [-1, 1].map((sx) => KIT.eye(head, [0.18 * sx, 0.12, 0.4], 0.08, { iris: "#2ac8e0", lid: "#f0a0a0", open: -0.3, rot: [0, 0.35 * sx, 0] }).lid);
+    const lids = [-1, 1].map((sx) => KIT.eye(head, [0.18 * sx, 0.12, 0.42], 0.09, { iris: "#2ac8e0", lid: "#f0a0a0", open: -0.3, rot: [0, 0.35 * sx, 0] }).lid);
+    // nostrils and freckled cheeks
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 8, 6), x.clay("#8a3a3a"), head, [0.05 * sx, 0.02, 0.495], null, [0.022, 0.016, 0.012]);
+      for (let k = 0; k < 4; k++) R(T.sphere(0.012, 6, 4), x.clay("#d06a6a"), head, [0.3 * sx + 0.04 * ((k % 2) - 0.5), -0.02 - 0.03 * (k >> 1), 0.38]);
+    });
     // AURAMEL's orange crown, GIGGLYPH's cyan spines down the back of the head
     [-0.13, 0, 0.13].forEach((px, k) => R(T.cone(0.07, 0.36 - 0.08 * Math.abs(k - 1), 8), x.clay("#f8a020", { shininess: 60 }), head, [px, 0.55, 0.02], [0, 0, -1.2 * px]));
     for (let k = 0; k < 4; k++) R(T.cone(0.06, 0.2, 6), x.clay("#3ad8e8", { shininess: 60 }), head, [0, 0.36 - 0.17 * k, -0.4 - 0.05 * k], [-1.0 - 0.15 * k, 0, 0]);
@@ -13583,7 +13721,7 @@ const JGP = (() => {
       R(T.sphere(0.055, 10, 8), x.clay(k % 2 ? "#ff7ab8" : "#3ae0e8", { shininess: 80 }), body, [0.44 * Math.sin(a), 1.98 - 0.05 * Math.cos(a), 0.4 * Math.cos(a)]);
     }
     // belly: AURAMEL's white ribs on GIGGLYPH's tan patch, with a carved glyph tile
-    R(T.sphere(1, 18, 14), x.clay("#e0c08a", { shininess: 30 }), body, [0, 0.82, 0.34], null, [0.4, 0.38, 0.34]);
+    R(T.sphere(1, 20, 14), KIT.surf("soft", "#e0c08a", { rep: 1, bump: 0.03, shine: 25 }), body, [0, 0.82, 0.34], null, [0.4, 0.38, 0.34]);
     for (let k = 0; k < 4; k++) R(T.torus(0.685 - 0.012 * k, 0.022, 5, 24, 1.3), x.clay("#ffffff", { shininess: 40 }), body, [0, 1.22 + 0.15 * k, 0], [Math.PI / 2, 0, Math.PI / 2 - 0.65]);
     const glyphTex = (seed) =>
       b(64, 64, (c) => {
@@ -13613,19 +13751,45 @@ const JGP = (() => {
     const arms = [-1, 1].map((sx) => {
       const a = new THREE.Group();
       a.position.set(0.62 * sx, 1.45, 0.05), body.add(a);
-      R(T.sphere(1, 12, 10), x.clay(sx < 0 ? "#b898b8" : "#c09aa8", { shininess: 50 }), a, [0.12 * sx, -0.05, 0], [0, 0, -0.6 * sx], [0.22, 0.1, 0.12]);
+      const am = KIT.surf("soft", sx < 0 ? "#b898b8" : "#c09aa8", { rep: 1, bump: 0.02, shine: 45 });
+      R(T.sphere(1, 14, 10), am, a, [0.12 * sx, -0.05, 0], [0, 0, -0.6 * sx], [0.22, 0.1, 0.12]);
+      // three stubby fingers
+      for (let k = 0; k < 3; k++) R(T.sphere(1, 8, 6), am, a, [0.3 * sx, -0.16 + 0.02 * k, 0.06 * (k - 1)], [0, 0, -0.9 * sx], [0.06, 0.035, 0.035]);
       return a;
     });
-    [-1, 1].forEach((sx) => R(T.sphere(1, 14, 10), x.clay("#fbf8f0", { shininess: 40 }), root, [0.26 * sx, 0.1, 0.18], null, [0.22, 0.1, 0.3]));
+    const footM = KIT.surf("soft", "#fbf8f0", { rep: 1, bump: 0.02, shine: 35 });
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 16, 10), footM, root, [0.26 * sx, 0.1, 0.18], null, [0.22, 0.1, 0.3]);
+      for (let k = 0; k < 3; k++) R(T.sphere(1, 8, 6), footM, root, [0.26 * sx + 0.09 * (k - 1), 0.07, 0.46], null, [0.05, 0.05, 0.06]);
+    });
     const tail = new THREE.Group();
     tail.position.set(0, 0.6, -0.5), body.add(tail);
-    R(ao([[0, 0, 0], [0, -0.2, -0.35], [0.08, -0.4, -0.75], [0.15, -0.48, -1.05]], 0.22, 0.05, 16, 10), x.clay("#3aa8d8", { shininess: 70 }), tail);
+    R(ao([[0, 0, 0], [0, -0.2, -0.35], [0.08, -0.4, -0.75], [0.15, -0.48, -1.05]], 0.22, 0.05, 20, 12), KIT.surf("scale", "#3aa8d8", { rep: 2, bump: 0.02, shine: 60 }), tail);
+    [0.25, 0.5, 0.72].forEach((f, k) => R(T.cone(0.045 - 0.008 * k, 0.14, 6), x.clay("#3ad8e8", { shininess: 60 }), tail, [0.03 * f, -0.2 * f * 1.9 + 0.15 - 0.04 * k, -0.35 - 0.7 * f], [-0.7, 0, 0]));
     return born(g, {
       height: 3.1,
       lids,
       step(t, dt, tk) {
         (tail.rotation.y = 0.35 * Math.sin(2.2 * t)), (head.rotation.z = 0.07 * Math.sin(1.3 * t)), body.scale.set(1 + 0.015 * Math.sin(2.4 * t), 1 - 0.015 * Math.sin(2.4 * t), 1);
         arms.forEach((a, k) => (a.rotation.z = (k ? -1 : 1) * 0.25 * Math.sin(2 * t + k)));
+      },
+    });
+  };
+
+  // BACKPACKA standing in the line-up for testing: the event's model, hovering on his wings, half
+  // full, his neck swaying and his legs dangling
+  BORN.backpacka = (g) => {
+    const hold = new THREE.Group();
+    (hold.position.y = 2.75), (hold.scale.setScalar(0.8)), g.add(hold);
+    const P = BP.buildModel(hold);
+    return born(g, {
+      height: 4.6,
+      step(t, dt, tk) {
+        (hold.position.y = 2.75 + 0.12 * Math.sin(1.7 * t)), (P.tilt.rotation.x = 0.04 * Math.sin(1.3 * t)), (P.tilt.rotation.z = 0.04 * Math.sin(0.9 * t));
+        BP.shape(P, 0.35 + 0.05 * Math.sin(0.8 * t), 0, 0, t), BP.flapWings(P, 0.3, 20, t);
+        P.jaw.rotation.x = 0.12 + 0.06 * Math.sin(3 * t);
+        const bl = ((t % 4.1) + 4.1) % 4.1 < 0.14;
+        P.eyes.forEach((ld) => (ld.rotation.x = bl ? 0.35 : -0.6));
       },
     });
   };
@@ -13660,6 +13824,20 @@ const JGP = (() => {
     g.traverse((n) => {
       !hip && n.isGroup && !n.visible && Math.abs(n.position.x - 0.45) < 0.01 && Math.abs(n.position.z + 0.55) < 0.01 && (hip = n);
     });
+    // the screen glows with scanlines; the plain casing gets a moulded plastic finish
+    const scan = b(128, 96, (c) => {
+      const g1 = c.createRadialGradient(64, 48, 6, 64, 48, 80);
+      g1.addColorStop(0, "#ff5af0"), g1.addColorStop(1, "#c010c0"), (c.fillStyle = g1), c.fillRect(0, 0, 128, 96);
+      c.fillStyle = "rgba(255,255,255,.12)";
+      for (let y = 0; y < 96; y += 4) c.fillRect(0, y, 128, 1.5);
+      (c.fillStyle = "rgba(255,255,255,.25)"), c.fillRect(10, 8, 30, 5);
+    });
+    g.traverse((m) => {
+      if (!m.isMesh || !m.material || Array.isArray(m.material) || m.material.map) return;
+      const cl = m.material.color;
+      cl && cl.r > 0.7 && cl.g < 0.35 && cl.b > 0.7 && (m.material = new THREE.MeshPhongMaterial({ map: scan, emissive: new THREE.Color("#5a0a5a"), emissiveMap: scan, shininess: 120, specular: 16777215 }));
+    });
+    texturize(g, "plastic", { rep: 1, bump: 0.02 });
     if (!hip) return r;
     const skin = hip.children[0] && hip.children[0].material;
     while (hip.children.length) hip.remove(hip.children[0]);
@@ -13787,7 +13965,7 @@ const JGP = (() => {
       { smooth: !0 },
     );
     [-1.6, 1.6].forEach((px) => R(T.box(0.12, 0.7, 0.12), white, o, [px, 4.95, -0.12]));
-    R(T.box(4.3, 1.05, 0.1), white, o, [0, 5.55, -0.12]), R(T.plane(4.1, 1.02), x.world(16777215, { map: signTex }), o, [0, 5.55, -0.06]);
+    R(T.box(4.3, 1.05, 0.1), white, o, [0, 5.55, -0.12]), R(T.plane(4.1, 1.02), x.world(16777215, { map: signTex }), o, [0, 5.55, -0.04]);
     // the counter, crates on either side
     R(T.box(3.8, 0.9, 0.1), wall, o, [0, 0.65, 1.07]), R(T.box(3.84, 0.08, 0.12), white, o, [0, 0.24, 1.08]);
     // the top overhangs the front panel and the end supports sit inside it, so no faces are flush
@@ -14098,18 +14276,179 @@ const JGP = (() => {
         G.add(leafy, gc, G.m(px, top + 0.62 * s, pz, rs(), rs(), 0, 0.24 * s, 0.22 * s, 0.24 * s)), G.add(leafy, GREENS[(rs() * 5) | 0], G.m(px + 0.1 * s, top + 0.52 * s, pz, rs(), rs(), 0, 0.14 * s, 0.13 * s, 0.14 * s));
       }
     };
+
+    // ---- curiosities after the plates of the Voynich manuscript: bare bulbous roots as big as the
+    // plant, striped cup blooms, an eye of a flower, trumpet clusters, a scaled bud on a hand of
+    // roots and a striped lantern bloom, all in the manuscript's faded inks (pale blue, olive, red
+    // brown, ochre, parchment). voy() builds one at (px, py, pz) with its base (where the roots meet
+    // the stem) at py, scaled by s and turned by rot.
+    const VC = { blue: "#7fa8c8", blue2: "#5f88b0", olive: "#7f9448", green: "#6a8a4a", rust: "#a8503a", rust2: "#8a3a2a", ochre: "#c8a058", parch: "#eadcb4", ink: "#4a3424", red: "#c8402e" };
+    const cupGeo = cachedGeo("vcup", () => latheGeo(smoothProfile([[0, 0], [0.05, 0.012], [0.12, 0.06], [0.165, 0.15], [0.158, 0.162], [0.112, 0.074], [0.042, 0.03], [0, 0.026]], 30), 18)),
+      trumpetGeo = cachedGeo("vtrump", () => latheGeo(smoothProfile([[0, 0], [0.022, 0.02], [0.03, 0.12], [0.085, 0.21], [0.078, 0.216], [0.022, 0.125], [0.012, 0.03], [0, 0.03]], 30), 14)),
+      sph = T.sphere(1, 12, 8),
+      sphLo = T.sphere(1, 8, 6);
+    const voy = (px, py, pz, s, kind, rot, seed) => {
+      const r = srand(seed),
+        cs = Math.cos(rot),
+        sn = Math.sin(rot),
+        P = (x0, y0, z0) => [px + s * (x0 * cs + z0 * sn), py + s * y0, pz + s * (-x0 * sn + z0 * cs)],
+        M = (x0, y0, z0, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1) => {
+          const q = P(x0, y0, z0);
+          return G.m(q[0], q[1], q[2], rx, ry + rot, rz, s * sx, s * sy, s * sz);
+        },
+        tube = (pts, r0, r1, col, segs = 14) => G.add(ao(pts.map((q) => P(q[0], q[1], q[2])), r0 * s, r1 * s, segs, 6), col, G.m(0, 0, 0)),
+        // a wandering root from (x0, y0, z0) outward along angle a, dropping by drop
+        root = (x0, y0, z0, a, len, drop, r0, col) => {
+          const pts = [[x0, y0, z0]];
+          for (let k = 1; k <= 4; k++) {
+            const f = k / 4,
+              wob = 0.06 * (r() - 0.5);
+            pts.push([x0 + Math.cos(a + wob * 4) * len * f + wob, y0 - drop * f * (0.6 + 0.4 * f), z0 + Math.sin(a + wob * 4) * len * f - wob]);
+          }
+          tube(pts, r0, 0.004, col, 12);
+          // a few hairs off the tip
+          const e = pts[4];
+          for (let h = 0; h < 2; h++) tube([e, [e[0] + 0.05 * Math.cos(a + h - 0.5), e[1] - 0.03, e[2] + 0.05 * Math.sin(a + h - 0.5)]], 0.006, 0.002, VC.ink, 3);
+        },
+        // a long leaf: a flattened ellipsoid with a darker midrib
+        leaf = (x0, y0, z0, a, tilt, len, col) => {
+          const cx = x0 + Math.cos(a) * len * 0.5,
+            cz = z0 + Math.sin(a) * len * 0.5,
+            cy = y0 + Math.sin(tilt) * len * 0.5;
+          G.add(sphLo, col, M(cx, cy, cz, 0, -a, tilt, len * 0.5, 0.012, len * 0.16));
+          G.add(G.UBX, VC.ink, M(cx, cy + 0.008, cz, 0, -a, tilt, len * 0.9, 0.006, 0.008));
+        };
+      if (0 === kind) {
+        // striped cup bloom on a bulb with a skirt of roots
+        G.add(sph, VC.ochre, M(0, 0.12, 0, 0, 0, 0, 0.17, 0.14, 0.17));
+        [0.07, 0.12, 0.17].forEach((y, k) => G.add(T.torus(1, 0.06, 6, 20), VC.rust, M(0, y, 0, Math.PI / 2, 0, 0, 0.16 - 0.03 * Math.abs(k - 1), 0.16 - 0.03 * Math.abs(k - 1), 0.3)));
+        for (let k = 0; k < 8; k++) root(0, 0.04, 0, (k / 8) * l + r(), 0.22 + 0.12 * r(), 0.14 + 0.06 * r(), 0.024, k % 2 ? VC.ink : VC.ochre);
+        tube([[0, 0.24, 0], [0.04, 0.5, 0.02], [-0.03, 0.78, 0], [0, 0.94, 0]], 0.02, 0.014, VC.olive);
+        leaf(0.02, 0.45, 0.01, 0.4, 0.4, 0.34, VC.green), leaf(-0.01, 0.62, 0, Math.PI + 0.3, 0.5, 0.3, VC.olive);
+        G.add(cupGeo, VC.blue, M(0, 0.92, 0, 0, 0, 0, 1.1, 1.1, 1.1));
+        for (let k = 0; k < 10; k++) {
+          const a = (k / 10) * l;
+          G.add(G.UBX, VC.rust2, M(0.15 * Math.cos(a), 1.02, 0.15 * Math.sin(a), 0, -a, 0.95, 0.012, 0.16, 0.012));
+        }
+        G.add(sph, VC.ochre, M(0, 1.0, 0, 0, 0, 0, 0.05, 0.05, 0.05));
+        for (let k = 0; k < 6; k++) G.add(sphLo, VC.ink, M(0.035 * Math.cos(k), 1.05, 0.035 * Math.sin(k), 0, 0, 0, 0.01, 0.01, 0.01));
+      } else if (1 === kind) {
+        // the eye: legs of forked roots, leaf fans up the stem and a ringed blue eye of a flower
+        [-1, 1].forEach((sd) => {
+          tube([[0, 0.06, 0], [0.08 * sd, 0.02, 0.02], [0.14 * sd, -0.06, 0.03]], 0.035, 0.022, VC.rust, 10);
+          for (let k = 0; k < 3; k++) root(0.14 * sd, -0.06, 0.03, (sd > 0 ? 0 : Math.PI) + (k - 1) * 0.6, 0.12, 0.06, 0.016, VC.rust2);
+        });
+        G.add(sph, VC.rust, M(0, 0.08, 0, 0, 0, 0, 0.07, 0.07, 0.06));
+        tube([[0, 0.1, 0], [0.02, 0.5, 0], [-0.02, 0.9, 0.02], [0, 1.15, 0.04]], 0.018, 0.012, VC.green);
+        [0.3, 0.55, 0.8].forEach((y, k) => [-1, 1].forEach((sd) => leaf(0, y, 0, (sd > 0 ? 0 : Math.PI) + 0.5 * k, 0.35, 0.26 - 0.04 * k, k % 2 ? VC.olive : VC.green)));
+        const ex = 0,
+          ey = 1.2,
+          ez = 0.06;
+        G.add(T.cyl(0.17, 0.17, 0.02, 20), VC.blue, M(ex, ey, ez, Math.PI / 2 - 0.25, 0, 0));
+        G.add(T.torus(0.12, 0.022, 6, 22), VC.ochre, M(ex, ey + 0.005, ez + 0.012, -0.25, 0, 0));
+        G.add(T.cyl(0.085, 0.085, 0.02, 18), VC.parch, M(ex, ey + 0.004, ez + 0.016, Math.PI / 2 - 0.25, 0, 0));
+        G.add(sph, VC.ink, M(ex, ey + 0.006, ez + 0.03, 0, 0, 0, 0.045, 0.045, 0.025));
+        for (let k = 0; k < 14; k++) {
+          const a = (k / 14) * l;
+          G.add(T.cone(0.03, 0.09, 4), k % 2 ? VC.red : VC.rust, M(ex + 0.2 * Math.cos(a), ey + 0.2 * Math.sin(a) * Math.cos(0.25), ez - 0.2 * Math.sin(a) * Math.sin(0.25), -0.25, 0, a - Math.PI / 2));
+        }
+      } else if (2 === kind) {
+        // a cluster of trumpets on a knot of roots
+        for (let k = 0; k < 5; k++) G.add(sph, k % 2 ? VC.ochre : VC.parch, M(0.07 * Math.cos(2.4 * k), 0.06 + 0.03 * (k % 2), 0.07 * Math.sin(2.4 * k), 0, 0, 0, 0.08, 0.07, 0.08));
+        for (let k = 0; k < 9; k++) root(0, 0.03, 0, (k / 9) * l, 0.26 + 0.1 * r(), 0.16, 0.022, k % 3 ? VC.ink : VC.rust);
+        tube([[0, 0.1, 0], [0, 0.35, 0]], 0.026, 0.02, VC.olive);
+        for (let k = 0; k < 5; k++) {
+          const a = (k / 5) * l + 0.3,
+            tip = [0.28 * Math.cos(a), 0.78 + 0.12 * (k % 2), 0.28 * Math.sin(a)];
+          tube([[0, 0.35, 0], [0.1 * Math.cos(a), 0.5, 0.1 * Math.sin(a)], [0.22 * Math.cos(a), 0.62, 0.22 * Math.sin(a)], tip], 0.014, 0.01, VC.green, 12);
+          leaf(0.12 * Math.cos(a), 0.52, 0.12 * Math.sin(a), a + 0.8, 0.3, 0.16, VC.olive);
+          // the trumpet leans out from the stem tip
+          const tg = P(tip[0], tip[1], tip[2]);
+          const tm = G.m(tg[0], tg[1], tg[2], 0.45 * Math.sin(a + rot), 0, -0.45 * Math.cos(a + rot), 1.2 * s, 1.2 * s, 1.2 * s);
+          G.add(trumpetGeo, k % 2 ? VC.blue : VC.rust, tm), G.add(T.torus(0.07, 0.012, 5, 16), VC.ochre, tm.clone().multiply(S(0, 0.17, 0, Math.PI / 2, 0, 0)));
+        }
+      } else if (3 === kind) {
+        // a scaled bud on a hand of fat roots
+        for (let k = 0; k < 5; k++) {
+          const a = (k / 5) * l + 0.2;
+          tube([[0, 0.1, 0], [0.12 * Math.cos(a), 0.06, 0.12 * Math.sin(a)], [0.24 * Math.cos(a), -0.02, 0.24 * Math.sin(a)], [0.3 * Math.cos(a + 0.2), -0.08, 0.3 * Math.sin(a + 0.2)]], 0.05, 0.02, k % 2 ? VC.parch : VC.ochre, 12);
+          G.add(sphLo, VC.ochre, M(0.3 * Math.cos(a + 0.2), -0.08, 0.3 * Math.sin(a + 0.2), 0, 0, 0, 0.025, 0.025, 0.025));
+        }
+        G.add(sph, VC.ochre, M(0, 0.12, 0, 0, 0, 0, 0.11, 0.09, 0.11));
+        tube([[0, 0.18, 0], [-0.03, 0.5, 0.02], [0.02, 0.84, 0]], 0.022, 0.016, VC.olive);
+        for (let k = 0; k < 6; k++) {
+          const a = k * 2.1;
+          G.add(T.cone(0.04, 0.26, 4), k % 2 ? VC.green : VC.olive, M(0.07 * Math.cos(a), 0.36 + 0.08 * k, 0.07 * Math.sin(a), 0.9 * Math.sin(a), 0, -0.9 * Math.cos(a), 1, 1, 0.35));
+        }
+        for (let k = 0; k < 6; k++) G.add(sph, k % 2 ? VC.blue : VC.green, M(0, 0.86 + 0.07 * k, 0, 0, k, 0, 0.13 - 0.016 * k, 0.05, 0.13 - 0.016 * k));
+        for (let k = 0; k < 5; k++) G.add(T.cone(0.02, 0.12, 4), VC.red, M(0.025 * Math.cos(1.3 * k), 1.3, 0.025 * Math.sin(1.3 * k), 0.4 * Math.sin(1.3 * k), 0, -0.4 * Math.cos(1.3 * k)));
+      } else {
+        // a striped lantern bloom on an onion with a beard of hair roots, topped with a curl
+        G.add(sph, VC.parch, M(0, 0.1, 0, 0, 0, 0, 0.12, 0.1, 0.12));
+        for (let k = 0; k < 6; k++) G.add(T.box(0.012, 0.2, 0.012), VC.rust, M(0.11 * Math.cos(k), 0.1, 0.11 * Math.sin(k), 0.9 * Math.sin(k), 0, -0.9 * Math.cos(k)));
+        for (let k = 0; k < 12; k++) root(0, 0.02, 0, (k / 12) * l, 0.14 + 0.08 * r(), 0.12, 0.012, VC.ink);
+        tube([[0, 0.2, 0], [0.03, 0.55, 0], [0, 0.9, 0]], 0.02, 0.015, VC.green);
+        leaf(0, 0.36, 0, 0.6, 0.6, 0.3, VC.olive), leaf(0, 0.5, 0, 2.8, 0.5, 0.28, VC.green), leaf(0, 0.66, 0, 4.4, 0.6, 0.22, VC.olive);
+        for (let k = 0; k < 8; k++) {
+          const a = (k / 8) * l;
+          G.add(sph, k % 2 ? VC.blue : VC.parch, M(0.085 * Math.cos(a), 1.06, 0.085 * Math.sin(a), 0, -a, 0, 0.05, 0.17, 0.035));
+          G.add(G.UBX, VC.rust2, M(0.123 * Math.cos(a), 1.06, 0.123 * Math.sin(a), 0, -a, 0, 0.008, 0.26, 0.012));
+        }
+        G.add(sph, VC.ochre, M(0, 1.24, 0, 0, 0, 0, 0.05, 0.04, 0.05));
+        const curl = [];
+        for (let k = 0; k <= 16; k++) {
+          const a = k * 0.55,
+            rr0 = 0.1 * (1 - k / 20);
+          curl.push([rr0 * Math.cos(a) - 0.1, 1.28 + 0.012 * k, rr0 * Math.sin(a)]);
+        }
+        tube(curl, 0.012, 0.005, VC.green, 32);
+      }
+    };
     // counter: seedling trays, pots, a sunflower tray
     [-1.3, -0.45].forEach((px) => {
       G.box("#2a2a2e", px, 1.15, 0.6, 0.7, 0.06, 0.5);
       for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) G.add(T.cone(0.03, 0.09, 4), GREENS[(i + j) % 5], G.m(px - 0.27 + 0.108 * i, 1.22, 0.42 + 0.12 * j, 0.2 * (rs() - 0.5), rs() * l, 0.2 * (rs() - 0.5)));
     });
-    [0.3, 0.75, 1.2, 1.6].forEach((px, k) => pot(px, 1.12, 0.6 + 0.08 * (k % 2), 0.9 + 0.2 * (k % 2), [1, 0, 2, 3][k]));
+    [0.3, 1.2].forEach((px, k) => pot(px, 1.12, 0.6 + 0.08 * k, 0.9, [1, 2][k]));
+    const jarGlass = x.clay("#d8f0f4", { transparent: !0, opacity: 0.28, shininess: 120, specular: 16777215, depthWrite: !1 }),
+      jarWater = x.clay("#8ac0c8", { transparent: !0, opacity: 0.35, shininess: 90, depthWrite: !1 });
+    [
+      [0.75, 0.66, 0, 0.62, 0.3],
+      [1.62, 0.62, 1, 0.55, -0.4],
+    ].forEach(([px, pz, kind, sc, rot], k) => {
+      const jar = R(cachedGeo("vjar", () => new THREE.CylinderGeometry(0.19, 0.17, 0.44, 20, 1, !0)), Object.assign(jarGlass, { side: THREE.DoubleSide }), o, [px, 1.34, pz]);
+      (jar.renderOrder = 3), (R(T.cyl(0.18, 0.165, 0.3, 20), jarWater, o, [px, 1.27, pz]).renderOrder = 2);
+      G.add(T.torus(0.19, 0.012, 6, 24), "#c8ccd0", G.m(px, 1.56, pz, Math.PI / 2, 0, 0));
+      voy(px, 1.32, pz, sc, kind, rot, 40 + k);
+    });
+    // a parchment card in the manuscript's unread script
+    {
+      const card = b(256, 128, (c) => {
+        (c.fillStyle = "#eadcb4"), c.fillRect(0, 0, 256, 128), (c.strokeStyle = "#8a6a40"), (c.lineWidth = 4), c.strokeRect(6, 6, 244, 116);
+        const r2 = srand(77);
+        (c.strokeStyle = "#4a3424"), (c.lineWidth = 2.4), (c.lineCap = "round");
+        for (let row = 0; row < 4; row++)
+          for (let x0 = 18; x0 < 236; ) {
+            const w = 10 + 16 * r2(),
+              y0 = 28 + 24 * row;
+            c.beginPath(), c.moveTo(x0, y0);
+            for (let k = 0; k < 3; k++) c.quadraticCurveTo(x0 + (w * (k + 0.5)) / 3, y0 - 10 * r2() - 2, x0 + (w * (k + 1)) / 3, y0 + 3 * (r2() - 0.5));
+            c.stroke(), r2() < 0.35 && (c.beginPath(), c.arc(x0 + w / 2, y0 - 8, 3, 0, l), c.stroke()), (x0 += w + 6 + 6 * r2());
+          }
+        (c.fillStyle = "#7fa8c8"), c.beginPath(), c.arc(214, 96, 12, 0, l), c.fill(), (c.fillStyle = "#a8503a"), c.beginPath(), c.arc(214, 96, 5, 0, l), c.fill();
+      });
+      G.box("#8a6a40", -1.05, 0.72, 1.135, 1.0, 0.52, 0.02);
+      R(T.plane(0.94, 0.47), x.world(16777215, { map: card, polygonOffset: !0, polygonOffsetFactor: 0, polygonOffsetUnits: -4 }), o, [-1.05, 0.72, 1.15]);
+    }
     // crates: shelves of pots
     [-1, 1].forEach((sx) => [-0.95, -0.38, 0.2].forEach((pz, k) => pot(1.42 * sx, 1.0, pz, 0.85, (k + (sx > 0 ? 1 : 3)) % 5)));
     // a plank shelf on the back wall with small pots
     G.box("#8a6a48", 0, 2.6, -2.2, 4.4, 0.06, 0.32);
     [-1, 1].forEach((sx) => G.box("#6a4a2a", 1.8 * sx, 2.45, -2.25, 0.05, 0.3, 0.28, 0.6 * sx));
-    for (let k = 0; k < 7; k++) pot(-1.95 + 0.65 * k, 2.63, -2.2, 0.6, k % 5);
+    for (let k = 0; k < 7; k++)
+      k % 2
+        ? (G.add(T.cyl(0.13, 0.1, 0.1, 12), "#a85a3a", G.m(-1.95 + 0.65 * k, 2.68, -2.2)), voy(-1.95 + 0.65 * k, 2.74, -2.2, 0.32, [3, 4, 0][(k - 1) / 2], 0.6 * k, 60 + k))
+        : pot(-1.95 + 0.65 * k, 2.63, -2.2, 0.6, k % 5);
     // hanging baskets from the front beam
     [-2.2, -0.8, 0.8, 2.2].forEach((px, k) => {
       G.add(T.cyl(0.006, 0.006, 0.5, 4), "#3a3a3e", G.m(px, 3.05, 2.15));
@@ -14124,7 +14463,22 @@ const JGP = (() => {
     // rows of pots on the deck and on the lawn beside the kiosk
     for (let k = 0; k < 10; k++) pot(-2.6 + 0.42 * (k % 3), 0.2, 1.0 + 0.45 * Math.floor(k / 3), 1.1 + 0.3 * rs(), k % 5);
     for (let k = 0; k < 6; k++) pot(2.2 + 0.42 * (k % 2), 0.2, 0.9 + 0.5 * Math.floor(k / 2), 1.2, (k + 2) % 5);
-    [-1, 1].forEach((sx) => [0, 1, 2].forEach((k) => pot(4.0 * sx, 0, -1.8 + 1.4 * k, 1.6 + 0.4 * (k % 2), k === 1 ? 4 : 1)));
+    [0, 1, 2].forEach((k) => pot(4.0, 0, -1.8 + 1.4 * k, 1.6 + 0.4 * (k % 2), k === 1 ? 4 : 1));
+    [0, 1, 2].forEach((k) => {
+      const pz = -1.8 + 1.4 * k;
+      G.add(T.cyl(0.42, 0.3, 0.2, 16), "#b86a48", G.m(-4.0, 0.1, pz)), G.add(T.torus(0.42, 0.04, 6, 24), "#a85a3a", G.m(-4.0, 0.2, pz, Math.PI / 2, 0, 0));
+      G.add(T.cyl(0.4, 0.4, 0.02, 16), "#4a3424", G.m(-4.0, 0.19, pz));
+      voy(-4.0, 0.36, pz, 1.65 + 0.2 * (k % 2), [2, 3, 4][k], 1.2 * k + 0.4, 90 + k);
+    });
+    // two more by the front walk: the eye of a flower and a striped cup bloom
+    [
+      [-3.3, 3.1, 1, 1.9, 0.3],
+      [-2.2, 3.8, 0, 1.6, 2.0],
+    ].forEach(([px, pz, kind, sc, rot], k) => {
+      G.add(T.cyl(0.42, 0.3, 0.2, 16), "#b86a48", G.m(px, 0.1, pz)), G.add(T.torus(0.42, 0.04, 6, 24), "#a85a3a", G.m(px, 0.2, pz, Math.PI / 2, 0, 0));
+      G.add(T.cyl(0.4, 0.4, 0.02, 16), "#4a3424", G.m(px, 0.19, pz));
+      voy(px, 0.36, pz, sc, kind, rot, 95 + k);
+    });
     // bags of soil and compost
     [
       [-2.4, -1.4, "#6a4a2a"],
@@ -14152,17 +14506,17 @@ const JGP = (() => {
   // A duck pond with a grassy bank, limestone rocks, cattails, lily pads and a little dock
   // (it replaces the city fountain); o sits at the pool station.
   function buildPond(o) {
-    R(T.circle(4.9, 36), KIT.surf("grass", "#4c7a2c", { rep: 4, shine: 6 }), o, [0, 0.015, 0], [-Math.PI / 2, 0, 0]);
-    R(T.circle(4.1, 36), KIT.surf("soil", "#6a5a3a", { rep: 3, shine: 20 }), o, [0, 0.025, 0], [-Math.PI / 2, 0, 0]);
+    PONDO = o;
+    // the flat layers sit 4 cm apart (bank, mud, water, pads) so none of them can win the depth test
+    // over the one above it at a distance or a grazing angle
+    R(T.circle(4.9, 36), KIT.surf("grass", "#4c7a2c", { rep: 4, shine: 6 }), o, [0, 0.03, 0], [-Math.PI / 2, 0, 0]);
+    R(T.circle(4.1, 36), KIT.surf("soil", "#6a5a3a", { rep: 3, shine: 20 }), o, [0, 0.07, 0], [-Math.PI / 2, 0, 0]);
     const water = R(
       T.circle(3.7, 36),
       x.clay("#3a8aa0", {
         unique: !0,
         shininess: 70,
         specular: 5596791,
-        polygonOffset: !0,
-        polygonOffsetFactor: -2,
-        polygonOffsetUnits: -2,
         map: b(128, 128, (c) => {
           const gr = c.createRadialGradient(64, 64, 4, 64, 64, 64);
           gr.addColorStop(0, "#7a8a96"), gr.addColorStop(0.6, "#b4c4cc"), gr.addColorStop(0.92, "#e8f4f0"), gr.addColorStop(1, "#f4fff4");
@@ -14171,7 +14525,7 @@ const JGP = (() => {
         }, { smooth: !0 }),
       }),
       o,
-      [0, 0.04, 0],
+      [0, 0.11, 0],
       [-Math.PI / 2, 0, 0],
     );
     for (let k = 0; k < 20; k++) {
@@ -14179,7 +14533,7 @@ const JGP = (() => {
         r = rr(3.7, 4.3),
         s = rr(0.22, 0.48);
       const q = rnd();
-      R(T.dodeca(s, 1), KIT.surf("stone", q < 0.5 ? "#b8ad98" : q < 0.8 ? "#a49c8c" : "#8a8478", { rep: 1, bump: 0.05, shine: 20 }), o, [r * Math.cos(a), 0.08, r * Math.sin(a)], [rnd(), rnd() * l, 0], [1.2, 0.6, 1]);
+      R(T.dodeca(s, 1), KIT.surf("stone", q < 0.5 ? "#b8ad98" : q < 0.8 ? "#a49c8c" : "#8a8478", { rep: 1, bump: 0.05, shine: 20 }), o, [r * Math.cos(a), 0.12, r * Math.sin(a)], [rnd(), rnd() * l, 0], [1.2, 0.6, 1]);
     }
     for (let k = 0; k < 8; k++) {
       const a = rnd() * l,
@@ -14187,13 +14541,13 @@ const JGP = (() => {
         px = r * Math.cos(a),
         pz = r * Math.sin(a);
       // lily pad with its notch, and every third one in flower
-      R(new THREE.CircleGeometry(0.3, 18, 0.25, l - 0.5), KIT.surf("leaf", k % 2 ? "#4f9a2a" : "#5aa83a", { rep: 1, shine: 40 }), o, [px, 0.055, pz], [-Math.PI / 2, 0, a]);
+      R(new THREE.CircleGeometry(0.3, 18, 0.25, l - 0.5), KIT.surf("leaf", k % 2 ? "#4f9a2a" : "#5aa83a", { rep: 1, shine: 40 }), o, [px, 0.15, pz], [-Math.PI / 2, 0, a]);
       if (!(k % 3)) {
         for (let j = 0; j < 7; j++) {
           const pa = (j / 7) * l;
-          R(T.sphere(1, 8, 6), x.clay(j % 2 ? "#ffa8d0" : "#ff8ac0", { shininess: 40 }), o, [px + 0.06 * Math.cos(pa), 0.12, pz + 0.06 * Math.sin(pa)], [0, -pa, 0.7], [0.07, 0.03, 0.035]);
+          R(T.sphere(1, 8, 6), x.clay(j % 2 ? "#ffa8d0" : "#ff8ac0", { shininess: 40 }), o, [px + 0.06 * Math.cos(pa), 0.21, pz + 0.06 * Math.sin(pa)], [0, -pa, 0.7], [0.07, 0.03, 0.035]);
         }
-        R(T.sphere(0.035, 8, 6), x.clay("#ffd23a"), o, [px, 0.13, pz]);
+        R(T.sphere(0.035, 8, 6), x.clay("#ffd23a"), o, [px, 0.22, pz]);
       }
     }
     for (let k = 0; k < 16; k++) {
@@ -14211,7 +14565,7 @@ const JGP = (() => {
     for (let k = 0; k < 6; k++) R(T.box(2.9, 0.08, 0.2), plank, o, [-4.1, 0.34, 0.4 + 0.22 * k], [0, 0, 0.01 * (k % 2)]);
     [-5.4, -2.85].forEach((px) => [0.32, 1.58].forEach((pz) => R(T.cyl(0.07, 0.07, 0.6, 7), plank, o, [px, 0.2, pz])));
     const rip = [0, 0.5].map(() =>
-      R(T.torus(1, 0.02, 4, 32), x.basic("#e8f6ff", { unique: !0, transparent: !0, opacity: 0.5, depthWrite: !1 }), o, [0.8, 0.06, -0.5], [Math.PI / 2, 0, 0]),
+      R(T.torus(1, 0.02, 4, 32), x.basic("#e8f6ff", { unique: !0, transparent: !0, opacity: 0.5, depthWrite: !1 }), o, [0.8, 0.13, -0.5], [Math.PI / 2, 0, 0]),
     );
     L.push((tt) => {
       rip.forEach((m, k) => {
@@ -14268,7 +14622,7 @@ const JGP = (() => {
     garden = { slots: [], plants: [], cans: [], startAt: 0 };
   function buildGarden(o) {
     o.userData.jgpKeep = !0;
-    const soil = Object.assign(KIT.surf("soil", "#5a3e26", { rep: 10, shine: 6, bump: 0.03 }).clone(), { polygonOffset: !0, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
+    const soil = KIT.surf("soil", "#5a3e26", { rep: 10, shine: 6, bump: 0.03 }),
       ridge = KIT.surf("soil", "#6e4c2e", { rep: 6, shine: 6, bump: 0.03 }),
       stone = KIT.surf("stone", "#8f8374", { rep: 1, bump: 0.05, shine: 12 }),
       moss = KIT.surf("fur", "#5a8a3a", { rep: 1, bump: 0.03 }),
@@ -14463,7 +14817,7 @@ const JGP = (() => {
     });
   }
   function plantTick(ent, now) {
-    if (ent.moving || now < (ent.plantNext || 0)) return;
+    if (ent.moving || now < (ent.plantNext || 0) || ent.hornWant) return;
     ent.plantNext = now + rr(5, 9);
     ent.plantCount = (ent.plantCount || 0) + 1;
     const p = ent.group.position;
@@ -14505,7 +14859,1019 @@ const JGP = (() => {
     for (const c of garden.cans)
       c.rotation.z = live ? 0.7 * Math.max(0, Math.sin(1.3 * tt + c.userData.ph)) : 0.06 * Math.sin(1.4 * tt + c.userData.ph);
   });
+
+  // ---- BACKPACKA: the garden event's climax -------------------------------------------------
+  // Once the seeds are in, BACKPACKA flies in, skinny: a tan, crackle-skinned pear of a body with
+  // glassy coloured patches, two pairs of veined teal dragonfly wings, a long banded neck with a
+  // green stripe up to a little open-mouthed head, a stubby tail, and four tube legs ending in open
+  // pipes. He hovers at the duck pond and dips his head in; gulps run up his neck as he swells up
+  // fat; he lifts his head, dripping, and flies heavily to the middle of the garden, where he spins
+  // slowly and sprays the water out of his feet in four arcs that sweep the whole garden. Plants
+  // bloom where it lands, a rainbow comes out, and he slims back down and flies off.
+  // Everything is a function of the time since he set off (pose(e)), so any moment can be shown.
+  let PONDO = null;
+  const BP = (() => {
+    const D = { inA: 9, down: 11.5, drink: 22, up: 24.5, toGarden: 33, splay: 35, spray: 55, unsplay: 57, gone: 65 },
+      N = 10, // neck segments
+      SEG = 0.27;
+    let made = null,
+      active = !1,
+      t0 = 0,
+      lastE = -1,
+      plantedAt = 0,
+      flags = {};
+    const V = (a = 0, b2 = 0, c = 0) => new THREE.Vector3(a, b2, c),
+      ease = (q) => (q <= 0 ? 0 : q >= 1 ? 1 : q * q * (3 - 2 * q)),
+      seg = (e, a, b2) => ease((e - a) / (b2 - a)),
+      bez = (a, m, b2, q) => V().copy(a).multiplyScalar((1 - q) * (1 - q)).addScaledVector(m, 2 * q * (1 - q)).addScaledVector(b2, q * q);
+    // a leaf-shaped wing panel: teal centre, green rim, a dark midrib, side veins and a mosaic of cells
+    const wingTex = () =>
+      b(128, 512, (c) => {
+        const outline = () => {
+          c.beginPath(), c.moveTo(64, 508), c.bezierCurveTo(4, 430, 10, 160, 64, 4), c.bezierCurveTo(118, 160, 124, 430, 64, 508), c.closePath();
+        };
+        outline();
+        const g1 = c.createLinearGradient(0, 0, 128, 0);
+        g1.addColorStop(0, "#2f5a26"), g1.addColorStop(0.22, "#3f8a4a"), g1.addColorStop(0.5, "#2aa08e"), g1.addColorStop(0.78, "#3f8a4a"), g1.addColorStop(1, "#2f5a26");
+        (c.fillStyle = g1), c.fill(), c.save(), outline(), c.clip();
+        const r2 = srand(51);
+        (c.strokeStyle = "rgba(40,30,20,.55)"), (c.lineWidth = 1.2);
+        for (let k = 0; k < 420; k++) {
+          const x0 = 128 * r2(),
+            y0 = 512 * r2();
+          c.beginPath(), c.moveTo(x0, y0), c.lineTo(x0 + 10 * (r2() - 0.5), y0 + 14 * (r2() - 0.5)), c.lineTo(x0 + 12 * (r2() - 0.5), y0 + 18 * (r2() - 0.5)), c.stroke();
+        }
+        (c.strokeStyle = "#3a2a18"), (c.lineWidth = 4), c.beginPath(), c.moveTo(64, 508), c.lineTo(64, 20), c.stroke(), (c.lineWidth = 2.2);
+        for (let y = 470; y > 60; y -= 34)
+          [-1, 1].forEach((sd) => {
+            c.beginPath(), c.moveTo(64, y), c.quadraticCurveTo(64 + 26 * sd, y - 20, 64 + 56 * sd, y - 60), c.stroke();
+          });
+        (c.fillStyle = "rgba(160,230,190,.22)");
+        for (let k = 0; k < 40; k++) c.fillRect(20 + 88 * r2(), 40 + 440 * r2(), 6 + 8 * r2(), 6 + 10 * r2());
+        c.restore(), outline(), (c.strokeStyle = "#a8e878"), (c.lineWidth = 5), c.stroke(), (c.strokeStyle = "#4a3a22"), (c.lineWidth = 1.5), c.stroke();
+      });
+    const dotTex = () =>
+      b(32, 32, (c) => {
+        const g1 = c.createRadialGradient(16, 16, 1, 16, 16, 15);
+        g1.addColorStop(0, "rgba(255,255,255,1)"), g1.addColorStop(0.45, "rgba(220,244,255,.8)"), g1.addColorStop(1, "rgba(200,235,255,0)"), (c.fillStyle = g1), c.fillRect(0, 0, 32, 32);
+      });
+    const streakTex = () => {
+      const t = b(32, 128, (c) => {
+        (c.fillStyle = "#b8e6ff"), c.fillRect(0, 0, 32, 128);
+        const r2 = srand(9);
+        for (let k = 0; k < 40; k++) (c.fillStyle = r2() < 0.5 ? "rgba(255,255,255,.85)" : "rgba(120,190,230,.6)"), c.fillRect(32 * r2(), 128 * r2(), 1 + 2 * r2(), 10 + 30 * r2());
+      });
+      return (t.wrapS = t.wrapT = THREE.RepeatWrapping), t;
+    };
+    // the model itself, built into root (the event's flying copy, or the line-up's)
+    function buildModel(root) {
+      const tilt = new THREE.Group();
+      root.add(tilt);
+      const skin = gradMat("skin", { rep: 6, bump: 0.05, shine: 30 }),
+        skinS = KIT.surf("skin", "#d48e64", { rep: 3, bump: 0.05, shine: 30 }),
+        stripe = KIT.surf("skin", "#7ab83a", { rep: 2, bump: 0.02, shine: 50 }),
+        dark = x.clay("#141210", { shininess: 40 });
+      // the body: a pear along +z, fuller at the back, warm tan above and paler beneath
+      const bodyG = new THREE.Group();
+      tilt.add(bodyG);
+      const bgeo = latheGeo(smoothProfile([[0, -1.15], [0.55, -1.02], [0.86, -0.62], [0.95, -0.1], [0.86, 0.42], [0.62, 0.82], [0.42, 1.02], [0, 1.1]], 40), 40).rotateX(Math.PI / 2);
+      keepR(gradient(bgeo, [[-0.95, "#ecb88e"], [-0.2, "#da9a6c"], [0.9, "#c47a4c"]]), skin, bodyG);
+      // glassy coloured patches, crackled like the skin
+      [
+        [[-0.55, 0.72, 0.05], [0.36, 0.24], "#f06a1a"],
+        [[-0.9, 0.15, -0.35], [0.3, 0.2], "#f0c81a"],
+        [[-0.8, 0.1, -0.85], [0.22, 0.16], "#c8941e"],
+        [[0.05, 0.98, -0.25], [0.34, 0.16], "#e02a7a"],
+        [[0.75, 0.45, -0.1], [0.32, 0.22], "#f0c81a"],
+        [[0.85, 0.05, 0.35], [0.26, 0.18], "#f06a1a"],
+        [[0.6, 0.6, -0.75], [0.22, 0.18], "#e02a7a"],
+      ].forEach(([d, [w, h], col]) => {
+        onEllipsoid(bodyG, T.box(1, 1, 1), KIT.surf("sand", col, { rep: 1, bump: 0.05, shine: 110, spec: 16777215 }), [0, 0, 0], [0.92, 0.92, 1.05], d, [1.8 * w, 1.8 * h, 0.05], 0.99);
+        onEllipsoid(bodyG, T.box(1, 1, 1), x.clay("#f4e0c0", { shininess: 30 }), [0, 0, 0], [0.92, 0.92, 1.05], d, [1.8 * w + 0.07, 1.8 * h + 0.07, 0.04], 0.985);
+      });
+      // attachment points that follow the body as it swells, without being stretched by it
+      const att = (name) => {
+        const a = new THREE.Group();
+        return (a.name = name), tilt.add(a), a;
+      };
+      const neckBase = att("neck"),
+        tailA = att("tail"),
+        hips = [
+          [-1, 1],
+          [1, 1],
+          [-1, -1],
+          [1, -1],
+        ].map(([sx, sz]) => Object.assign(att("hip"), { userData: { sx, sz } })),
+        wingA = [
+          [-1, 1],
+          [1, 1],
+          [-1, -1],
+          [1, -1],
+        ].map(([sx, fore]) => Object.assign(att("wing"), { userData: { sx, fore: fore > 0 } }));
+      // the neck: a chain of tapering segments with a green stripe along the top
+      const segs = [];
+      let par = neckBase;
+      for (let k = 0; k < N; k++) {
+        const r0 = 0.3 - 0.0125 * k,
+          r1 = 0.3 - 0.0125 * (k + 1),
+          sg = new THREE.Group();
+        k && (sg.position.z = SEG), par.add(sg), segs.push(sg), (par = sg);
+        R(new THREE.CylinderGeometry(r1, r0, SEG + 0.02, 16, 1, !0).rotateX(Math.PI / 2).translate(0, 0, SEG / 2), skinS, sg);
+        R(T.sphere(r0, 16, 10), skinS, sg);
+        R(T.box(0.07 + 0.012 * k, 0.04, SEG + 0.02), stripe, sg, [0, r0 * 0.93, SEG / 2]);
+      }
+      [0.05, 0.12, 0.19].forEach((z, k) => R(T.torus(0.305, 0.028, 6, 24), k % 2 ? x.clay("#8ac83a", { shininess: 60 }) : dark, segs[1], [0, 0, z]));
+      // the head: a little skull, a big eye each side of the green crest, and an open mouth
+      const head = new THREE.Group();
+      (head.position.z = SEG), segs[N - 1].add(head);
+      R(T.sphere(1, 20, 14), skinS, head, [0, 0.05, 0.1], null, [0.21, 0.19, 0.28]);
+      R(T.sphere(1, 16, 10), skinS, head, [0, 0.0, 0.34], null, [0.16, 0.085, 0.2]);
+      const jaw = new THREE.Group();
+      jaw.position.set(0, -0.07, 0.12), head.add(jaw);
+      R(T.sphere(1, 16, 10), skinS, jaw, [0, -0.03, 0.18], null, [0.14, 0.055, 0.2]);
+      R(T.sphere(1, 12, 8), x.clay("#a83a3a", { shininess: 20 }), head, [0, -0.06, 0.28], null, [0.12, 0.05, 0.15]);
+      R(T.sphere(1, 12, 8), x.clay("#e8707a", { shininess: 30 }), jaw, [0, 0.0, 0.2], null, [0.09, 0.025, 0.12]);
+      R(T.sphere(1, 14, 8), stripe, head, [0, 0.2, 0.06], null, [0.1, 0.06, 0.3]);
+      const eyes = [];
+      [-1, 1].forEach((sx) => {
+        const eg = new THREE.Group();
+        eg.position.set(0.12 * sx, 0.19, 0.16), (eg.rotation.y = 0.5 * sx), (eg.rotation.x = -0.25), head.add(eg);
+        R(T.sphere(0.1, 18, 12), x.clay("#fbf8f0", { shininess: 90 }), eg);
+        R(T.circle(0.06, 18), x.clay("#7a4a1e", { shininess: 80 }), eg, [0, 0, 0.1]);
+        R(T.circle(0.03, 14), x.basic("#0c0c10"), eg, [0, 0, 0.101]);
+        R(T.sphere(0.012, 6, 4), x.basic("#ffffff"), eg, [0.025, 0.025, 0.1]);
+        const lid = R(new THREE.SphereGeometry(0.108, 18, 8, 0, l, 0, Math.PI / 2), stripe, eg, [0, 0, 0], [-0.6, 0, 0]);
+        eyes.push(lid);
+        R(T.torus(0.1, 0.018, 6, 20), stripe, eg, [0, 0, 0.02]);
+      });
+      [-1, 1].forEach((sx) => R(T.sphere(0.012, 6, 4), dark, head, [0.04 * sx, 0.07, 0.53]));
+      // a stubby tail
+      R(ao([[0, 0, 0.1], [0, 0.06, -0.18], [0, 0.2, -0.34], [0, 0.32, -0.38]], 0.16, 0.035, 14, 10), skinS, tailA);
+      // the legs: long tubes down to open pipe feet
+      const pipeIn = x.clay("#3a1a12", { shininess: 10, side: THREE.DoubleSide });
+      const legs = hips.map((h) => {
+        const lg = new THREE.Group();
+        h.add(lg);
+        const sx = h.userData.sx,
+          sz = h.userData.sz;
+        R(ao([[0, 0.15, 0], [0.12 * sx, -0.5, 0.04 * sz], [0.14 * sx, -1.0, 0.1 * sz], [0.1 * sx, -1.62, 0.04 * sz]], 0.2, 0.15, 24, 14), skinS, lg);
+        const foot = new THREE.Group();
+        foot.position.set(0.1 * sx, -1.62, 0.04 * sz), lg.add(foot);
+        R(new THREE.CylinderGeometry(0.155, 0.17, 0.3, 18, 1, !0), Object.assign(skinS.clone(), { side: THREE.DoubleSide }), foot, [0, -0.1, 0]);
+        R(T.torus(0.165, 0.025, 8, 24), KIT.surf("skin", "#e8a87a", { rep: 1, bump: 0.02, shine: 40 }), foot, [0, -0.25, 0], [Math.PI / 2, 0, 0]);
+        R(T.circle(0.15, 18), pipeIn, foot, [0, -0.04, 0], [Math.PI / 2, 0, 0]);
+        return { lg, foot, sx, sz };
+      });
+      // the wings: two pairs a side, fanned like leaves
+      const wmat = new THREE.MeshPhongMaterial({ map: wingTex(), alphaTest: 0.45, side: THREE.DoubleSide, shininess: 90, specular: 8947848, emissive: new THREE.Color("#0c2a22") }),
+        wgeo = new THREE.PlaneGeometry(0.62, 1, 1, 4).translate(0, 0.5, 0).rotateY(Math.PI / 2);
+      const wings = wingA.map((wa) => {
+        const flap = new THREE.Group();
+        wa.add(flap);
+        const fore = wa.userData.fore,
+          blades = fore
+            ? [
+                [0.75, 2.4],
+                [1.02, 2.15],
+                [1.28, 1.85],
+              ]
+            : [
+                [0.22, 1.7],
+                [0.48, 1.5],
+              ];
+        blades.forEach(([fan, len], k) => {
+          const fg = new THREE.Group();
+          (fg.rotation.x = -fan), (fg.rotation.z = wa.userData.sx * 0.08 * k), flap.add(fg);
+          R(wgeo, wmat, fg, [0, 0, 0], null, [1, 1.25 * len, 1.25 + 0.15 * k]);
+        });
+        return { flap, sx: wa.userData.sx, fore };
+      });
+      // the gulp: a swallow of water travelling up the neck
+      const gulp = R(T.sphere(1, 14, 10), skinS, root);
+      gulp.visible = !1;
+      return { root, tilt, bodyG, neckBase, tailA, hips, wingA, segs, head, jaw, eyes, legs, wings, gulp };
+    }
+    function make() {
+      const root = new THREE.Group();
+      (root.userData.jgpKeep = !0), (root.userData.keepInFinale = !0), (root.visible = !1), C.add(root);
+      const M0 = buildModel(root),
+        { legs } = M0;
+      // pond ripples, water jets, droplets and the rainbow live in world space
+      const ripples = [0, 1, 2].map(() => {
+        const m = R(T.torus(1, 0.03, 4, 32), x.basic("#e8f6ff", { unique: !0, transparent: !0, opacity: 0, depthWrite: !1 }), C, [0, 0, 0], [Math.PI / 2, 0, 0]);
+        return (m.visible = !1), (m.userData.keepInFinale = !0), m;
+      });
+      const NP = 22,
+        NR = 8,
+        jetMat = new THREE.MeshPhongMaterial({ map: streakTex(), color: "#d8f2ff", emissive: new THREE.Color("#3a6a80"), transparent: !0, opacity: 0.5, shininess: 120, specular: 16777215, depthWrite: !1, side: THREE.DoubleSide }),
+        jets = legs.map(() => {
+          const geo = new THREE.BufferGeometry(),
+            pos = new Float32Array(NP * NR * 3),
+            nor = new Float32Array(NP * NR * 3),
+            uv = new Float32Array(NP * NR * 2),
+            idx = [];
+          for (let i = 0; i < NP; i++)
+            for (let j = 0; j < NR; j++) {
+              (uv[2 * (i * NR + j)] = j / (NR - 1)), (uv[2 * (i * NR + j) + 1] = (3 * i) / (NP - 1));
+              if (i < NP - 1 && j < NR - 1) {
+                const a = i * NR + j;
+                idx.push(a, a + NR, a + 1, a + 1, a + NR, a + NR + 1);
+              }
+            }
+          geo.setAttribute("position", new THREE.BufferAttribute(pos, 3)), geo.setAttribute("normal", new THREE.BufferAttribute(nor, 3)), geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2)), geo.setIndex(idx);
+          const m = new THREE.Mesh(geo, jetMat);
+          return (m.frustumCulled = !1), (m.visible = !1), (m.userData.keepInFinale = !0), (m.renderOrder = 3), C.add(m), { m, geo, pos, nor, land: V(), on: 0 };
+        });
+      const NDROP = 420,
+        dgeo = new THREE.BufferGeometry(),
+        dpos = new Float32Array(3 * NDROP).fill(-200),
+        dvel = new Float32Array(3 * NDROP),
+        dlife = new Float32Array(NDROP);
+      dgeo.setAttribute("position", new THREE.BufferAttribute(dpos, 3));
+      const drops = new THREE.Points(dgeo, new THREE.PointsMaterial({ map: dotTex(), color: "#e8f8ff", size: 0.16, transparent: !0, opacity: 0.9, depthWrite: !1 }));
+      (drops.frustumCulled = !1), (drops.userData.keepInFinale = !0), (drops.renderOrder = 4), C.add(drops);
+      let dnext = 0;
+      const spawn = (px, py, pz, vx, vy, vz, life) => {
+        const k = dnext;
+        (dnext = (dnext + 1) % NDROP), (dpos[3 * k] = px), (dpos[3 * k + 1] = py), (dpos[3 * k + 2] = pz), (dvel[3 * k] = vx), (dvel[3 * k + 1] = vy), (dvel[3 * k + 2] = vz), (dlife[k] = life);
+      };
+      const rbGeo = new THREE.RingGeometry(12.2, 14.2, 64, 7, 0, Math.PI),
+        rbc = new Float32Array(3 * rbGeo.attributes.position.count),
+        bands = ["#e8302a", "#ff8a1a", "#ffd23a", "#4ac83a", "#3a9ae8", "#5a4ad8", "#a04ad8"].map((h) => new THREE.Color(h));
+      for (let k = 0; k < rbGeo.attributes.position.count; k++) {
+        const r0 = Math.hypot(rbGeo.attributes.position.getX(k), rbGeo.attributes.position.getY(k)),
+          q = Math.max(0, Math.min(0.999, (r0 - 12.2) / 2)) * (bands.length - 1),
+          i0 = Math.floor(q),
+          cc = bands[bands.length - 1 - i0].clone().lerp(bands[Math.max(0, bands.length - 2 - i0)], q - i0);
+        (rbc[3 * k] = cc.r), (rbc[3 * k + 1] = cc.g), (rbc[3 * k + 2] = cc.b);
+      }
+      rbGeo.setAttribute("color", new THREE.BufferAttribute(rbc, 3));
+      const rainbow = R(rbGeo, new THREE.MeshBasicMaterial({ vertexColors: !0, transparent: !0, opacity: 0, side: THREE.DoubleSide, depthWrite: !1 }), C, [0, -2.5, -7]);
+      (rainbow.visible = !1), (rainbow.userData.keepInFinale = !0);
+      return Object.assign(M0, { ripples, jets, drops, dpos, dvel, dlife, spawn, dgeo, jetMat, rainbow });
+    }
+    // the neck's two poses: held high and curving forward, or reaching down and forward to drink
+    const UP = [-0.34, -0.18, -0.12, -0.2, -0.24, -0.2, -0.04, 0.12, 0.24, 0.3],
+      DOWN = [0.85, 0.35, 0.16, 0.06, 0.0, 0.0, -0.05, -0.08, -0.1, -0.1];
+    function shape(P, fat, neckDown, spr, t) {
+      const fx = 0.52 + 0.58 * fat,
+        fy = 0.58 + 0.46 * fat,
+        fz = 0.92 + 0.26 * fat;
+      P.bodyG.scale.set(fx, fy, fz);
+      P.neckBase.position.set(0, 0.42 * fy, 0.86 * fz), (P.tailA.position.z = -1.08 * fz), (P.tailA.position.y = 0.18 * fy);
+      P.hips.forEach((h) => h.position.set(0.42 * fx * h.userData.sx, -0.6 * fy, (h.userData.sz > 0 ? 0.48 : -0.55) * fz));
+      P.wingA.forEach((w) => w.position.set(0.16 * fx * w.userData.sx, 0.86 * fy, (w.userData.fore ? 0.18 : -0.38) * fz));
+      P.segs.forEach((sg, k) => (sg.rotation.x = UP[k] + (DOWN[k] - UP[k]) * neckDown + 0.03 * Math.sin(1.3 * t + 0.6 * k) * (1 - neckDown)));
+      P.head.rotation.x = -0.25 + 0.55 * neckDown;
+      P.legs.forEach((L0, k) => {
+        (L0.lg.rotation.x = (0.18 + 0.08 * Math.sin(2.1 * t + k) - 1.3 * neckDown) * (1 - spr) - 0.55 * L0.sz * spr), (L0.lg.rotation.z = (0.05 * Math.sin(1.7 * t + 2 * k)) * (1 - spr) + 0.6 * L0.sx * spr);
+      });
+    }
+    function flapWings(P, amp, freq, t) {
+      P.wings.forEach((w, k) => {
+        const ph = w.fore ? 0 : 1.4;
+        w.flap.rotation.z = -w.sx * (0.9 + amp * (0.5 + 0.5 * Math.sin(freq * t + ph)));
+      });
+    }
+    // world positions for the drinking hover, worked out from the drinking pose itself
+    function drinkSpot(P) {
+      const pond = PONDO ? PONDO.getWorldPosition(V()) : V(24.6, 0, 0),
+        water = pond.y + 0.11,
+        toC = V(-pond.x, 0, -pond.z).normalize(),
+        face = Math.atan2(toC.x, toC.z);
+      // he hovers over the far bank, facing the garden (and everyone watching), and reaches in: his
+      // head goes into the water 1.2 m from the pond's centre
+      P.root.position.set(0, 0, 0), (P.root.rotation.y = face), (P.tilt.rotation.x = 0.3), shape(P, 0.5, 1, 0, 0), P.root.updateMatrixWorld(!0);
+      const hp = P.head.localToWorld(V(0, -0.02, 0.36)),
+        tgt = V(pond.x - toC.x * 1.2, water - 0.06, pond.z - toC.z * 1.2);
+      return { pos: tgt.sub(hp), face, water, pond, hp };
+    }
+    function pose(e, dt) {
+      const P = made,
+        t = e;
+      P.root.visible = !0;
+      const ds = flags.ds || (flags.ds = drinkSpot(P)),
+        above = V().copy(ds.pos).add(V(0, 1.3, 0)),
+        far = flags.far || (flags.far = V(ds.pond.x + 60, 26, ds.pond.z - 70)),
+        gardenHover = V(0, 4.9, 0),
+        away = flags.away || (flags.away = V(-70, 40, 60));
+      let pos = V(),
+        face = ds.face,
+        pitch = 0.05,
+        fat = 0,
+        neck = 0,
+        spr = 0,
+        amp = 0.35,
+        freq = 22;
+      if (e < D.inA) {
+        const q = seg(e, 0, D.inA),
+          m = V((far.x + above.x) / 2, 18, (far.z + above.z) / 2);
+        pos = bez(far, m, above, q);
+        const ahead = bez(far, m, above, Math.min(1, q + 0.02));
+        q < 0.98 && (face = Math.atan2(ahead.x - pos.x, ahead.z - pos.z) * (1 - ease((q - 0.7) / 0.3)) + ds.face * ease((q - 0.7) / 0.3));
+        pitch = 0.15 * (1 - q);
+      } else if (e < D.down) {
+        const q = seg(e, D.inA, D.down);
+        pos.copy(above).lerp(ds.pos, q), (neck = q), (pitch = 0.05 + 0.25 * q), (amp = 0.3 - 0.15 * q), (freq = 18);
+      } else if (e < D.drink) {
+        const q = seg(e, D.down, D.drink);
+        pos.copy(ds.pos), (pos.y += 0.04 * Math.sin(2 * e)), (neck = 1), (pitch = 0.3), (fat = q + 0.04 * Math.sin(5.2 * e) * Math.min(1, 3 * q)), (amp = 0.12), (freq = 14);
+      } else if (e < D.up) {
+        const q = seg(e, D.drink, D.up);
+        pos.copy(ds.pos).lerp(above, q), (pos.y -= 0.25 * q), (neck = 1 - q), (pitch = 0.3 - 0.28 * q), (fat = 1), (amp = 0.28), (freq = 26);
+      } else if (e < D.toGarden) {
+        const q = seg(e, D.up, D.toGarden),
+          a0 = V().copy(above).add(V(0, -0.25, 0)),
+          m = V((a0.x + gardenHover.x) / 2, 7.5, (a0.z + gardenHover.z) / 2);
+        pos = bez(a0, m, gardenHover, q);
+        const ahead = bez(a0, m, gardenHover, Math.min(1, q + 0.02));
+        q < 0.97 && (face = Math.atan2(ahead.x - pos.x, ahead.z - pos.z));
+        q >= 0.97 && (face = flags.gface || ds.face), (flags.gface = face), (fat = 1), (pitch = 0.1), (amp = 0.42), (freq = 28), (pos.y -= 0.35 * Math.sin(Math.PI * q));
+      } else if (e < D.spray) {
+        const q = seg(e, D.toGarden, D.splay),
+          qs = Math.max(0, (e - D.splay) / (D.spray - D.splay));
+        pos.copy(gardenHover), (pos.y += 0.12 * Math.sin(1.6 * e)), (spr = q), (fat = 1 - 0.85 * ease(qs)), (face = (flags.gface || 0) + 3 * l * 0.5 * ease(qs)), (amp = 0.32), (freq = 24), (pitch = 0.0);
+      } else if (e < D.unsplay) {
+        const q = seg(e, D.spray, D.unsplay);
+        pos.copy(gardenHover), (pos.y += 0.3 * q), (spr = 1 - q), (fat = 0.15), (face = (flags.gface || 0) + 3 * l * 0.5), (amp = 0.3), (freq = 22);
+      } else {
+        const q = seg(e, D.unsplay, D.gone),
+          a0 = V(0, 5.2, 0),
+          m = V(0, 16, 0);
+        pos = bez(a0, m, away, q);
+        const ahead = bez(a0, m, away, Math.min(1, q + 0.02));
+        (face = Math.atan2(ahead.x - pos.x, ahead.z - pos.z)), (pitch = -0.25 * Math.sin(Math.PI * q)), (fat = 0.15), (amp = 0.4), (freq = 24);
+      }
+      P.root.position.copy(pos), (P.root.rotation.y = face), (P.tilt.rotation.x = pitch), (P.tilt.rotation.z = 0.05 * Math.sin(1.1 * e));
+      shape(P, Math.max(0, fat), neck, ease(spr), t), flapWings(P, amp, freq, t);
+      P.jaw.rotation.x = neck > 0.9 ? 0.25 : 0.12 + 0.06 * Math.sin(3 * e);
+      // blink now and then
+      const bl = ((e % 4.1) + 4.1) % 4.1 < 0.14;
+      P.eyes.forEach((ld) => (ld.rotation.x = bl ? 0.35 : -0.6));
+      P.root.updateMatrixWorld(!0);
+      effects(P, e, dt || 0, fat, spr, neck, ds);
+    }
+    // ripples, gulps, drips, jets, spray, blooming plants, the rainbow, and everyone's reactions
+    function effects(P, e, dt, fat, spr, neck, ds) {
+      const drinking = e > D.down - 0.3 && e < D.drink;
+      P.ripples.forEach((m, k) => {
+        const on = e > D.down - 0.4 && e < D.up + 0.4,
+          a = (0.6 * e + k / 3) % 1;
+        (m.visible = on), on && (m.position.set(ds.pos.x + ds.hp.x * 0 + 0, ds.water + 0.03, 0), m.position.copy(P.head.localToWorld(V(0, 0, 0.3))).setY(ds.water + 0.03), m.scale.setScalar(0.2 + 1.6 * a), (m.material.opacity = 0.55 * (1 - a)));
+      });
+      // a swallow running up the neck every so often
+      if (drinking && e > D.down + 0.3) {
+        const q = (1.15 * (e - D.down)) % 1,
+          kf = (N - 1) * (1 - q),
+          k = Math.floor(kf),
+          wp = P.segs[k].localToWorld(V(0, 0, SEG * (kf - k)));
+        P.gulp.visible = !0, P.gulp.position.copy(P.root.worldToLocal(wp)), P.gulp.scale.setScalar(0.33 - 0.015 * k + 0.04 * Math.sin(Math.PI * q));
+      } else P.gulp.visible = !1;
+      // drips from the mouth after drinking, splashes at the pond surface
+      const mouth = P.head.localToWorld(V(0, -0.05, 0.4));
+      if (dt) {
+        e > D.drink && e < D.toGarden && Math.random() < 0.5 && P.spawn(mouth.x, mouth.y, mouth.z, 0.3 * (Math.random() - 0.5), -0.2, 0.3 * (Math.random() - 0.5), 1.4);
+        if ((Math.abs(e - D.down) < 0.35 || Math.abs(e - D.drink) < 0.4) && Math.random() < 0.9)
+          for (let k = 0; k < 4; k++) P.spawn(mouth.x, ds.water + 0.05, mouth.z, 1.6 * (Math.random() - 0.5), 1.4 + 1.6 * Math.random(), 1.6 * (Math.random() - 0.5), 1.2);
+      }
+      // the four jets
+      const spraying = e > D.splay - 0.2 && e < D.spray + 0.3,
+        pressure = spraying ? Math.min(1, (e - D.splay + 0.2) / 0.8) * Math.min(1, (D.spray + 0.3 - e) / 0.8) : 0;
+      P.jets.forEach((J, k) => {
+        J.m.visible = pressure > 0.02;
+        if (!J.m.visible) return;
+        const L0 = P.legs[k],
+          F = L0.foot.localToWorld(V(0, -0.26, 0)),
+          dir = L0.foot.localToWorld(V(0, -1, 0)).sub(L0.foot.localToWorld(V(0, 0, 0))).normalize(),
+          hz = V(dir.x, 0, dir.z),
+          hl = hz.length() || 1;
+        hz.multiplyScalar(1 / hl);
+        const reach = (4.2 + 4.6 * (0.5 + 0.5 * Math.sin(1.25 * e + 1.7 * k)) + 3.2 * fat) * pressure,
+          up0 = 0.9,
+          side = V(-hz.z, 0, hz.x),
+          pts = [];
+        for (let i = 0; i < 22; i++) {
+          const q = i / 21;
+          pts.push(V(F.x + hz.x * reach * q, F.y + up0 * q - (up0 + F.y) * q * q, F.z + hz.z * reach * q));
+        }
+        J.land.copy(pts[21]);
+        for (let i = 0; i < 22; i++) {
+          const tg = (i < 21 ? V().subVectors(pts[i + 1], pts[i]) : V().subVectors(pts[i], pts[i - 1])).normalize(),
+            nrm = V().crossVectors(side, tg).normalize(),
+            rad = (0.1 + 0.13 * (i / 21)) * (0.6 + 0.4 * pressure);
+          for (let j = 0; j < 8; j++) {
+            const a = (j / 7) * l,
+              ox = Math.cos(a),
+              oy = Math.sin(a),
+              q = 3 * (i * 8 + j);
+            (J.nor[q] = side.x * ox + nrm.x * oy), (J.nor[q + 1] = side.y * ox + nrm.y * oy), (J.nor[q + 2] = side.z * ox + nrm.z * oy);
+            (J.pos[q] = pts[i].x + rad * J.nor[q]), (J.pos[q + 1] = pts[i].y + rad * J.nor[q + 1]), (J.pos[q + 2] = pts[i].z + rad * J.nor[q + 2]);
+          }
+        }
+        (J.geo.attributes.position.needsUpdate = !0), (J.geo.attributes.normal.needsUpdate = !0), J.geo.computeBoundingSphere();
+        if (dt) {
+          // spray mist off the stream and a splash where it lands
+          for (let n = 0; n < 3; n++) {
+            const q = Math.random(),
+              pp = pts[Math.floor(q * 21)];
+            P.spawn(pp.x, pp.y, pp.z, hz.x * reach * 0.45 + 0.8 * (Math.random() - 0.5), 0.6 * Math.random(), hz.z * reach * 0.45 + 0.8 * (Math.random() - 0.5), 0.8);
+          }
+          for (let n = 0; n < 3; n++) P.spawn(J.land.x, 0.05, J.land.z, 2.2 * (Math.random() - 0.5), 1.2 + 2 * Math.random(), 2.2 * (Math.random() - 0.5), 0.9);
+          // plants bloom where the water lands
+          for (const pl of garden.plants) {
+            const dx = pl.g.position.x - J.land.x,
+              dz = pl.g.position.z - J.land.z;
+            if (dx * dx + dz * dz < 2.6) {
+              pl.grow = Math.min(1, pl.grow + 2.5 * dt);
+              if (pl.grow >= 1 && !pl.bloomed) (pl.bloomed = !0), Math.random() < 0.35 && Ut.at(pl.g.position.x, 0.9, pl.g.position.z, "✿", f(PLANT_COLS));
+            }
+          }
+        }
+      });
+      P.jetMat.map.offset.y = -2.2 * e;
+      // droplets
+      if (dt) {
+        const dp = P.dpos,
+          dv = P.dvel,
+          dl = P.dlife;
+        for (let k = 0; k < dl.length; k++) {
+          if (dl[k] <= 0) continue;
+          (dl[k] -= dt), (dv[3 * k + 1] -= 9.8 * dt), (dp[3 * k] += dv[3 * k] * dt), (dp[3 * k + 1] += dv[3 * k + 1] * dt), (dp[3 * k + 2] += dv[3 * k + 2] * dt);
+          (dl[k] <= 0 || dp[3 * k + 1] < -0.05) && ((dl[k] = 0), (dp[3 * k + 1] = -200));
+        }
+        P.dgeo.attributes.position.needsUpdate = !0;
+      }
+      // the rainbow
+      const rb = Math.min(seg(e, D.splay + 3, D.splay + 7), 1 - seg(e, D.unsplay, D.gone));
+      (P.rainbow.visible = rb > 0.01), (P.rainbow.material.opacity = 0.42 * rb);
+      // everyone reacts
+      if (dt) {
+        const fin = It.all.filter((en) => "finale" === en.busy),
+          once = (key, at, fn) => e >= at && !flags[key] && ((flags[key] = !0), fn());
+        once("arrive", 3, () => fin.forEach((en) => Ut.above(en, "!", M.yellow)));
+        once("drink", D.down + 2, () => fin.forEach((en) => Math.random() < 0.6 && Ut.above(en, "?", M.teal)));
+        once("fat", D.drink - 1, () => fin.forEach((en) => Ut.above(en, "!", M.pink)));
+        once("spray", D.splay, () => {
+          try {
+            G.jingle();
+          } catch (err) {}
+        });
+        e > D.splay && e < D.spray && Math.random() < 1.2 * dt && fin.length && Ut.above(f(fin), f(["♥", "✿", "♪"]), f([M.pink, M.yellow, M.lime, M.teal]));
+      }
+    }
+    function hideAll() {
+      if (!made) return;
+      const P = made;
+      (P.root.visible = !1), P.ripples.forEach((m) => (m.visible = !1)), P.jets.forEach((J) => (J.m.visible = !1)), (P.rainbow.visible = !1), P.dlife.fill(0), P.dpos.fill(-200), (P.dgeo.attributes.position.needsUpdate = !0);
+    }
+    function start(now) {
+      made || (made = make()), (active = !0), (t0 = now), (lastE = -1), (flags = {});
+      // FORTIZMO raises her horn and plays "Backpacka's Rain Strut" for the whole visit
+      try {
+        gcHorn.play();
+      } catch (err) {}
+    }
+    function stopHorn() {
+      try {
+        "off" !== gcHorn.phase && "lowering" !== gcHorn.phase && gcHorn.finish();
+      } catch (err) {}
+    }
+    L.push((tt, dt) => {
+      // he sets off once the planting has got going (30 s in, or 40 plants in the ground)
+      const live = me.active && bt.live;
+      // the event ended early (or was left): put everything away
+      active && !me.active && ((active = !1), hideAll(), stopHorn());
+      if (!live) plantedAt = 0;
+      else if (!plantedAt) plantedAt = tt;
+      if (!active && live && plantedAt && (tt - plantedAt > 30 || garden.plants.length >= 40)) start(tt);
+      if (!active) return;
+      const e = tt - t0;
+      if (e > D.gone + 2.5) return (active = !1), hideAll(), void stopHorn();
+      e > D.gone && (made.root.visible = !1);
+      pose(e, lastE < 0 ? 0 : Math.min(0.1, e - lastE)), (lastE = e);
+    });
+    return {
+      buildModel,
+      shape,
+      flapWings,
+      busy: () => active,
+      start: (now) => start(null == now ? Re.t : now),
+      // for testing: show him at time e of his visit (no side effects except the effects' state)
+      preview: (e) => {
+        made || (made = make()), (flags = flags || {}), pose(e, 0.016);
+        return made.root;
+      },
+      D,
+    };
+  })();
+
+  // ---- creature-to-creature vignettes ----------------------------------------------------------
+  // Every pair of creatures in the line-up has its own little vignette. They stay on their spots
+  // (the line-up stands still), turn to each other and trade their signature messengers through
+  // the air, each in its own way: a choreography style per pair, both creatures' own messengers,
+  // gestures, emotes and sounds, and a seeded twist. Each pair also has one two-line exchange that
+  // shows in speech bubbles only rarely (10% of the time, at most once every 4 minutes). Pairs
+  // are played least-played first, nearby pairs preferred.
+  // styles: 0 swap, 1 volley, 2 boomerang, 3 parade, 4 juggle, 5 orbit dance, 6 bounce, 7 bubble,
+  // 8 zip, 9 confetti, 10 serenade, 11 tag
+  const VIG = (() => {
+    const NAMES = { HN: "HENNRICK", MT: "MALTOE", MU: "MUSHROOM", AN: "ANOMALEE", KD: "KING DINO", GW: "GOWARD", SS: "SPARKSTAR", ZL: "ZOLLOD", SM: "SOMLET", FZ: "FORTIZMO", ET: "ETCHER", GT: "GEMTOE", GL: "GLYPH", LA: "LARRY", NX: "NEXTESSA", BP: "BACKPACKA" },
+      PAIRS = [
+      ["HN", "MT", 8, "SCAN COMPLETE. You are 41% mushroom.", "And 100% the law. Mind the sidewalk!"],
+      ["HN", "MU", 7, "Your spore count is... adorable.", "P-please don't put me in a spreadsheet."],
+      ["HN", "AN", 1, "Your signal is buffering again.", "I'm not buffering! I'm thinking. Loudly."],
+      ["HN", "KD", 3, "Crown detected. Cooling fans engaged.", "We permit you to admire us at 60fps."],
+      ["HN", "GW", 6, "Goo viscosity: exceptional.", "Thanks! It's a family recipe. Blorp."],
+      ["HN", "SS", 0, "Your tail emits 2.4 gigahertz.", "That's my happy frequency! Wanna fetch?"],
+      ["HN", "ZL", 10, "Uploading one (1) gentle compliment.", "Received. Your wires grow like vines."],
+      ["HN", "SM", 2, "Packet loss detected on your mail route.", "Mm... the packets wanted a nap too."],
+      ["HN", "FZ", 5, "Your horn exceeds the safe groove limit.", "Then crank the limit, big fella."],
+      ["HN", "ET", 4, "Requesting a backup of your etchings.", "Already carved one onto your left tusk."],
+      ["HN", "GT", 9, "Gem clarity: 99.8%. Remarkable.", "Only 99.8?! Polish me, polish me!"],
+      ["HN", "GL", 11, "Your glyphs fail all my decoders.", "Hee hee. They're upside-down on purpose."],
+      ["HN", "LA", 3, "Price check on one (1) happiness.", "For you, free today. Tomorrow, two coins."],
+      ["HN", "NX", 8, "Delivery ETA: calculating...", "Already here! The pizza's on your screen."],
+      ["HN", "BP", 7, "Water content: rising rapidly.", "Glug! Want a sip? I've got plenty."],
+      ["MT", "MU", 6, "Sheriff's orders: stand up straight!", "I... I'm a mushroom. This IS straight."],
+      ["MT", "AN", 1, "Is that leg street-legal, ma'am?", "It's peg-legal! Arr... *static*"],
+      ["MT", "KD", 2, "This town has one law, and it's me.", "And we are the crown. Call it a tie."],
+      ["MT", "GW", 6, "No splashing on the square!", "It's not splashing if I'm on a float!"],
+      ["MT", "SS", 8, "That tail's broadcasting without a license.", "Woof! It's licensed for joy, Sheriff!"],
+      ["MT", "ZL", 10, "Your back's got more mushrooms than mine.", "We could start a very slow posse."],
+      ["MT", "SM", 4, "Wake up, mail carrier! Rounds are due!", "Mmh... ten more letters... minutes."],
+      ["MT", "FZ", 5, "Turn it down! ...Actually, turn it up.", "That's what I call keeping the peace."],
+      ["MT", "ET", 3, "I need that wanted poster engraved.", "Done. WANTED: more snacks for the Sheriff."],
+      ["MT", "GT", 9, "Those toes are evidence. Shiny evidence.", "Arrest me, Sheriff! But spin me first!"],
+      ["MT", "GL", 11, "What's that writing say? A confession?", "It says 'the Sheriff is ticklish.' Hee!"],
+      ["MT", "LA", 0, "Checking your scales, shopkeep.", "Honest scales, honest Larry. Mostly."],
+      ["MT", "NX", 8, "Slow down! Speed limit's one wing-beat!", "Can't! The pizza gets cold at two!"],
+      ["MT", "BP", 7, "You drank the duck pond, didn't you?", "Borrowed it! I give it all back. Squirt!"],
+      ["MU", "AN", 7, "Um... your screen is very bright.", "Sorry! Dimming to 'cozy cave' mode."],
+      ["MU", "KD", 3, "Y-your majesty...", "Rise, small fungus. You may hold our cape."],
+      ["MU", "GW", 6, "C-can I sit on your float?", "Hop on! It's a mushroom-and-goo cruise!"],
+      ["MU", "SS", 0, "Your stars are so sparkly...", "Your spots are so spotty! Best friends!"],
+      ["MU", "ZL", 10, "Your back looks... like home.", "There's always room for one more cap."],
+      ["MU", "SM", 2, "(whisper) are you asleep?", "(whisper) yes... but say hi anyway."],
+      ["MU", "FZ", 5, "I like music... if it's quiet music.", "Then here's a lullaby on a tiny horn."],
+      ["MU", "ET", 4, "Could you carve my name? Small, please.", "In the smallest letters ever etched."],
+      ["MU", "GT", 9, "Your gems make me feel underdressed.", "Wear a spore! Spores are the new gems!"],
+      ["MU", "GL", 11, "What do your tiles mean?", "This one means 'shy friend'. Hee hee."],
+      ["MU", "LA", 3, "Do you sell... courage?", "Aisle three, between the seeds and soup."],
+      ["MU", "NX", 1, "Did I order a pizza? I don't remember.", "Mushroom topping! Wait... that's awkward."],
+      ["MU", "BP", 7, "Please don't water me too hard.", "Just a sprinkle for my favorite cap!"],
+      ["AN", "KD", 8, "Now broadcasting: KING DINO TONIGHT.", "We approve this programming. Repeat it."],
+      ["AN", "GW", 1, "Error: goo on my screen.", "That's a kiss! Goo kisses don't count."],
+      ["AN", "SS", 0, "Your wifi is stronger than mine!", "Wanna share bars? I've got three!"],
+      ["AN", "ZL", 6, "Why's your garden walking?", "Gardens walk slowly. You never waited."],
+      ["AN", "SM", 2, "Channel 3: a cloud, snoring.", "...that's... my favorite show... zzz."],
+      ["AN", "FZ", 5, "Can I sync my screen to your horn?", "Flash on the two and four, baby."],
+      ["AN", "ET", 4, "Can you etch me a new leg?", "One peg leg, engraved 'still walking'."],
+      ["AN", "GT", 9, "Your gems are glitching my colors!", "That's not a glitch, that's sparkle!"],
+      ["AN", "GL", 11, "Your glyphs read as static to me.", "Static is a glyph too. Hee hee!"],
+      ["AN", "LA", 3, "Do you stock replacement pixels?", "Gently used. Some still blink."],
+      ["AN", "NX", 8, "Live footage of a pizza in motion!", "Get my good side! Both sides are crust!"],
+      ["AN", "BP", 7, "Keep that water AWAY from my screen.", "Just a mist! Electronics love mist?"],
+      ["KD", "GW", 2, "Kneel before the crown!", "I'm goo, I'm always kneeling. Blorp."],
+      ["KD", "SS", 3, "Fetch our royal stick, star-dog!", "Fetching! Royally! Here it is!"],
+      ["KD", "ZL", 10, "Your garden shall be the royal garden.", "It was always yours. Gardens are for all."],
+      ["KD", "SM", 4, "Deliver our decree at once!", "Mmh... at once... after one more nap."],
+      ["KD", "FZ", 5, "Play our royal anthem!", "One anthem, extra swing, your highness."],
+      ["KD", "ET", 4, "Engrave our face on everything.", "Started with the moon. It's a big job."],
+      ["KD", "GT", 9, "Those gems belong in our crown.", "Your crown belongs on my toes, then!"],
+      ["KD", "GL", 11, "Translate our glory into your tiles.", "Done. It reads 'big egg'. Hee!"],
+      ["KD", "LA", 0, "Put it on the royal tab.", "The royal tab is now a royal scroll."],
+      ["KD", "NX", 8, "We ordered a pizza in 1402.", "And here it is, still warm, your majesty!"],
+      ["KD", "BP", 7, "Water our royal feet, flying thing.", "Sprinkle for the king! Mind the cape!"],
+      ["GW", "SS", 6, "Jump in the pool, starpup!", "Cannonball! Wait, I'm a dog. PADDLE!"],
+      ["GW", "ZL", 10, "Can your mushrooms swim?", "They float. With a little help."],
+      ["GW", "SM", 7, "You look like a cloud! Clouds are goo!", "...and goo is a cloud that fell asleep."],
+      ["GW", "FZ", 5, "Play a pool party song!", "Splash on the downbeat, sweetheart."],
+      ["GW", "ET", 1, "Etch me! I'll just drip it off. Hee.", "Then I'll etch faster than you drip."],
+      ["GW", "GT", 9, "Can gems go in goo?", "Only if you keep them shiny, squishy!"],
+      ["GW", "GL", 11, "Your teeth are so square!", "Your eyes are so plus! We match. Hee!"],
+      ["GW", "LA", 3, "One inflatable, please!", "You're already floating, Goward."],
+      ["GW", "NX", 0, "Goo-za! A goo pizza!", "Hold the goo. HOLD THE GOO."],
+      ["GW", "BP", 7, "You and me: the water gang!", "Glug! Best gang! Splash formation!"],
+      ["SS", "ZL", 6, "Can I dig in your back garden?", "Only if you plant something nice."],
+      ["SS", "SM", 4, "Wake up! Wake up! Walkies!", "Mmm... carry me, star puppy..."],
+      ["SS", "FZ", 5, "Howl along? AWOOOO!", "That's a blue note, pup. Keep it."],
+      ["SS", "ET", 3, "Etch a star on me!", "You're already covered in stars!"],
+      ["SS", "GT", 9, "Your toes sparkle like my tail!", "Sparkle-off! On three! Twirl!"],
+      ["SS", "GL", 11, "What does that tile say?", "'Good dog.' They all say 'good dog.'"],
+      ["SS", "LA", 0, "Do you have treats?", "Biscuits, bones, and one star-shaped thing."],
+      ["SS", "NX", 8, "Race you to the gate!", "I deliver faster than I race. Gone!"],
+      ["SS", "BP", 1, "Spray me! Spray me!", "Here comes the sprinkle! Shake it off!"],
+      ["ZL", "SM", 7, "You may nap in my garden.", "Mmm... smells like moss and pillows."],
+      ["ZL", "FZ", 10, "Your music makes my sprouts grow.", "Then let's grow a forest, slow tempo."],
+      ["ZL", "ET", 4, "Etch the names of my mushrooms?", "All forty-two. Starting with 'Tiny'."],
+      ["ZL", "GT", 6, "Plant one gem; grow a gem tree.", "A gem tree?! Water it! WATER IT!"],
+      ["ZL", "GL", 11, "Your glyphs look like roots.", "They are! Roots of words. Hee hee."],
+      ["ZL", "LA", 3, "Fertilizer, please. Slowly.", "Slowly packed, slowly paid. Lovely."],
+      ["ZL", "NX", 8, "No rush, little courier.", "Rush is my middle name! First: Pizza."],
+      ["ZL", "BP", 7, "My garden thanks you, sky sprinkler.", "Glug! Your mushrooms said thanks too!"],
+      ["SM", "FZ", 10, "Play something sleepy...", "Moonlight in C minor, coming right up."],
+      ["SM", "ET", 4, "I lost a letter... do you remember it?", "'Dear Somlet, wake up.' Signed: me."],
+      ["SM", "GT", 2, "You twirl so much... I'm dizzy... zzz.", "Twirl naps! The best naps!"],
+      ["SM", "GL", 11, "Is that mail? It looks like mail.", "A postcard from the year 3000. Hee!"],
+      ["SM", "LA", 3, "Postage, please... the soft kind.", "Pillow stamps. Very popular."],
+      ["SM", "NX", 0, "Who delivers to the deliverers?", "Me! Pizza for the mail carrier!"],
+      ["SM", "BP", 7, "Your feet are like hoses... cozy.", "Want a warm sprinkle bath? Glug glug."],
+      ["FZ", "ET", 5, "Carve my latest solo on a plate.", "Every note. Even the wrong ones."],
+      ["FZ", "GT", 9, "You twirl on the one, gem-girl!", "And you toot on the two! Encore!"],
+      ["FZ", "GL", 11, "Your grin's got rhythm.", "Hee! My teeth are a xylophone."],
+      ["FZ", "LA", 0, "Got any reeds in stock?", "Fresh reeds! And one slightly chewed."],
+      ["FZ", "NX", 8, "A pizza for the band!", "Extra cheese for the horn section!"],
+      ["FZ", "BP", 10, "Ready, Backpacka? Here's your theme!", "Glug! I'll spray right on the beat!"],
+      ["ET", "GT", 4, "Hold still, I'll etch your portrait.", "Hold still?! I've never held still!"],
+      ["ET", "GL", 11, "Your tiles have no punctuation.", "Punctuation is for quitters. Hee!"],
+      ["ET", "LA", 3, "I'd like a receipt. Engraved.", "One stone receipt. Heavy, but final."],
+      ["ET", "NX", 8, "Signature on delivery, please.", "Scribble! Zoom! Already gone!"],
+      ["ET", "BP", 7, "May I record your flight path?", "Record the splashes too! Every drop!"],
+      ["GT", "GL", 11, "Do glyphs sparkle?", "Only when they laugh. HEE HEE."],
+      ["GT", "LA", 0, "Do you buy gems?", "Buy gems, sell gems, trade toe-gems."],
+      ["GT", "NX", 8, "A pizza with gem sprinkles?!", "Crunchy! But sure, for you!"],
+      ["GT", "BP", 9, "Spray my gems till they shine!", "Sparkle shower! Hold still! ...Never mind!"],
+      ["GL", "LA", 3, "I'll pay in glyphs.", "Glyphs accepted. Giggles cost extra."],
+      ["GL", "NX", 8, "Your stripes spell 'zoom'.", "That's literally my job description."],
+      ["GL", "BP", 11, "Your patches look like glyphs too!", "They spell 'thirsty'. Always thirsty!"],
+      ["LA", "NX", 0, "Delivery for the shop? I didn't order.", "Larry, you ordered last Tuesday. Twice."],
+      ["LA", "BP", 3, "I sell watering cans. You ARE one.", "Free samples! Psssshh!"],
+      ["NX", "BP", 8, "Pizza for the sprinkler!", "Glug! Pizza... soup! Even better!"]
+      ],
+      // what each creature sends, how it moves, what it says without words, and how a catch sounds
+      SIG = {
+        HN: { item: "cube", col: "#4af0a0", gest: "nod", emote: "!", snd: "pickup" },
+        MT: { item: "ring", col: "#ffd23a", gest: "stomp", emote: "★", snd: "bump" },
+        MU: { item: "spore", col: "#fffaf0", gest: "shy", emote: "…", snd: "blorp" },
+        AN: { item: "pixel", col: "#e030e0", gest: "glitch", emote: "?", snd: "pickup" },
+        KD: { item: "crown", col: "#ffc81e", gest: "puff", emote: "★", snd: "bump" },
+        GW: { item: "goo", col: "#4ac8f0", gest: "wobble", emote: "~", snd: "blorp" },
+        SS: { item: "star", col: "#ffd23a", gest: "hop", emote: "★", snd: "pickup" },
+        ZL: { item: "sprout", col: "#6ac83a", gest: "sway", emote: "✿", snd: "heart" },
+        SM: { item: "letter", col: "#fbf8f0", gest: "doze", emote: "z", snd: "pickup" },
+        FZ: { item: "note", col: "#ff8a3a", gest: "groove", emote: "♪", snd: "pickup" },
+        ET: { item: "card", col: "#e050b8", gest: "nod", emote: "!", snd: "pickup" },
+        GT: { item: "gem", col: "#2ae070", gest: "twirl", emote: "✦", snd: "pickup" },
+        GL: { item: "tile", col: "#f2c84a", gest: "giggle", emote: "?", snd: "pickup" },
+        LA: { item: "coin", col: "#ffd23a", gest: "nod", emote: "$", snd: "pickup" },
+        NX: { item: "pizza", col: "#f2903a", gest: "zoom", emote: "!", snd: "pickup" },
+        BP: { item: "drop", col: "#8ad8ff", gest: "flutter", emote: "~", snd: "splash" },
+      },
+      V = (a = 0, b2 = 0, c = 0) => new THREE.Vector3(a, b2, c),
+      sm = (q) => (q <= 0 ? 0 : q >= 1 ? 1 : q * q * (3 - 2 * q));
+    const plays = {},
+      fx = [];
+    let cur = null,
+      nextAt = 0,
+      lastText = -1e9,
+      haloTex = null;
+    // ---- messengers
+    const glow = () =>
+      haloTex ||
+      (haloTex = b(64, 64, (c) => {
+        const g1 = c.createRadialGradient(32, 32, 2, 32, 32, 31);
+        g1.addColorStop(0, "rgba(255,255,255,.95)"), g1.addColorStop(0.35, "rgba(255,255,255,.4)"), g1.addColorStop(1, "rgba(255,255,255,0)"), (c.fillStyle = g1), c.fillRect(0, 0, 64, 64);
+      }));
+    function messenger(kind, col, sc = 1) {
+      const g = new THREE.Group(),
+        m = (geo, c, o = {}) => R(geo, x.clay(c, Object.assign({ shininess: 80, emissive: new THREE.Color(c).multiplyScalar(0.35).getStyle() }, o)), g);
+      if ("cube" === kind) m(T.box(0.26, 0.26, 0.26), col), m(T.box(0.18, 0.18, 0.272), "#0a2a1a");
+      else if ("ring" === kind) R(T.torus(0.2, 0.035, 6, 24), x.clay(col, { emissive: col }), g);
+      else if ("spore" === kind) for (let k = 0; k < 6; k++) m(T.sphere(0.07 + 0.03 * (k % 2), 8, 6), col).position.set(0.1 * Math.cos(k), 0.08 * Math.sin(2 * k), 0.1 * Math.sin(k));
+      else if ("pixel" === kind) m(T.box(0.24, 0.24, 0.24), col), m(T.box(0.12, 0.12, 0.25), "#2ad8c8").position.set(0.06, 0.06, 0);
+      else if ("crown" === kind) {
+        m(T.cyl(0.16, 0.16, 0.1, 10, 1), col);
+        for (let k = 0; k < 5; k++) m(T.cone(0.04, 0.12, 5), col).position.set(0.14 * Math.cos((k / 5) * l), 0.1, 0.14 * Math.sin((k / 5) * l));
+        m(T.sphere(0.04, 8, 6), "#e8302a").position.set(0, 0.0, 0.16);
+      } else if ("goo" === kind) m(T.sphere(0.2, 14, 10), col, { transparent: !0, opacity: 0.85, shininess: 140 });
+      else if ("star" === kind) R(starGeo(), x.clay(col, { emissive: col, side: THREE.DoubleSide }), g, [0, 0, 0], null, 0.2);
+      else if ("sprout" === kind) {
+        m(T.cyl(0.015, 0.02, 0.24, 5), "#4f8a2a");
+        [-1, 1].forEach((sd) => {
+          const lf = m(T.sphere(1, 8, 6), col);
+          lf.scale.set(0.1, 0.03, 0.06), lf.position.set(0.08 * sd, 0.1, 0), (lf.rotation.z = 0.4 * sd);
+        });
+      }
+      else if ("letter" === kind) m(T.box(0.34, 0.22, 0.02), col), m(T.box(0.07, 0.08, 0.025), "#e8302a").position.set(0.11, 0.05, 0.002);
+      else if ("note" === kind) m(T.sphere(0.08, 10, 8), col).scale.set(1.2, 0.9, 0.9), (m(T.cyl(0.015, 0.015, 0.28, 5), col).position.set(0.08, 0.14, 0)), (m(T.box(0.1, 0.03, 0.02), col).position.set(0.13, 0.27, 0));
+      else if ("card" === kind) m(T.box(0.24, 0.32, 0.015), col), m(T.box(0.18, 0.25, 0.018), "#f8f4ff");
+      else if ("gem" === kind) R(new THREE.OctahedronGeometry(0.17, 0), x.clay(col, { shininess: 140, specular: 16777215, emissive: new THREE.Color(col).multiplyScalar(0.3).getStyle() }), g).scale.set(1, 1.3, 1);
+      else if ("tile" === kind) m(T.box(0.26, 0.26, 0.05), col), m(T.box(0.16, 0.03, 0.055), "#5a3a10");
+      else if ("coin" === kind) m(T.cyl(0.14, 0.14, 0.03, 16), col).rotation.set(Math.PI / 2, 0, 0);
+      else if ("pizza" === kind) m(T.cyl(0.22, 0.22, 0.04, 3), "#f8d070"), m(T.cyl(0.05, 0.05, 0.045, 8), "#d8302a").position.set(0.05, 0, 0);
+      else if ("drop" === kind) m(T.sphere(0.15, 12, 10), col, { transparent: !0, opacity: 0.8, shininess: 140 }).scale.set(1, 1.3, 1);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow(), color: col, transparent: !0, opacity: 0.55, depthWrite: !1, blending: THREE.AdditiveBlending }));
+      halo.scale.setScalar(0.95), g.add(halo), g.scale.setScalar(sc);
+      return (g.userData.keepInFinale = !0), C.add(g), g;
+    }
+    // ---- speech bubbles
+    const bubble = (text) => {
+      const words = text.split(" "),
+        rows = [];
+      let line = "";
+      const meas = b(8, 8, () => {}).image.getContext("2d");
+      meas.font = "bold 34px sans-serif";
+      for (const w of words) {
+        const t = line ? line + " " + w : w;
+        meas.measureText(t).width > 440 && line ? (rows.push(line), (line = w)) : (line = t);
+      }
+      line && rows.push(line);
+      const H = 40 + 42 * rows.length + 26,
+        tex = b(512, H, (c) => {
+          (c.fillStyle = "#fffdf6"), (c.strokeStyle = "#2a2a34"), (c.lineWidth = 6), c.beginPath();
+          const r0 = 26, w0 = 500, h0 = H - 30;
+          c.moveTo(6 + r0, 6), c.arcTo(6 + w0, 6, 6 + w0, 6 + h0, r0), c.arcTo(6 + w0, 6 + h0, 6, 6 + h0, r0), c.lineTo(276, 6 + h0), c.lineTo(250, H - 3), c.lineTo(236, 6 + h0), c.arcTo(6, 6 + h0, 6, 6, r0), c.arcTo(6, 6, 6 + w0, 6, r0), c.closePath(), c.fill(), c.stroke();
+          (c.fillStyle = "#1a1a24"), (c.font = "bold 34px sans-serif"), (c.textAlign = "center"), (c.textBaseline = "middle");
+          rows.forEach((rw, k) => c.fillText(rw, 256, 34 + 21 + 42 * k));
+        }),
+        sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: !0, depthWrite: !1, depthTest: !1 }));
+      return sp.scale.set(4.4, (4.4 * H) / 512, 1), (sp.renderOrder = 20), (sp.userData.keepInFinale = !0), C.add(sp), sp;
+    };
+    // ---- the gestures every creature makes in its own way, as an offset for its wrapper
+    function gesture(name, u, k) {
+      const o = { y: 0, rx: 0, ry: 0, rz: 0, s: [1, 1, 1] };
+      if (u <= 0 || u >= 1) return o;
+      const e1 = Math.sin(Math.PI * u),
+        w = (f) => Math.sin(l * f * u);
+      switch (name) {
+        case "hop":
+          (o.y = 0.45 * Math.abs(Math.sin(2 * Math.PI * u)) * k), (o.s = [1 + 0.05 * e1, 1 - 0.06 * e1, 1 + 0.05 * e1]);
+          break;
+        case "stomp":
+          (o.y = 0.18 * Math.max(0, w(3)) * k), (o.rz = 0.08 * w(1.5) * k);
+          break;
+        case "shy":
+          (o.rx = 0.25 * e1 * k), (o.s = [1 - 0.05 * e1, 1 - 0.08 * e1, 1 - 0.05 * e1]);
+          break;
+        case "glitch":
+          (o.rz = 0.12 * Math.sign(Math.sin(31 * u)) * e1 * k), (o.y = 0.04 * Math.sign(Math.sin(23 * u)) * e1);
+          break;
+        case "puff":
+          o.s = [1 + 0.12 * e1 * k, 1 + 0.08 * e1 * k, 1 + 0.12 * e1 * k], (o.rx = -0.15 * e1 * k);
+          break;
+        case "wobble":
+          (o.rz = 0.18 * w(2) * e1 * k), (o.s = [1 + 0.08 * w(4), 1 - 0.08 * w(4), 1 + 0.08 * w(4)]);
+          break;
+        case "sway":
+          (o.rz = 0.12 * w(1) * k), (o.rx = 0.05 * w(2));
+          break;
+        case "doze":
+          (o.rx = 0.18 * e1 * k), (o.rz = 0.1 * w(0.5) * k);
+          break;
+        case "groove":
+          (o.rz = 0.14 * w(2) * k), (o.y = 0.08 * Math.abs(w(2)) * k);
+          break;
+        case "twirl":
+          (o.ry = l * sm(u) * k), (o.y = 0.2 * e1 * k);
+          break;
+        case "giggle":
+          (o.rz = 0.06 * Math.sin(40 * u) * e1 * k), (o.s = [1, 1 + 0.04 * Math.sin(40 * u), 1]);
+          break;
+        case "zoom":
+          (o.rx = 0.25 * w(3) * k), (o.y = 0.1 * e1 * k);
+          break;
+        case "flutter":
+          (o.y = 0.3 * e1 * k + 0.05 * Math.sin(30 * u)), (o.rz = 0.05 * w(3));
+          break;
+        case "spin":
+          o.ry = l * sm(u) * k;
+          break;
+        case "bow":
+          o.rx = 0.4 * e1 * k;
+          break;
+        case "lean":
+          o.rx = -0.3 * e1 * k;
+          break;
+        case "stretch":
+          o.s = [1 - 0.06 * e1 * k, 1 + 0.14 * e1 * k, 1 - 0.06 * e1 * k];
+          break;
+        default:
+          (o.rx = 0.18 * Math.max(0, w(2)) * k), (o.y = 0.03 * e1);
+      }
+      return o;
+    }
+    const wrap = (ent) => {
+      const g = ent.group;
+      if (g.userData.vgW) return g.userData.vgW;
+      const w = new THREE.Group();
+      return g.children.slice().forEach((ch) => (g.remove(ch), w.add(ch))), g.add(w), (g.userData.vgW = w), w;
+    };
+    const headY = (ent) => ent.group.position.y + (ent.height || 2.5) * (ent.group.scale.y || 1);
+    // ---- build one vignette's script: messenger flights and gesture windows
+    function script(pk, A, B, st, rs) {
+      const a = SIG[pk[0]],
+        bS = SIG[pk[1]],
+        d = Math.hypot(A.group.position.x - B.group.position.x, A.group.position.z - B.group.position.z),
+        fl = Math.min(2.6, 0.75 + d / 22),
+        flights = [],
+        gest = [],
+        F = (from, item, col, t0, dur, mode, o = {}) => flights.push(Object.assign({ from, item, col, t0, dur, mode, arc: Math.min(9, 1.2 + 0.18 * d) * (0.8 + 0.4 * rs()) }, o)),
+        Gs = (who, name, t0, dur, k = 1) => gest.push({ who, name, t0, dur, k });
+      let T0 = 0.9,
+        end = 0;
+      switch (st) {
+        case 0:
+          F(0, a.item, a.col, T0, fl, "arc"), F(1, bS.item, bS.col, T0, fl, "arc", { arc: -1 });
+          Gs(0, "hop", T0 + fl, 0.9), Gs(1, "hop", T0 + fl, 0.9), (end = T0 + fl + 1.2);
+          break;
+        case 1:
+          for (let k = 0; k < 4; k++) F(k % 2, a.item, a.col, T0 + k * (fl * 0.75 + 0.15), fl * 0.75, "arc", { low: 1 }), Gs((k + 1) % 2, "stomp", T0 + (k + 1) * (fl * 0.75 + 0.15) - 0.2, 0.5, 0.7);
+          end = T0 + 4 * (fl * 0.75 + 0.15) + 0.6;
+          break;
+        case 2:
+          F(0, a.item, a.col, T0, fl, "arc", { orbit: 1.2, back: 1 }), Gs(1, "wobble", T0 + fl, 1.6), (end = T0 + 2 * fl + 1.6);
+          break;
+        case 3:
+          for (let k = 0; k < 5; k++) F(0, a.item, a.col, T0 + 0.35 * k, fl, "arc", { sc: 0.7 }), Gs(1, "bow", T0 + fl + 0.35 * k - 0.1, 0.5, 0.6);
+          F(1, bS.item, bS.col, T0 + fl + 2, fl * 1.1, "arc", { sc: 1.6 }), Gs(0, bS.gest === "hop" ? "spin" : "hop", T0 + 2 * fl + 2, 0.9), (end = T0 + 2.1 * fl + 3.2);
+          break;
+        case 4:
+          F(0, a.item, a.col, T0, fl, "arc", { juggle: 1.6, back: 1 }), F(1, bS.item, bS.col, T0 + fl, 0.01, "juggle", { juggle: 1.6, back: 1, ph: Math.PI }), Gs(1, bS.gest, T0 + fl, 1.6), Gs(0, "stretch", T0 + 2 * fl + 1.6, 0.8), (end = T0 + 2 * fl + 2.6);
+          break;
+        case 5:
+          Gs(0, "spin", T0, 1.6), Gs(1, "spin", T0, 1.6), F(0, a.item, a.col, T0, 1.6, "orbitSelf"), F(1, bS.item, bS.col, T0, 1.6, "orbitSelf"), F(0, a.item, a.col, T0 + 1.6, fl, "arc"), F(1, bS.item, bS.col, T0 + 1.6, fl, "arc", { arc: -1 }), (end = T0 + 1.6 + fl + 0.8);
+          break;
+        case 6:
+          F(0, a.item, a.col, T0, fl * 1.4, "bounce"), Gs(1, "stomp", T0 + fl * 1.4, 0.8), F(1, bS.item, bS.col, T0 + fl * 1.4 + 0.6, fl * 1.4, "bounce"), Gs(0, a.gest, T0 + fl * 2.8 + 0.6, 0.9), (end = T0 + fl * 2.8 + 1.6);
+          break;
+        case 7:
+          F(0, a.item, a.col, T0, fl * 2, "float", { bubble: 1 }), Gs(1, "hop", T0 + fl * 2, 0.7), Gs(0, a.gest, T0, 1.4), F(1, bS.item, bS.col, T0 + fl * 2 + 0.8, fl, "arc"), (end = T0 + fl * 3 + 1.4);
+          break;
+        case 8:
+          for (let k = 0; k < 4; k++) F(k % 2, k % 2 ? bS.item : a.item, k % 2 ? bS.col : a.col, T0 + k * (fl * 0.45 + 0.35), fl * 0.45, "zip"), Gs((k + 1) % 2, "giggle", T0 + (k + 1) * (fl * 0.45 + 0.35) - 0.35, 0.5);
+          end = T0 + 4 * (fl * 0.45 + 0.35) + 0.6;
+          break;
+        case 9:
+          F(0, a.item, a.col, T0, fl * 0.6, "arc", { mid: 1, burst: 1 }), F(1, bS.item, bS.col, T0, fl * 0.6, "arc", { mid: 1 }), Gs(0, "stretch", T0 + fl * 0.6, 0.9), Gs(1, "stretch", T0 + fl * 0.6, 0.9), (end = T0 + fl * 0.6 + 1.8);
+          break;
+        case 10:
+          Gs(0, "sway", T0 - 0.4, 2.4 + fl, 1.2);
+          for (let k = 0; k < 3; k++) F(0, "note", "#ff8a3a", T0 + 0.5 * k, fl * 1.5, "float", { sc: 0.7 });
+          F(0, a.item, a.col, T0 + 1.6, fl * 1.5, "float"), Gs(1, "lean", T0 + fl * 1.5 + 1.6, 1.2), F(1, bS.item, bS.col, T0 + fl * 1.5 + 2.2, fl, "arc", { heart: 1 }), (end = T0 + fl * 2.5 + 2.6);
+          break;
+        default:
+          F(0, a.item, a.col, T0, fl, "arc", { back: 1, tap: 1 }), F(1, bS.item, bS.col, T0 + fl + 0.25, fl, "arc", { chase: 1 }), Gs(1, "giggle", T0 + fl - 0.1, 0.5), Gs(0, a.gest, T0 + 2 * fl + 0.3, 0.8), (end = T0 + 2 * fl + 1.4);
+      }
+      // each creature's own flourish at the start
+      Gs(0, a.gest, 0.15, 0.7, 0.6);
+      return { flights, gest, end: Math.max(end, 4) };
+    }
+    function start(pk, A, B, opt = {}) {
+      const id = pk[0] + pk[1],
+        rs = srand(1 + PAIRS.indexOf(pk) * 7919),
+        sc = script(pk, A, B, pk[2], rs),
+        text = !!opt.text;
+      (plays[id] = (plays[id] || 0) + 1), wrap(A), wrap(B);
+      cur = { pk, A, B, t: 0, sc, text, done: {}, bubbles: [], end: text ? Math.max(sc.end, 8.2) : sc.end };
+      Ut.above(A, SIG[pk[0]].emote, f(po())), (cur.flights = sc.flights.map((fx0) => Object.assign({}, fx0, { g: null, landed: !1 })));
+    }
+    function finish() {
+      if (!cur) return;
+      cur.flights.forEach((fl) => fl.g && (C.remove(fl.g), (fl.g = null))), cur.bubbles.forEach((bb) => (C.remove(bb.sp), bb.sp.material.map.dispose()));
+      [cur.A, cur.B].forEach((en) => {
+        const w = en.group.userData.vgW;
+        w && (w.position.set(0, 0, 0), w.rotation.set(0, 0, 0), w.scale.set(1, 1, 1));
+      });
+      fx.forEach((p) => C.remove(p.m)), (fx.length = 0), (cur = null);
+    }
+    function burst(pos, col, n = 14) {
+      for (let k = 0; k < n; k++) {
+        const m = R(T.box(0.07, 0.07, 0.015), x.clay(k % 3 ? col : f(["#ff5fb0", "#ffd23a", "#35f0e0", "#a8e830"]), { emissive: "#222222", side: THREE.DoubleSide }), C, [pos.x, pos.y, pos.z]);
+        fx.push({ m, v: V(2.4 * (Math.random() - 0.5), 1.5 + 2 * Math.random(), 2.4 * (Math.random() - 0.5)), life: 1.4, spin: V(Math.random() * 9, Math.random() * 9, 0) });
+      }
+    }
+    function tick(dt) {
+      const c0 = cur;
+      c0.t += dt;
+      const t = c0.t,
+        ents = [c0.A, c0.B],
+        P0 = ents.map((en) => V(en.group.position.x, headY(en) - 0.5, en.group.position.z));
+      // turn toward each other at the start, back at the end
+      const face = sm(t / 0.6) * (1 - sm((t - (c0.end - 0.7)) / 0.7));
+      ents.forEach((en, k) => {
+        const w = en.group.userData.vgW,
+          o2 = ents[1 - k].group.position,
+          want = Math.atan2(o2.x - en.group.position.x, o2.z - en.group.position.z);
+        let dy = want - en.group.rotation.y;
+        dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+        const go = { y: 0, rx: 0, ry: Math.max(-1.45, Math.min(1.45, dy)) * face, rz: 0, s: [1, 1, 1] };
+        for (const gs of c0.sc.gest) {
+          if (gs.who !== k) continue;
+          const g1 = gesture(gs.name, (t - gs.t0) / gs.dur, gs.k);
+          (go.y += g1.y), (go.rx += g1.rx), (go.ry += g1.ry), (go.rz += g1.rz), (go.s = go.s.map((v, i) => v * g1.s[i]));
+        }
+        w.position.set(0, go.y, 0), w.rotation.set(go.rx, go.ry, go.rz), w.scale.set(...go.s);
+      });
+      // messengers
+      for (const fl of c0.flights) {
+        const t1 = t - fl.t0;
+        if (t1 < 0) continue;
+        const from = P0[fl.from],
+          to = P0[1 - fl.from],
+          tot = fl.dur + (fl.orbit || 0) + (fl.juggle || 0) + (fl.back ? fl.dur : 0);
+        if (t1 > tot) {
+          fl.g && (C.remove(fl.g), (fl.g = null));
+          if (!fl.landed) {
+            fl.landed = !0;
+            const at = fl.back ? from : fl.mid ? V().lerpVectors(from, to, 0.5) : to;
+            fl.burst && burst(at, fl.col, 22), fl.heart && Ut.at(at.x, at.y + 0.6, at.z, "♥", M.pink);
+            Ut.at(at.x, at.y + 0.4, at.z, fl.mid ? "✦" : fl.bubble ? "~" : "!", f(po()));
+            G.near(at.x, at.z, 26, SIG[c0.pk[1 - fl.from]] ? (fl.item === "drop" ? "splash" : fl.item === "goo" ? "blorp" : "pickup") : "pickup");
+          }
+          continue;
+        }
+        fl.g || ((fl.g = messenger(fl.item, fl.col, fl.sc || 1)), fl.bubble && R(T.sphere(0.42, 16, 12), x.clay("#e8faff", { transparent: !0, opacity: 0.32, shininess: 140, specular: 16777215, depthWrite: !1 }), fl.g));
+        const p = fl.g.position,
+          go = (q, a0, b0, h, mode) => {
+            const qq = "zip" === mode ? q * q * (3 - 2 * q) : q;
+            p.lerpVectors(a0, b0, qq);
+            if ("bounce" === mode) p.y = a0.y + (b0.y - a0.y) * q - (a0.y - 0.15) * Math.min(1, q * 4) + Math.abs(Math.sin(3 * Math.PI * q)) * (h * 0.35) + (a0.y - 0.15) * Math.max(0, (q - 0.75) * 4);
+            else if ("float" === mode) p.y += Math.sin(Math.PI * q) * h * 0.7 + 0.25 * Math.sin(9 * q);
+            else if ("zip" === mode) p.y += Math.sin(Math.PI * q) * 0.4;
+            else p.y += Math.sin(Math.PI * q) * (fl.low ? h * 0.45 : Math.abs(h)) * (h < 0 ? 0.6 : 1);
+          };
+        if ("orbitSelf" === fl.mode) {
+          const a = (l * t1) / 0.8;
+          p.set(from.x + 1.0 * Math.cos(a), from.y + 0.4 + 0.2 * Math.sin(2 * a), from.z + 1.0 * Math.sin(a));
+        } else if ("juggle" === fl.mode) {
+          const a = (l * t1) / 0.8 + (fl.ph || 0);
+          t1 < fl.juggle ? p.set(to.x + 0.5 * Math.cos(a), to.y + 1.2 + 0.5 * Math.sin(a), to.z) : go((t1 - fl.juggle) / Math.max(0.6, fl.dur || 0.6), V(to.x, to.y + 1.2, to.z), from, 2, "arc");
+        } else if (t1 < fl.dur) go(t1 / fl.dur, from, fl.mid ? V().lerpVectors(from, to, 0.5) : to, fl.arc, fl.mode);
+        else if (t1 < fl.dur + (fl.orbit || 0) + (fl.juggle || 0)) {
+          const a = (l * (t1 - fl.dur)) / 0.9;
+          fl.juggle ? p.set(to.x + 0.5 * Math.cos(a), to.y + 1.2 + 0.5 * Math.sin(a), to.z) : p.set(to.x + 0.9 * Math.cos(a), to.y + 0.6, to.z + 0.9 * Math.sin(a));
+        } else go((t1 - fl.dur - (fl.orbit || 0) - (fl.juggle || 0)) / fl.dur, to, from, fl.arc * 0.7, fl.mode);
+        fl.g.rotation.y += 4 * dt, (fl.g.rotation.x += 2 * dt);
+        "zip" === fl.mode && Math.random() < 8 * dt && Ut.at(p.x, p.y, p.z, "·", fl.col);
+      }
+      // confetti
+      for (let k = fx.length - 1; k >= 0; k--) {
+        const q = fx[k];
+        (q.life -= dt), q.v.y -= 6 * dt, q.m.position.addScaledVector(q.v, dt), (q.m.rotation.x += q.spin.x * dt), (q.m.rotation.y += q.spin.y * dt);
+        (q.life <= 0 || q.m.position.y < 0) && (C.remove(q.m), fx.splice(k, 1));
+      }
+      // speech bubbles
+      if (c0.text) {
+        [
+          [0, 0.5, c0.pk[3]],
+          [1, 3.9, c0.pk[4]],
+        ].forEach(([who, at, line]) => {
+          if (t >= at && !c0.done["b" + who]) (c0.done["b" + who] = !0), c0.bubbles.push({ who, t0: at, sp: bubble(line) }), G.textTick && G.near(P0[who].x, P0[who].z, 26, "textTick");
+        });
+        c0.bubbles.forEach((bb) => {
+          const en = ents[bb.who],
+            u = t - bb.t0;
+          bb.sp.position.set(en.group.position.x, headY(en) + 1.1 + 0.1 * Math.min(1, u * 3), en.group.position.z), (bb.sp.material.opacity = Math.min(1, u * 4) * Math.max(0, Math.min(1, (3.8 - u) * 2)));
+        });
+      }
+      t > c0.end && finish();
+    }
+    const lineUp = () => {
+      const m = {};
+      for (const en of It.all) for (const k in NAMES) en.def && en.def.name === NAMES[k] && en.def.stationary && (m[k] = en);
+      return m;
+    };
+    function pick(now) {
+      const m = lineUp(),
+        ok = PAIRS.filter((pk) => m[pk[0]] && m[pk[1]] && !m[pk[0]].busy && !m[pk[1]].busy);
+      if (!ok.length) return;
+      let best = null,
+        bs = 1e9;
+      for (const pk of ok) {
+        const A = m[pk[0]].group.position,
+          B = m[pk[1]].group.position,
+          sc = 100 * (plays[pk[0] + pk[1]] || 0) + 0.6 * Math.hypot(A.x - B.x, A.z - B.z) + 14 * Math.random();
+        sc < bs && ((bs = sc), (best = pk));
+      }
+      const text = now - lastText > 240 && Math.random() < 0.1;
+      text && (lastText = now), start(best, m[best[0]], m[best[1]], { text });
+    }
+    L.push((tt, dt) => {
+      dt = Math.min(0.1, dt || 0.016);
+      if (cur) {
+        if (me.active || cur.A.busy || cur.B.busy) return finish();
+        return tick(dt);
+      }
+      if (me.active || "playing" !== jt.top) return void (nextAt = Math.max(nextAt, tt + 4));
+      tt > nextAt && (pick(tt), (nextAt = tt + 5 + 5 * Math.random()));
+    });
+    return {
+      PAIRS,
+      plays,
+      // for testing: play the vignette of a pair now, e.g. JGP.vignette.play("MU", "GW", true)
+      play(a, b2, text) {
+        const pk = PAIRS.find((q) => (q[0] === a && q[1] === b2) || (q[0] === b2 && q[1] === a)),
+          m = lineUp();
+        if (!pk || !m[pk[0]] || !m[pk[1]]) return !1;
+        return finish(), start(pk, m[pk[0]], m[pk[1]], { text: !!text }), !0;
+      },
+      get current() {
+        return cur && { pair: cur.pk[0] + "-" + cur.pk[1], t: cur.t, end: cur.end, text: cur.text };
+      },
+    };
+  })();
   const GAZEBO = [5, -31];
+  let UFO_FLY = null; // set by the town: sends the UFO over right away (for testing)
   const JGP_K = { post: (g) => buildPostOffice(g), garden: (g) => buildGardenSupplies(g), sheriff: (g) => buildSheriff(g) };
   function swapWorld() {
     // keep the working stations (garden, shop, pond, phone, sign, obelisk, portal) and
@@ -14938,7 +16304,9 @@ const JGP = (() => {
       glass: { m: glassM() },
       lit: { m: glassM() }, // windows that glow at night
       lamp: { m: lam({}) },
-      sign: { m: lam({ map: atlasTx, alphaTest: 0.5, side: THREE.DoubleSide }), uv: !0 },
+      // signs hang 1-2 cm off their boards: a constant depth bias (units only, no slope factor, so it
+      // stays tiny at grazing angles) keeps them in front where depth precision is low
+      sign: { m: lam({ map: atlasTx, alphaTest: 0.5, side: THREE.DoubleSide, polygonOffset: !0, polygonOffsetFactor: 0, polygonOffsetUnits: -4 }), uv: !0 },
       corn: { m: lam({ map: cornTx, alphaTest: 0.45, side: THREE.DoubleSide }), uv: !0 },
     };
     const bins = {},
@@ -15389,12 +16757,12 @@ const JGP = (() => {
         fz = bz + d / 2;
       // the lot: asphalt, parking stalls with curb stops, drive-thru arrows down the right
       B.box("asphalt", "#2c2c30", 0, -0.04, 0, 20, 0.08, 24);
-      for (let k = 0; k <= 4; k++) B.box("plain", "#f2f0ea", -9 + 3 * k, 0.005, 9, 0.12, 0.02, 5);
+      for (let k = 0; k <= 4; k++) B.box("plain", "#f2f0ea", -9 + 3 * k, 0.02, 9, 0.12, 0.02, 5);
       for (let k = 0; k < 4; k++) B.box("plain", gold, -7.5 + 3 * k, 0.08, 6.9, 1.6, 0.16, 0.25);
       [-6, -1, 4].forEach((pz) =>
-        B.box("plain", "#f2f0ea", 7.5, 0.005, pz, 0.22, 0.02, 1.8)
-          .box("plain", "#f2f0ea", 7.2, 0.005, pz - 0.75, 0.22, 0.02, 0.8, 0, -0.6, 0)
-          .box("plain", "#f2f0ea", 7.8, 0.005, pz - 0.75, 0.22, 0.02, 0.8, 0, 0.6, 0),
+        B.box("plain", "#f2f0ea", 7.5, 0.02, pz, 0.22, 0.02, 1.8)
+          .box("plain", "#f2f0ea", 7.2, 0.02, pz - 0.75, 0.22, 0.02, 0.8, 0, -0.6, 0)
+          .box("plain", "#f2f0ea", 7.8, 0.02, pz - 0.75, 0.22, 0.02, 0.8, 0, 0.6, 0),
       );
       // the restaurant: red tile skirt, cream tile walls, chrome-framed wraparound windows
       B.box("concrete", "#c8c2b6", bx, 0.15, bz, w + 0.6, 0.3, d + 0.6);
@@ -15725,10 +17093,10 @@ const JGP = (() => {
       [-45, -45],
       [SZ, 45],
     ].forEach(([cz, cx]) => {
-      put("asphalt", UHs(64, 1), ROAD, S(0, -0.1, cz, 0, 0, 0, 640, 1, 8)), put("asphalt", UHs(1, 64), ROAD, S(cx, -0.101, 0, 0, 0, 0, 8, 1, 640));
+      put("asphalt", UHs(64, 1), ROAD, S(0, -0.1, cz, 0, 0, 0, 640, 1, 8)), put("asphalt", UHs(1, 64), ROAD, S(cx, -0.12, 0, 0, 0, 0, 8, 1, 640));
       for (let u = -318; u < 318; u += 9) {
-        Math.abs(u + 1.5 - 45) > 6 && Math.abs(u + 1.5 + 45) > 6 && put("plain", UH, "#e8c030", S(u + 1.5, -0.09, cz, 0, 0, 0, 3, 1, 0.18));
-        Math.abs(u + 1.5 - SZ) > 6 && Math.abs(u + 1.5 + 45) > 6 && put("plain", UH, "#e8c030", S(cx, -0.09, u + 1.5, 0, 0, 0, 0.18, 1, 3));
+        Math.abs(u + 1.5 - 45) > 6 && Math.abs(u + 1.5 + 45) > 6 && put("plain", UH, "#e8c030", S(u + 1.5, -0.07, cz, 0, 0, 0, 3, 1, 0.18));
+        Math.abs(u + 1.5 - SZ) > 6 && Math.abs(u + 1.5 + 45) > 6 && put("plain", UH, "#e8c030", S(cx, -0.07, u + 1.5, 0, 0, 0, 0.18, 1, 3));
       }
       [-1, 1].forEach((sd) => {
         SEGS.forEach(([a0, a1]) => put("concrete", UBs(segs(a1 - a0), 1), WALK, S((a0 + a1) / 2, -0.1, cz + 5.5 * sd, 0, 0, 0, a1 - a0, 0.2, 3)));
@@ -15744,8 +17112,8 @@ const JGP = (() => {
     [-1, 1].forEach((sx) =>
       [-1, 1].forEach((sz) => {
         for (let k = 0; k < 7; k++) {
-          put("plain", UH, "#f2f0ea", S(39.5 * sx, -0.09, (sz > 0 ? SZ : 45 * sz) + sz * (k - 3.5), 0, 0, 0, 3, 1, 0.5));
-          put("plain", UH, "#f2f0ea", S(sx * (41.5 + k), -0.09, sz > 0 ? SZ - 5.5 : -39.5, 0, 0, 0, 0.5, 1, 3));
+          put("plain", UH, "#f2f0ea", S(39.5 * sx, -0.07, (sz > 0 ? SZ : 45 * sz) + sz * (k - 3.5), 0, 0, 0, 3, 1, 0.5));
+          put("plain", UH, "#f2f0ea", S(sx * (41.5 + k), -0.07, sz > 0 ? SZ - 5.5 : -39.5, 0, 0, 0, 0.5, 1, 3));
         }
       }),
     );
@@ -15769,7 +17137,7 @@ const JGP = (() => {
           wl = dx < 0 ? (LINEUP_X + 2.6 - x0) / ux : len + 0.53;
         return { x0, z0, cx, cz, len, ux, uz, wl };
       };
-    put("concrete", cached("ringwalk", () => new THREE.RingGeometry(GARDEN_R + 1.6, GARDEN_R + 3.4, 72).rotateX(-Math.PI / 2)), WALK, S(0, 0.004, 0));
+    put("concrete", cached("ringwalk", () => new THREE.RingGeometry(GARDEN_R + 1.6, GARDEN_R + 3.4, 72).rotateX(-Math.PI / 2)), WALK, S(0, 0.02, 0));
     [
       [1, -1],
       [1, 1],
@@ -16132,6 +17500,103 @@ const JGP = (() => {
       if (!bins[key].length) continue;
       R(mergeBin(bins[key], BIN[key]), BIN[key].m, grp).name = "town_" + key;
     }
+
+    // ---- a UFO that very rarely crosses the sky: the first pass comes 5-15 minutes into the visit
+    // and the next ones 10-25 minutes apart, so a player may never see it. It drifts in out of the
+    // haze, stops to wobble over the town for a moment, then zips off over the far horizon.
+    {
+      const ufo = new THREE.Group(),
+        // a faint glow of its own so the chrome still reads as metal from underneath
+        chrome = x.clay("#a8aeb8", { unique: !0, shininess: 140, specular: 12632256, emissive: "#3e434c" }),
+        dark = x.clay("#4a4e58", { unique: !0, shininess: 60, emissive: "#22252c" }),
+        glow = x.basic("#9affb0", { unique: !0, transparent: !0, opacity: 0.85 }),
+        bulbs = [0, 1, 2].map((k) => x.clay(["#ff4a5a", "#ffd23a", "#4ae8ff"][k], { unique: !0, emissive: ["#ff4a5a", "#ffd23a", "#4ae8ff"][k] }));
+      (ufo.userData.jgpKeep = !0), (ufo.userData.keepInFinale = !0), (ufo.visible = !1), C.add(ufo);
+      const body = new THREE.Group();
+      ufo.add(body);
+      // hull: the sunlit top plain chrome with panel seams, the shaded underside glowing faintly
+      R(latheGeo(smoothProfile([[0, -0.5], [1.2, -0.55], [2.6, -0.36], [3.8, -0.06], [4.05, 0.04]], 24), 40), chrome, body);
+      R(latheGeo(smoothProfile([[4.05, 0.04], [3.5, 0.28], [2.3, 0.52], [1.5, 0.68], [0, 0.72]], 24), 40), x.clay("#8a909a", { shininess: 90, specular: 10526880 }), body);
+      [
+        [3.3, 0.33],
+        [2.45, 0.5],
+      ].forEach(([rr0, y]) => R(T.torus(rr0, 0.035, 5, 48), dark, body, [0, y, 0], [Math.PI / 2, 0, 0]));
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * l + 0.2;
+        R(T.sphere(0.2, 10, 8), x.clay("#ffe6a0", { emissive: "#a88a30" }), body, [2.85 * Math.cos(a), 0.43, 2.85 * Math.sin(a)], null, [1, 0.45, 1]);
+      }
+      R(T.torus(3.95, 0.12, 8, 48), dark, body, [0, 0, 0], [Math.PI / 2, 0, 0]);
+      for (let k = 0; k < 18; k++) {
+        const a = (k / 18) * l;
+        R(T.sphere(0.16, 8, 6), bulbs[k % 3], body, [4.05 * Math.cos(a), 0.06, 4.05 * Math.sin(a)]);
+      }
+      // the glass dome and its pilot
+      R(new THREE.SphereGeometry(1.45, 24, 12, 0, l, 0, Math.PI / 2), x.clay("#a8e8f0", { transparent: !0, opacity: 0.45, shininess: 140, specular: 16777215, depthWrite: !1 }), body, [0, 0.66, 0]).renderOrder = 2;
+      R(T.sphere(0.42, 16, 12), x.clay("#7ad85a", { shininess: 50 }), body, [0, 1.15, 0], null, [1, 1.15, 1]);
+      R(T.cyl(0.22, 0.32, 0.4, 12), x.clay("#7ad85a", { shininess: 50 }), body, [0, 0.82, 0]);
+      [-1, 1].forEach((sx) => R(T.sphere(0.14, 12, 8), x.clay("#101014", { shininess: 120, specular: 16777215 }), body, [0.17 * sx, 1.2, 0.34], [0, 0, 0.5 * sx], [1, 1.5, 0.6]));
+      [-1, 1].forEach((sx) => {
+        R(T.cyl(0.02, 0.02, 0.35, 5), x.clay("#7ad85a"), body, [0.2 * sx, 1.7, 0], [0, 0, -0.35 * sx]);
+        R(T.sphere(0.06, 8, 6), x.clay("#ffd23a", { emissive: "#6a5000" }), body, [0.26 * sx, 1.86, 0]);
+      });
+      // the underside: three pods and a pulsing glow
+      for (let k = 0; k < 3; k++) {
+        const a = (k / 3) * l;
+        R(T.sphere(0.4, 12, 8), dark, body, [2.0 * Math.cos(a), -0.45, 2.0 * Math.sin(a)], null, [1, 0.5, 1]);
+      }
+      const under = R(T.circle(1.25, 28), glow, body, [0, -0.56, 0], [Math.PI / 2, 0, 0]);
+      let next = 300 + 600 * rnd(),
+        fly = null,
+        t0 = null;
+      const launch = (now) => {
+        const a = rnd() * l,
+          off = (rnd() - 0.5) * 80,
+          ux = Math.cos(a),
+          uz = Math.sin(a),
+          px = -uz,
+          pz = ux,
+          R0 = 190,
+          y = 35 + 13 * rnd();
+        fly = {
+          t: now,
+          A: new THREE.Vector3(-ux * R0 + px * off, y + 6, -uz * R0 + pz * off),
+          M: new THREE.Vector3(px * off * 0.6, y, pz * off * 0.6),
+          B: new THREE.Vector3(ux * R0 * 1.3 + px * off, y + 24, uz * R0 * 1.3 + pz * off),
+          dir: a,
+        };
+        ufo.visible = !0;
+      };
+      UFO_FLY = () => (next = 0);
+      L.push((tt, dt) => {
+        if (null === t0) t0 = tt;
+        const now = tt - t0;
+        if (!fly) {
+          if (now < next) return;
+          launch(now);
+        }
+        const e = now - fly.t,
+          T1 = 9,
+          T2 = 2.6,
+          T3 = 3.2,
+          p = ufo.position;
+        if (e < T1) {
+          const f = e / T1,
+            q = 1 - (1 - f) * (1 - f);
+          p.lerpVectors(fly.A, fly.M, q), (body.rotation.x = 0.12 * (1 - f) * Math.cos(fly.dir)), (body.rotation.z = -0.12 * (1 - f) * Math.sin(fly.dir));
+        } else if (e < T1 + T2) {
+          const f = (e - T1) / T2;
+          p.copy(fly.M), (p.y += 0.8 * Math.sin(f * l * 1.5)), (p.x += 0.5 * Math.sin(f * 17)), (body.rotation.x = 0.1 * Math.sin(f * 9)), (body.rotation.z = 0.1 * Math.cos(f * 7));
+        } else if (e < T1 + T2 + T3) {
+          const f = (e - T1 - T2) / T3;
+          p.lerpVectors(fly.M, fly.B, f * f * f), (body.rotation.x = -0.25 * Math.cos(fly.dir) * Math.min(1, 3 * f)), (body.rotation.z = 0.25 * Math.sin(fly.dir) * Math.min(1, 3 * f));
+        } else return (fly = null), (ufo.visible = !1), void (next = now + 600 + 900 * rnd());
+        body.rotation.y += 2.2 * (dt || 0.016);
+        const ph = Math.floor(now * 6) % 3;
+        bulbs.forEach((m, k) => m.emissive.setScalar(0).add(m.color.clone().multiplyScalar(k === ph ? 1 : 0.15)));
+        glow.opacity = 0.55 + 0.35 * Math.sin(now * 7);
+        under.scale.setScalar(1 + 0.08 * Math.sin(now * 7));
+      });
+    }
     let nightWas = -1;
     L.push((tt, dt) => {
       SPINNERS.forEach(([m, spd]) => (m.rotation.z += spd * (dt || 0.016)));
@@ -16165,6 +17630,10 @@ const JGP = (() => {
     buildSheriff,
     buildGardenSupplies,
     fireBlossom,
+    ufoNow: () => UFO_FLY && UFO_FLY(),
+    backpacka: BP,
+    vignette: VIG,
+    KIT,
     beforeSpawn() {
       try {
         applyCast();

@@ -14681,6 +14681,7 @@ const JGP = (() => {
       c.rotation.z = live ? 0.7 * Math.max(0, Math.sin(1.3 * tt + c.userData.ph)) : 0.06 * Math.sin(1.4 * tt + c.userData.ph);
   });
   const GAZEBO = [5, -31];
+  let UFO_FLY = null; // set by the town: sends the UFO over right away (for testing)
   const JGP_K = { post: (g) => buildPostOffice(g), garden: (g) => buildGardenSupplies(g), sheriff: (g) => buildSheriff(g) };
   function swapWorld() {
     // keep the working stations (garden, shop, pond, phone, sign, obelisk, portal) and
@@ -16309,6 +16310,103 @@ const JGP = (() => {
       if (!bins[key].length) continue;
       R(mergeBin(bins[key], BIN[key]), BIN[key].m, grp).name = "town_" + key;
     }
+
+    // ---- a UFO that very rarely crosses the sky: the first pass comes 5-15 minutes into the visit
+    // and the next ones 10-25 minutes apart, so a player may never see it. It drifts in out of the
+    // haze, stops to wobble over the town for a moment, then zips off over the far horizon.
+    {
+      const ufo = new THREE.Group(),
+        // a faint glow of its own so the chrome still reads as metal from underneath
+        chrome = x.clay("#a8aeb8", { unique: !0, shininess: 140, specular: 12632256, emissive: "#3e434c" }),
+        dark = x.clay("#4a4e58", { unique: !0, shininess: 60, emissive: "#22252c" }),
+        glow = x.basic("#9affb0", { unique: !0, transparent: !0, opacity: 0.85 }),
+        bulbs = [0, 1, 2].map((k) => x.clay(["#ff4a5a", "#ffd23a", "#4ae8ff"][k], { unique: !0, emissive: ["#ff4a5a", "#ffd23a", "#4ae8ff"][k] }));
+      (ufo.userData.jgpKeep = !0), (ufo.userData.keepInFinale = !0), (ufo.visible = !1), C.add(ufo);
+      const body = new THREE.Group();
+      ufo.add(body);
+      // hull: the sunlit top plain chrome with panel seams, the shaded underside glowing faintly
+      R(latheGeo(smoothProfile([[0, -0.5], [1.2, -0.55], [2.6, -0.36], [3.8, -0.06], [4.05, 0.04]], 24), 40), chrome, body);
+      R(latheGeo(smoothProfile([[4.05, 0.04], [3.5, 0.28], [2.3, 0.52], [1.5, 0.68], [0, 0.72]], 24), 40), x.clay("#8a909a", { shininess: 90, specular: 10526880 }), body);
+      [
+        [3.3, 0.33],
+        [2.45, 0.5],
+      ].forEach(([rr0, y]) => R(T.torus(rr0, 0.035, 5, 48), dark, body, [0, y, 0], [Math.PI / 2, 0, 0]));
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * l + 0.2;
+        R(T.sphere(0.2, 10, 8), x.clay("#ffe6a0", { emissive: "#a88a30" }), body, [2.85 * Math.cos(a), 0.43, 2.85 * Math.sin(a)], null, [1, 0.45, 1]);
+      }
+      R(T.torus(3.95, 0.12, 8, 48), dark, body, [0, 0, 0], [Math.PI / 2, 0, 0]);
+      for (let k = 0; k < 18; k++) {
+        const a = (k / 18) * l;
+        R(T.sphere(0.16, 8, 6), bulbs[k % 3], body, [4.05 * Math.cos(a), 0.06, 4.05 * Math.sin(a)]);
+      }
+      // the glass dome and its pilot
+      R(new THREE.SphereGeometry(1.45, 24, 12, 0, l, 0, Math.PI / 2), x.clay("#a8e8f0", { transparent: !0, opacity: 0.45, shininess: 140, specular: 16777215, depthWrite: !1 }), body, [0, 0.66, 0]).renderOrder = 2;
+      R(T.sphere(0.42, 16, 12), x.clay("#7ad85a", { shininess: 50 }), body, [0, 1.15, 0], null, [1, 1.15, 1]);
+      R(T.cyl(0.22, 0.32, 0.4, 12), x.clay("#7ad85a", { shininess: 50 }), body, [0, 0.82, 0]);
+      [-1, 1].forEach((sx) => R(T.sphere(0.14, 12, 8), x.clay("#101014", { shininess: 120, specular: 16777215 }), body, [0.17 * sx, 1.2, 0.34], [0, 0, 0.5 * sx], [1, 1.5, 0.6]));
+      [-1, 1].forEach((sx) => {
+        R(T.cyl(0.02, 0.02, 0.35, 5), x.clay("#7ad85a"), body, [0.2 * sx, 1.7, 0], [0, 0, -0.35 * sx]);
+        R(T.sphere(0.06, 8, 6), x.clay("#ffd23a", { emissive: "#6a5000" }), body, [0.26 * sx, 1.86, 0]);
+      });
+      // the underside: three pods and a pulsing glow
+      for (let k = 0; k < 3; k++) {
+        const a = (k / 3) * l;
+        R(T.sphere(0.4, 12, 8), dark, body, [2.0 * Math.cos(a), -0.45, 2.0 * Math.sin(a)], null, [1, 0.5, 1]);
+      }
+      const under = R(T.circle(1.25, 28), glow, body, [0, -0.56, 0], [Math.PI / 2, 0, 0]);
+      let next = 300 + 600 * rnd(),
+        fly = null,
+        t0 = null;
+      const launch = (now) => {
+        const a = rnd() * l,
+          off = (rnd() - 0.5) * 80,
+          ux = Math.cos(a),
+          uz = Math.sin(a),
+          px = -uz,
+          pz = ux,
+          R0 = 190,
+          y = 35 + 13 * rnd();
+        fly = {
+          t: now,
+          A: new THREE.Vector3(-ux * R0 + px * off, y + 6, -uz * R0 + pz * off),
+          M: new THREE.Vector3(px * off * 0.6, y, pz * off * 0.6),
+          B: new THREE.Vector3(ux * R0 * 1.3 + px * off, y + 24, uz * R0 * 1.3 + pz * off),
+          dir: a,
+        };
+        ufo.visible = !0;
+      };
+      UFO_FLY = () => (next = 0);
+      L.push((tt, dt) => {
+        if (null === t0) t0 = tt;
+        const now = tt - t0;
+        if (!fly) {
+          if (now < next) return;
+          launch(now);
+        }
+        const e = now - fly.t,
+          T1 = 9,
+          T2 = 2.6,
+          T3 = 3.2,
+          p = ufo.position;
+        if (e < T1) {
+          const f = e / T1,
+            q = 1 - (1 - f) * (1 - f);
+          p.lerpVectors(fly.A, fly.M, q), (body.rotation.x = 0.12 * (1 - f) * Math.cos(fly.dir)), (body.rotation.z = -0.12 * (1 - f) * Math.sin(fly.dir));
+        } else if (e < T1 + T2) {
+          const f = (e - T1) / T2;
+          p.copy(fly.M), (p.y += 0.8 * Math.sin(f * l * 1.5)), (p.x += 0.5 * Math.sin(f * 17)), (body.rotation.x = 0.1 * Math.sin(f * 9)), (body.rotation.z = 0.1 * Math.cos(f * 7));
+        } else if (e < T1 + T2 + T3) {
+          const f = (e - T1 - T2) / T3;
+          p.lerpVectors(fly.M, fly.B, f * f * f), (body.rotation.x = -0.25 * Math.cos(fly.dir) * Math.min(1, 3 * f)), (body.rotation.z = 0.25 * Math.sin(fly.dir) * Math.min(1, 3 * f));
+        } else return (fly = null), (ufo.visible = !1), void (next = now + 600 + 900 * rnd());
+        body.rotation.y += 2.2 * (dt || 0.016);
+        const ph = Math.floor(now * 6) % 3;
+        bulbs.forEach((m, k) => m.emissive.setScalar(0).add(m.color.clone().multiplyScalar(k === ph ? 1 : 0.15)));
+        glow.opacity = 0.55 + 0.35 * Math.sin(now * 7);
+        under.scale.setScalar(1 + 0.08 * Math.sin(now * 7));
+      });
+    }
     let nightWas = -1;
     L.push((tt, dt) => {
       SPINNERS.forEach(([m, spd]) => (m.rotation.z += spd * (dt || 0.016)));
@@ -16342,6 +16440,7 @@ const JGP = (() => {
     buildSheriff,
     buildGardenSupplies,
     fireBlossom,
+    ufoNow: () => UFO_FLY && UFO_FLY(),
     beforeSpawn() {
       try {
         applyCast();

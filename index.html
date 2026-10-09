@@ -11790,6 +11790,45 @@ const JGP = (() => {
           c.stroke();
         }
       },
+      // thatch: long straw strands laid in overlapping bundles with a dark gap under each row
+      thatch(c, base, acc, r) {
+        (c.fillStyle = "#c8c8c8"), c.fillRect(0, 0, S, S);
+        for (let row = 0; row < 8; row++) {
+          const y0 = row * 32;
+          (c.fillStyle = "#8a8a8a"), c.fillRect(0, y0 + 28, S, 4);
+          for (let k = 0; k < 220; k++) {
+            const x0 = S * r(),
+              v = 190 + 65 * r();
+            (c.strokeStyle = grey(v)), (c.lineWidth = 1 + r()), (c.globalAlpha = 0.8);
+            c.beginPath(), c.moveTo(x0, y0 - 2), c.lineTo(x0 + 4 * (r() - 0.5), y0 + 30), c.stroke();
+          }
+        }
+        c.globalAlpha = 1;
+      },
+      // sand: fine grains with a few pebbles
+      sand(c, base, acc, r) {
+        (c.fillStyle = "#ececec"), c.fillRect(0, 0, S, S), noise(c, r, 10, 0.35, 215, 255), speck(c, r, 2600, 1.2, 175, 255, 0.45);
+        for (let k = 0; k < 40; k++) (c.fillStyle = grey(160 + 60 * r())), c.beginPath(), c.arc(S * r(), S * r(), 1.5 + 2.5 * r(), 0, l), c.fill();
+      },
+      // soil: clumpy dark earth with crumbs and tiny stones
+      soil(c, base, acc, r) {
+        (c.fillStyle = "#d8d8d8"), c.fillRect(0, 0, S, S), noise(c, r, 12, 0.6, 170, 245), noise(c, r, 30, 0.35, 160, 255);
+        for (let k = 0; k < 500; k++) (c.fillStyle = grey(140 + 115 * r())), (c.globalAlpha = 0.5), c.beginPath(), c.arc(S * r(), S * r(), 0.8 + 2.2 * r(), 0, l), c.fill();
+        c.globalAlpha = 1;
+      },
+      // short grass seen from above: blade strokes of varied tone over darker earth flecks
+      grass(c, base, acc, r) {
+        (c.fillStyle = "#d4d4d4"), c.fillRect(0, 0, S, S), noise(c, r, 8, 0.4, 195, 245), (c.lineCap = "round");
+        for (let k = 0; k < 3200; k++) {
+          const x0 = S * r(),
+            y0 = S * r(),
+            a = -Math.PI / 2 + 0.9 * (r() - 0.5),
+            n = 3 + 6 * r();
+          (c.strokeStyle = grey(175 + 80 * r())), (c.globalAlpha = 0.6), (c.lineWidth = 0.8 + 0.8 * r());
+          c.beginPath(), c.moveTo(x0, y0), c.lineTo(x0 + n * Math.cos(a), y0 + n * Math.sin(a)), c.stroke();
+        }
+        c.globalAlpha = 1, speck(c, r, 300, 1.5, 120, 170, 0.35);
+      },
       circuit(c, base, acc, r) {
         (c.fillStyle = "#d0d0d0"), c.fillRect(0, 0, S, S), (c.strokeStyle = "#f8f8f8"), (c.lineWidth = 2);
         for (let k = 0; k < 80; k++) {
@@ -15428,23 +15467,23 @@ const JGP = (() => {
   // thatched roof with a stone finial and a chiselled stone sign. Local +Z faces
   // the customer; the shopkeeper stands at (0, 0.2, -0.45) behind the counter.
   function buildShop(o) {
-    const stone = x.world("#a89a88"),
-      stone2 = x.world("#8f8374"),
-      wood = x.world("#8a5a30"),
-      straw = x.world("#d8b060"),
-      straw2 = x.world("#c49a48"),
-      rope = x.world("#c8a060");
+    const stone = KIT.surf("stone", "#a89a88", { rep: 1, bump: 0.04, shine: 10, spec: 1118481 }),
+      stone2 = KIT.surf("stone", "#8f8374", { rep: 1, bump: 0.04, shine: 10, spec: 1118481 }),
+      wood = KIT.surf("wood", "#8a5a30", { rep: 1, bump: 0.03, shine: 12 }),
+      straw = KIT.surf("thatch", "#d8b060", { rep: 2, bump: 0.04, shine: 6 }),
+      straw2 = KIT.surf("thatch", "#c49a48", { rep: 2, bump: 0.04, shine: 6 }),
+      rope = KIT.surf("fabric", "#c8a060", { rep: 1, shine: 8 });
     R(T.cyl(3.1, 3.3, 0.2, 9), stone2, o, [0, 0.1, 0]);
     for (let k = 0; k < 9; k++) {
       const a = (k / 9) * l + 0.2;
       R(T.cyl(0.62, 0.66, 0.06, 6), stone, o, [1.9 * Math.cos(a), 0.22, 1.9 * Math.sin(a)], [0, k, 0]);
     }
     // counter: big slab resting on two boulders
-    [-1.05, 1.05].forEach((sx) => R(T.dodeca(0.55, 0), stone2, o, [sx, 0.5, 0.62], [0.3, sx, 0.2], [1, 0.95, 0.75]));
+    [-1.05, 1.05].forEach((sx) => R(T.dodeca(0.55, 1), stone2, o, [sx, 0.5, 0.62], [0.3, sx, 0.2], [1, 0.95, 0.75]));
     R(T.box(3.4, 0.24, 0.95), stone, o, [0, 1.0, 0.62], [0, 0, 0.015]);
     // side shelves
     [-1, 1].forEach((sx) => {
-      R(T.dodeca(0.45, 0), stone2, o, [1.4 * sx, 0.42, -0.38], [0.4, sx, 0], [0.8, 1, 1.3]);
+      R(T.dodeca(0.45, 1), stone2, o, [1.4 * sx, 0.42, -0.38], [0.4, sx, 0], [0.8, 1, 1.3]);
       R(T.box(0.62, 0.16, 1.6), stone, o, [1.39 * sx, 0.92, -0.38], [0, 0, 0.03 * sx]);
     });
     // lashed log posts and beams
@@ -15462,14 +15501,17 @@ const JGP = (() => {
     // thatched roof
     const roof = new THREE.Group();
     roof.position.set(0, 3.55, -0.1), o.add(roof);
-    R(T.cone(3, 1.3, 10), straw, roof, [0, 0.6, 0], null, [1, 1, 0.85]);
-    R(T.cone(2.1, 1, 10), straw2, roof, [0, 1.15, 0], null, [1, 1, 0.85]);
+    R(T.cone(3, 1.3, 14), straw, roof, [0, 0.6, 0], null, [1, 1, 0.85]);
+    R(T.cone(2.55, 1.15, 14), straw2, roof, [0, 0.88, 0], null, [1, 1, 0.85]);
+    R(T.cone(2.1, 1, 14), straw, roof, [0, 1.15, 0], null, [1, 1, 0.85]);
+    R(T.cone(1.5, 0.8, 12), straw2, roof, [0, 1.42, 0], null, [1, 1, 0.85]);
+    R(T.torus(0.45, 0.07, 6, 14), rope, roof, [0, 1.62, 0], [Math.PI / 2, 0, 0], [1, 0.85, 1]);
     for (let k = 0; k < 22; k++) {
       const a = (k / 22) * l;
       R(T.cone(0.2, 0.5, 4), k % 2 ? straw2 : straw, roof, [2.85 * Math.cos(a), -0.08, 2.4 * Math.sin(a)], [Math.PI, a, 0]);
     }
     // carved stone finial and a tuft of palm leaves on the peak
-    R(T.dodeca(0.26, 0), stone2, roof, [0, 1.78, 0], [0.3, 0.5, 0], [1, 1.3, 1]);
+    R(T.dodeca(0.26, 1), stone2, roof, [0, 1.78, 0], [0.3, 0.5, 0], [1, 1.3, 1]);
     for (let k = 0; k < 5; k++)
       R(T.cone(0.12, 0.7, 4), x.world(k % 2 ? "#4f9a2a" : "#5aa83a"), roof, [0, 1.95, 0], [0.5 * Math.cos((k / 5) * l), (k / 5) * l, 0.5 * Math.sin((k / 5) * l)], [1, 1, 0.3]);
     // chiselled stone sign on the front of the roof
@@ -15493,7 +15535,7 @@ const JGP = (() => {
     // fruit on the counter and the side shelves (bananas, pineapple, coconuts, mangoes,
     // watermelon, grapes, oranges and berries), each pile resting on a big leaf
     const fr = (c) => x.clay(c, { shininess: 45 }),
-      leafM = x.world("#4f9a2a"),
+      leafM = KIT.surf("leaf", "#4f9a2a", { rep: 1, shine: 20 }),
       leafBed = (px, py, pz, w) => R(T.sphere(1, 10, 4), leafM, o, [px, py, pz], [0, 0.3, 0], [w, 0.03, 0.28]),
       bananas = (px, py, pz) => {
         for (let k = 0; k < 5; k++) R(T.torus(0.13, 0.035, 6, 10, 1.9), fr("#ffd23a"), o, [px, py + 0.12, pz + 0.04 * (k - 2)], [0.25 * (k - 2), 0, 2.2]);
@@ -15545,11 +15587,24 @@ const JGP = (() => {
 
   // A natural pond (replaces the city fountain); o sits at the pool station.
   function buildPond(o) {
-    R(T.circle(4.9, 28), x.world("#b89a6a"), o, [0, 0.015, 0], [-Math.PI / 2, 0, 0]);
-    R(T.circle(4.1, 28), x.world("#6a5a3a"), o, [0, 0.025, 0], [-Math.PI / 2, 0, 0]);
+    R(T.circle(4.9, 36), KIT.surf("sand", "#d0b27e", { rep: 4, shine: 6 }), o, [0, 0.015, 0], [-Math.PI / 2, 0, 0]);
+    R(T.circle(4.1, 36), KIT.surf("soil", "#6a5a3a", { rep: 3, shine: 20 }), o, [0, 0.025, 0], [-Math.PI / 2, 0, 0]);
     const water = R(
       T.circle(3.7, 36),
-      x.clay("#3a8aa0", { unique: !0, shininess: 90, specular: 10066363, polygonOffset: !0, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
+      x.clay("#3a8aa0", {
+        unique: !0,
+        shininess: 70,
+        specular: 5596791,
+        polygonOffset: !0,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2,
+        map: b(128, 128, (c) => {
+          const gr = c.createRadialGradient(64, 64, 4, 64, 64, 64);
+          gr.addColorStop(0, "#7a8a96"), gr.addColorStop(0.6, "#b4c4cc"), gr.addColorStop(0.92, "#e8f4f0"), gr.addColorStop(1, "#f4fff4");
+          (c.fillStyle = gr), c.fillRect(0, 0, 128, 128);
+          for (let k = 0; k < 14; k++) (c.strokeStyle = "rgba(255,255,255,.25)"), (c.lineWidth = 1.5), c.beginPath(), c.arc(64 + 30 * Math.cos(k), 64 + 30 * Math.sin(1.3 * k), 4 + 5 * (k % 3), 0, l), c.stroke();
+        }, { smooth: !0 }),
+      }),
       o,
       [0, 0.04, 0],
       [-Math.PI / 2, 0, 0],
@@ -15558,15 +15613,23 @@ const JGP = (() => {
       const a = (k / 20) * l + 0.2 * rnd(),
         r = rr(3.7, 4.3),
         s = rr(0.22, 0.48);
-      R(T.dodeca(s, 0), x.world(rnd() < 0.35 ? "#5a8a3a" : rnd() < 0.5 ? "#7a726a" : "#6a6460"), o, [r * Math.cos(a), 0.08, r * Math.sin(a)], [rnd(), rnd() * l, 0], [1.2, 0.6, 1]);
+      const q = rnd();
+      R(T.dodeca(s, 1), q < 0.35 ? KIT.surf("fur", "#5a8a3a", { rep: 1, bump: 0.03 }) : KIT.surf("stone", q < 0.65 ? "#7a726a" : "#6a6460", { rep: 1, bump: 0.05, shine: 20 }), o, [r * Math.cos(a), 0.08, r * Math.sin(a)], [rnd(), rnd() * l, 0], [1.2, 0.6, 1]);
     }
     for (let k = 0; k < 8; k++) {
       const a = rnd() * l,
         r = rr(0.8, 3),
         px = r * Math.cos(a),
         pz = r * Math.sin(a);
-      R(T.cyl(0.3, 0.3, 0.02, 12), x.world(k % 2 ? "#4f9a2a" : "#5aa83a"), o, [px, 0.06, pz], [0, a, 0]);
-      k % 3 || R(T.cone(0.08, 0.12, 6), x.world("#ff8ac0"), o, [px, 0.13, pz]);
+      // lily pad with its notch, and every third one in flower
+      R(new THREE.CircleGeometry(0.3, 18, 0.25, l - 0.5), KIT.surf("leaf", k % 2 ? "#4f9a2a" : "#5aa83a", { rep: 1, shine: 40 }), o, [px, 0.055, pz], [-Math.PI / 2, 0, a]);
+      if (!(k % 3)) {
+        for (let j = 0; j < 7; j++) {
+          const pa = (j / 7) * l;
+          R(T.sphere(1, 8, 6), x.clay(j % 2 ? "#ffa8d0" : "#ff8ac0", { shininess: 40 }), o, [px + 0.06 * Math.cos(pa), 0.12, pz + 0.06 * Math.sin(pa)], [0, -pa, 0.7], [0.07, 0.03, 0.035]);
+        }
+        R(T.sphere(0.035, 8, 6), x.clay("#ffd23a"), o, [px, 0.13, pz]);
+      }
     }
     for (let k = 0; k < 16; k++) {
       const a = rnd() * l,
@@ -15636,19 +15699,19 @@ const JGP = (() => {
     garden = { slots: [], plants: [], cans: [], startAt: 0 };
   function buildGarden(o) {
     o.userData.jgpKeep = !0;
-    const soil = x.clay("#5a3e26", { shininess: 6, polygonOffset: !0, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
-      ridge = x.world("#6e4c2e"),
-      stone = x.world("#8f8374"),
-      moss = x.world("#5a8a3a"),
-      sack = x.world("#c8a868"),
-      wood = x.world("#8a5a30");
+    const soil = Object.assign(KIT.surf("soil", "#5a3e26", { rep: 10, shine: 6, bump: 0.03 }).clone(), { polygonOffset: !0, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
+      ridge = KIT.surf("soil", "#6e4c2e", { rep: 6, shine: 6, bump: 0.03 }),
+      stone = KIT.surf("stone", "#8f8374", { rep: 1, bump: 0.05, shine: 12 }),
+      moss = KIT.surf("fur", "#5a8a3a", { rep: 1, bump: 0.03 }),
+      sack = KIT.surf("fabric", "#c8a868", { rep: 1, shine: 8 }),
+      wood = KIT.surf("wood", "#8a5a30", { rep: 1, shine: 12 });
     R(T.circle(GARDEN_R, 48), soil, o, [0, 0.02, 0], [-Math.PI / 2, 0, 0]);
     // border of stones
     const nb = Math.floor((l * GARDEN_R) / 1.3);
     for (let k = 0; k < nb; k++) {
       const a = (k / nb) * l,
         s = 0.28 + 0.1 * Math.sin(3.7 * k);
-      R(T.dodeca(s, 0), k % 4 ? stone : moss, o, [(GARDEN_R + 0.15) * Math.cos(a), 0.1, (GARDEN_R + 0.15) * Math.sin(a)], [k, 2 * k, 0], [1.3, 0.7, 1]);
+      R(T.dodeca(s, 1), k % 4 ? stone : moss, o, [(GARDEN_R + 0.15) * Math.cos(a), 0.1, (GARDEN_R + 0.15) * Math.sin(a)], [k, 2 * k, 0], [1.3, 0.7, 1]);
     }
     // tilled rows: raised rings every 2 m, with a planting slot every ~1.4 m along each
     for (let r = 2.6, ri = 0; r < GARDEN_R - 1; r += 2, ri++) {
@@ -15675,6 +15738,7 @@ const JGP = (() => {
         r = GARDEN_R + 0.9;
       R(T.sphere(0.32, 10, 8), sack, o, [r * Math.cos(a), 0.3, r * Math.sin(a)], null, [1, 1.2, 1]);
       R(T.cyl(0.1, 0.18, 0.18, 8), sack, o, [r * Math.cos(a), 0.68, r * Math.sin(a)]);
+      R(T.torus(0.11, 0.025, 5, 12), KIT.surf("fabric", "#8a6a3a", { rep: 1 }), o, [r * Math.cos(a), 0.62, r * Math.sin(a)], [Math.PI / 2, 0, 0]);
       R(T.cyl(0.04, 0.05, 1.3, 6), wood, o, [(GARDEN_R - 0.4) * Math.cos(a + 0.35), 0.65, (GARDEN_R - 0.4) * Math.sin(a + 0.35)]);
     }
   }
@@ -15931,17 +15995,7 @@ const JGP = (() => {
       cc.multiplyScalar(0.92 + 0.16 * nz), (gc[3 * k] = cc.r), (gc[3 * k + 1] = cc.g), (gc[3 * k + 2] = cc.b);
     }
     gg.setAttribute("color", new THREE.BufferAttribute(gc, 3)), gg.computeVertexNormals();
-    const gTex = N(
-      128,
-      128,
-      (c) => {
-        (c.fillStyle = "#c0c0c0"), c.fillRect(0, 0, 128, 128);
-        for (let k = 0; k < 900; k++)
-          (c.fillStyle = rnd() < 0.5 ? "rgba(255,255,255,.18)" : "rgba(0,0,0,.14)"),
-            c.fillRect(128 * rnd(), 128 * rnd(), 1 + 2 * rnd(), 1 + 3 * rnd());
-      },
-      120,
-    );
+    const gTex = KIT.surf("grass", "#ffffff", { rep: 110 }).map;
     R(gg, new THREE.MeshLambertMaterial({ vertexColors: !0, map: gTex }), grp);
     const groundY = (X, Z) => {
       const r = Math.hypot(X, Z),
@@ -15949,17 +16003,194 @@ const JGP = (() => {
       return r < 52 ? 0 : 0.05 * hill + 0.0009 * hill * hill;
     };
 
-    // tropical plants and rocks: merged per material for speed (no collision on any of them)
+    // ---- vegetation and rocks ---------------------------------------------------------------
+    // Everything below is merged into ONE vertex-coloured mesh (one draw call, no collision).
+    // The generator geometries carry their own per-vertex shading (dark leaf bases and light tips,
+    // trunk grooves, moss on rock tops, shaded undersides); add() tints them per placement.
     const parts = [],
       add = (geo, color, m) => parts.push({ geo, color, matrix: m }),
-      leafGreens = ["#3f8a2a", "#4f9a2a", "#5aa83a", "#2f7a2a"];
-    // a frond: flattened cone laid out from (X,Y,Z) at heading a, drooping by `droop`
-    const frond = (X, Y, Z, a, len, w, droop, col) =>
-      add(
-        T.cone(w, len, 4),
-        col,
-        S(X, Y, Z, 0, -a, 0).multiply(S(0, 0, 0, 0, 0, Math.PI / 2 + droop)).multiply(S(0, -len / 2, 0, 0, 0, 0, 1, 1, 0.22)),
-      );
+      leafGreens = ["#3f8a2a", "#4f9a2a", "#5aa83a", "#2f7a2a"],
+      gcache = new Map(),
+      VEG_HI = !window.__jgpMobile, // the mobile test mode gets lighter leaves, trunks and bushes
+      cached = (key, mk) => gcache.get(key) || (gcache.set(key, mk()), gcache.get(key));
+    const hash3 = (i, j, k) => {
+        const s = Math.sin(i * 127.1 + j * 311.7 + k * 74.7) * 43758.5453;
+        return s - Math.floor(s);
+      },
+      vnoise = (x0, y0, z0) => {
+        const i = Math.floor(x0),
+          j = Math.floor(y0),
+          k = Math.floor(z0),
+          f = (t) => t * t * (3 - 2 * t),
+          sx = f(x0 - i),
+          sy = f(y0 - j),
+          sz = f(z0 - k),
+          L = (a, b2, t) => a + (b2 - a) * t;
+        return L(
+          L(L(hash3(i, j, k), hash3(i + 1, j, k), sx), L(hash3(i, j + 1, k), hash3(i + 1, j + 1, k), sx), sy),
+          L(L(hash3(i, j, k + 1), hash3(i + 1, j, k + 1), sx), L(hash3(i, j + 1, k + 1), hash3(i + 1, j + 1, k + 1), sx), sy),
+          sz,
+        );
+      };
+    // triangles [[p0, p1, p2, shade0, shade1, shade2], ...] -> geometry; a shade is a grey multiplier or [r, g, b]
+    const triGeo = (tris) => {
+      const pos = new Float32Array(9 * tris.length),
+        col = new Float32Array(9 * tris.length);
+      tris.forEach((t, k) => {
+        for (let j = 0; j < 3; j++) {
+          pos.set(t[j], 9 * k + 3 * j);
+          const c = t[3 + j];
+          col.set("number" == typeof c ? [c, c, c] : c, 9 * k + 3 * j);
+        }
+      });
+      const geo = new THREE.BufferGeometry();
+      return geo.setAttribute("position", new THREE.BufferAttribute(pos, 3)), geo.setAttribute("color", new THREE.BufferAttribute(col, 3)), geo.computeVertexNormals(), geo;
+    };
+    // shade every vertex of a geometry with fn(x, y, z, nx, ny, nz) -> grey or [r, g, b]
+    const shadeGeo = (geo, fn) => {
+      const p = geo.attributes.position,
+        nm = geo.attributes.normal,
+        col = new Float32Array(3 * p.count);
+      for (let k = 0; k < p.count; k++) {
+        const c = fn(p.getX(k), p.getY(k), p.getZ(k), nm.getX(k), nm.getY(k), nm.getZ(k));
+        col.set("number" == typeof c ? [c, c, c] : c, 3 * k);
+      }
+      return geo.setAttribute("color", new THREE.BufferAttribute(col, 3)), geo;
+    };
+    // a pinnate frond one unit long along +Z: a midrib arching down by `droop`, with paired leaflets
+    // that are widest mid-frond; leaflet bases are darker than their tips
+    const frondGeo = (droop, wid, far) =>
+      cached("frond" + droop + "|" + wid + "|" + far, () => {
+        const tris = [],
+          rib = (u) => [0, -droop * u * u, u],
+          n = far ? 6 : VEG_HI ? 12 : 8;
+        for (let i = 0; i < n; i++) {
+          const u0 = 0.06 + 0.9 * (i / n),
+            u1 = u0 + 0.85 / n,
+            p0 = rib(u0),
+            p1 = rib(u1),
+            lf = wid * (0.06 + 0.38 * Math.sin(Math.PI * Math.min(1, u0 + 0.05))),
+            sh = 0.68 + 0.3 * u0;
+          [-1, 1].forEach((sx) => tris.push([p0, p1, [sx * lf, p0[1] - 0.35 * lf - 0.03, p0[2] + 0.45 * lf], sh, sh, sh + 0.3]));
+        }
+        for (let i = 0; i < 8; i++) {
+          const a = rib(i / 8),
+            b2 = rib((i + 1) / 8),
+            w = 0.018 * (1 - i / 8);
+          tris.push([[-w, a[1], a[2]], [w, a[1], a[2]], b2, 0.5, 0.5, 0.6]);
+        }
+        return triGeo(tris);
+      });
+    const frond = (X, Y, Z, a, len, w, droop, col) => {
+      const lift = 0.5 - droop,
+        dv = lift > 0.7 ? 0.55 : lift > 0.3 ? 0.35 : 0.2;
+      add(frondGeo(dv, w / len > 0.13 ? 1 : 0.7, Math.hypot(X, Z) > 75 ? 1 : 0), col, S(X, Y, Z, 0, Math.PI / 2 - a, 0).multiply(S(0, 0, 0, -lift, 0, 0, len, len, len)));
+    };
+    // a palm trunk segment: one unit tall from its base, with ring ridges and darker grooves
+    const trunkFar = cached("trunkFar", () => shadeGeo(new THREE.CylinderGeometry(1, 1, 1, 5, 1, !0).translate(0, 0.5, 0), (px, py) => 0.8 + 0.1 * py));
+    const trunkGeo = cached("trunk", () => {
+      const pts = [];
+      const rows = VEG_HI ? 4 : 3;
+      for (let k = 0; k <= rows; k++) {
+        const y = k / rows;
+        pts.push(new THREE.Vector2(1 - 0.09 * (k % 2), y));
+      }
+      return shadeGeo(new THREE.LatheGeometry(pts, VEG_HI ? 6 : 5), (px, py, pz) => 0.7 + 0.35 * (Math.hypot(px, pz) - 0.91) / 0.09 + 0.06 * Math.sin(9 * Math.atan2(pz, px)));
+    });
+    // rocks: noise-displaced icosahedra, flat-bottomed, faceted; moss on the upward faces, darker below
+    const rockGeo = (v) =>
+      cached("rock" + v, () => {
+        const geo = new THREE.IcosahedronGeometry(1, 2),
+          p = geo.attributes.position,
+          o3 = 13.7 * v;
+        for (let k = 0; k < p.count; k++) {
+          const X = p.getX(k),
+            Y = p.getY(k),
+            Z = p.getZ(k),
+            d = 0.75 + 0.45 * vnoise(1.6 * X + o3, 1.6 * Y, 1.6 * Z) + 0.12 * vnoise(4 * X, 4 * Y + o3, 4 * Z);
+          p.setXYZ(k, X * d, Math.max(-0.42, Y * d * 0.8), Z * d);
+        }
+        geo.computeVertexNormals();
+        const base = v % 2 ? [0.46, 0.42, 0.37] : [0.4, 0.4, 0.42];
+        return shadeGeo(geo, (px, py, pz, nx, ny) => {
+          const n = vnoise(3 * px + o3, 3 * py, 3 * pz),
+            sh = 0.6 + 0.35 * Math.max(0, ny + 0.3) + 0.15 * n;
+          return ny > 0.5 && n > 0.3 ? [0.3 * sh, 0.55 * sh, 0.22 * sh] : [base[0] * sh * 1.15, base[1] * sh * 1.15, base[2] * sh * 1.15];
+        });
+      });
+    // leafy bush: overlapping leaf cards on a dome, darker inside, lighter at the rim
+    const bushGeo = (v) =>
+      cached("bush" + v, () => {
+        const tris = [],
+          N2 = VEG_HI ? 40 : 24;
+        for (let k = 0; k < N2; k++) {
+          const u = Math.acos(1 - 1.1 * ((k + 0.5) / N2)),
+            a = k * 2.39996 + v,
+            d = [Math.sin(u) * Math.cos(a), Math.cos(u), Math.sin(u) * Math.sin(a)],
+            c = [0.55 * d[0], 0.35 + 0.5 * d[1], 0.55 * d[2]],
+            t1 = [-d[2], 0, d[0]],
+            L1 = Math.hypot(...t1) || 1,
+            t = t1.map((q) => q / L1),
+            up = [d[0] * 0.3, 1, d[2] * 0.3],
+            sz = 0.2 + 0.06 * hash3(k, v, 3),
+            P0 = c.map((q, i) => q - up[i] * sz * 0.2),
+            P1 = c.map((q, i) => q + t[i] * sz * 0.55 + d[i] * 0.05),
+            P2 = c.map((q, i) => q + up[i] * sz + d[i] * 0.12),
+            P3 = c.map((q, i) => q - t[i] * sz * 0.55 + d[i] * 0.05),
+            sh = 0.62 + 0.45 * d[1] + 0.12 * hash3(k, v, 7);
+          tris.push([P0, P1, P2, sh * 0.8, sh, sh + 0.2], [P0, P2, P3, sh * 0.8, sh + 0.2, sh]);
+        }
+        return triGeo(tris);
+      });
+    // a five-petal flower (tinted per placement) with a darker throat
+    const flowerGeo = cached("flower", () => {
+      const tris = [];
+      for (let k = 0; k < 5; k++) {
+        const a0 = (k / 5) * l,
+          a1 = a0 + 0.55,
+          a2 = a0 - 0.55;
+        tris.push([[0, 0.02, 0], [Math.cos(a1) * 1, 0.25, Math.sin(a1) * 1], [Math.cos(a0) * 1.1, 0.35, Math.sin(a0) * 1.1], 0.6, 1.05, 1.15]);
+        tris.push([[0, 0.02, 0], [Math.cos(a0) * 1.1, 0.35, Math.sin(a0) * 1.1], [Math.cos(a2) * 1, 0.25, Math.sin(a2) * 1], 0.6, 1.15, 1.05]);
+      }
+      return triGeo(tris);
+    });
+    // a grass tuft: nine bending blades, dark at the root and sunlit at the tips
+    const tuftGeo = (v) =>
+      cached("tuft" + v, () => {
+        const tris = [];
+        for (let k = 0; k < 9; k++) {
+          const a = (k / 9) * l + 1.3 * hash3(k, v, 1),
+            h = 0.22 + 0.22 * hash3(k, v, 2),
+            lean = 0.08 + 0.12 * hash3(k, v, 3),
+            bx = 0.05 * Math.cos(a),
+            bz = 0.05 * Math.sin(a),
+            w = 0.03,
+            px = -Math.sin(a) * w,
+            pz = Math.cos(a) * w;
+          tris.push([[bx - px, 0, bz - pz], [bx + px, 0, bz + pz], [bx + Math.cos(a) * lean, h, bz + Math.sin(a) * lean], 0.85, 0.85, 1.3]);
+        }
+        return triGeo(tris);
+      });
+    // rounded distant hill: a noisy dome, darker in the folds and speckled with tree crowns
+    const hillGeo = (v) =>
+      cached("hill" + v, () => {
+        const geo = new THREE.SphereGeometry(1, 36, 12, 0, l, 0, Math.PI / 2),
+          p = geo.attributes.position;
+        for (let k = 0; k < p.count; k++) {
+          const X = p.getX(k),
+            Y = p.getY(k),
+            Z = p.getZ(k),
+            d = 1 + 0.28 * (vnoise(2.2 * X + v, 2.2 * Y, 2.2 * Z) - 0.5) + 0.1 * (vnoise(7 * X, 7 * Y + v, 7 * Z) - 0.5);
+          p.setXYZ(k, X * d, Y * d, Z * d);
+        }
+        geo.computeVertexNormals();
+        return shadeGeo(geo, (px, py, pz, nx, ny) => {
+          const n = vnoise(11 * px + v, 11 * py, 11 * pz),
+            m = vnoise(3 * px, 3 * py + v, 3 * pz),
+            sh = 0.62 + 0.3 * py + 0.2 * ny + 0.2 * m;
+          return n > 0.55 ? [0.42 * sh, 0.6 * sh, 0.38 * sh] : [0.85 * sh, 1.02 * sh, 0.78 * sh];
+        });
+      });
     const palm = (X, Z, s) => {
         const y = groundY(X, Z),
           h = rr(4.2, 6) * s,
@@ -15969,78 +16200,81 @@ const JGP = (() => {
         let px = X,
           pz = Z,
           py = y;
-        // segmented, slightly curving trunk with ring bands
+        // segmented, gently curving trunk with ring ridges, tapering towards the crown
         for (let k = 0; k < segs; k++) {
           const sl = h / segs,
             tilt = lean * (0.4 + (0.6 * k) / segs),
             dx = Math.sin(tilt) * Math.cos(la) * sl,
-            dz = Math.sin(tilt) * Math.sin(la) * sl;
-          add(
-            T.cyl(0.2 * s * (1 - 0.06 * k), 0.24 * s * (1 - 0.06 * k), sl * 1.05, 7),
-            k % 2 ? "#8a6a42" : "#7a5a36",
-            S(px + dx / 2, py + sl / 2, pz + dz / 2, Math.sin(la) * tilt, 0, -Math.cos(la) * tilt),
-          ),
-            (px += dx),
-            (pz += dz),
-            (py += sl * Math.cos(tilt));
+            dz = Math.sin(tilt) * Math.sin(la) * sl,
+            rad = 0.23 * s * (1 - 0.07 * k);
+          add(Math.hypot(X, Z) > 75 ? trunkFar : trunkGeo, k % 2 ? "#9a7a52" : "#8a6a46", S(px, py, pz, Math.sin(la) * tilt, 0, -Math.cos(la) * tilt, rad, sl * 1.04, rad));
+          (px += dx), (pz += dz), (py += sl * Math.cos(tilt));
         }
-        for (let k = 0; k < 9; k++) frond(px, py, pz, (k / 9) * l + rnd() * 0.3, rr(2.4, 3.2) * s, 0.42 * s, rr(0.15, 0.55), leafGreens[k % 4]);
-        for (let k = 0; k < 3; k++) {
+        // fibrous crown boot, coconuts, then two tiers of arching fronds
+        add(T.sphere(0.3 * s, 8, 6), "#6a5030", S(px, py - 0.1 * s, pz, 0, 0, 0, 1, 0.8, 1));
+        for (let k = 0; k < 4; k++) {
           const a = rnd() * l;
-          add(T.sphere(0.16 * s, 8, 6), "#6a4a22", S(px + 0.22 * s * Math.cos(a), py - 0.25 * s, pz + 0.22 * s * Math.sin(a)));
+          add(T.sphere(0.16 * s, 8, 6), "#5a3e1e", S(px + 0.24 * s * Math.cos(a), py - 0.28 * s, pz + 0.24 * s * Math.sin(a)));
         }
+        for (let k = 0; k < 7; k++) frond(px, py, pz, (k / 7) * l + rnd() * 0.3, rr(2.6, 3.3) * s, 0.42 * s, rr(0.2, 0.5), leafGreens[k % 4]);
+        for (let k = 0; k < 4; k++) frond(px, py + 0.1 * s, pz, (k / 4) * l + 0.4 + rnd() * 0.3, rr(1.6, 2.1) * s, 0.4 * s, rr(-0.2, 0.05), leafGreens[(k + 2) % 4]);
       },
       treeFern = (X, Z, s) => {
         const y = groundY(X, Z),
           h = rr(2.2, 3.4) * s;
-        add(T.cyl(0.14 * s, 0.22 * s, h, 7), "#4a3a26", S(X, y + h / 2, Z));
-        for (let k = 0; k < 10; k++) frond(X, y + h, Z, (k / 10) * l + rnd() * 0.3, rr(1.8, 2.4) * s, 0.32 * s, rr(-0.1, 0.35), leafGreens[k % 4]);
+        add(trunkGeo, "#4a3a26", S(X, y, Z, 0, 0, 0, 0.18 * s, h, 0.18 * s));
+        for (let k = 0; k < 11; k++) frond(X, y + h, Z, (k / 11) * l + rnd() * 0.3, rr(1.8, 2.5) * s, 0.3 * s, rr(-0.1, 0.35), leafGreens[k % 4]);
+        add(T.sphere(0.2 * s, 8, 6), "#3a2a1a", S(X, y + h, Z));
       },
       banana = (X, Z, s) => {
         const y = groundY(X, Z),
           h = rr(1.4, 2.2) * s;
-        add(T.cyl(0.14 * s, 0.2 * s, h, 7), "#7a9a3a", S(X, y + h / 2, Z));
+        add(trunkGeo, "#7a9a3a", S(X, y, Z, 0, 0, 0, 0.17 * s, h, 0.17 * s));
         for (let k = 0; k < 6; k++) {
           const a = (k / 6) * l + rnd() * 0.5,
             up = rr(0.35, 0.8),
             L2 = 1.3 * s;
-          // long paddle leaves
+          // long paddle leaves with a pale midrib
           add(
-            T.sphere(1, 10, 6),
+            T.sphere(1, 12, 6),
             k % 2 ? "#4fa83a" : "#5ab842",
             S(X + Math.cos(a) * L2 * 0.8 * Math.cos(up), y + h + Math.sin(up) * L2 * 0.8, Z + Math.sin(a) * L2 * 0.8 * Math.cos(up), 0, -a + Math.PI / 2, up).multiply(S(0, 0, 0, 0, 0, 0, 0.32 * s, 0.04 * s, L2)),
+          );
+          add(
+            T.cyl(0.02, 0.02, 1, 4),
+            "#c8e08a",
+            S(X + Math.cos(a) * L2 * 0.8 * Math.cos(up), y + h + Math.sin(up) * L2 * 0.8 + 0.035 * s, Z + Math.sin(a) * L2 * 0.8 * Math.cos(up), 0, -a + Math.PI / 2, up).multiply(S(0, 0, 0, Math.PI / 2, 0, 0, s, 1.9 * L2, s)),
           );
         }
       },
       cycad = (X, Z, s) => {
         const y = groundY(X, Z),
           h = rr(0.5, 1.1) * s;
-        add(T.cyl(0.32 * s, 0.38 * s, h, 8), "#6a5a3a", S(X, y + h / 2, Z));
-        for (let k = 0; k < 12; k++) frond(X, y + h, Z, (k / 12) * l, rr(1.3, 1.7) * s, 0.2 * s, rr(-0.45, -0.1), k % 2 ? "#2f6a2a" : "#3a7a2a");
+        add(trunkGeo, "#6a5a3a", S(X, y, Z, 0, 0, 0, 0.36 * s, h, 0.36 * s));
+        for (let k = 0; k < 14; k++) frond(X, y + h, Z, (k / 14) * l, rr(1.3, 1.8) * s, 0.2 * s, rr(-0.45, -0.1), k % 2 ? "#2f6a2a" : "#3a7a2a");
       },
       hibiscus = (X, Z, s) => {
         const y = groundY(X, Z),
-          fl = ["#e8301e", "#ff5fb0", "#ff8a1a", "#ffd23a"][Math.floor(4 * rnd())];
-        for (let k = 0; k < 5; k++) {
-          const a = rnd() * l,
-            r0 = rr(0, 0.5) * s;
-          add(T.ico(rr(0.45, 0.7) * s, 0), leafGreens[k % 4], S(X + Math.cos(a) * r0, y + rr(0.35, 0.7) * s, Z + Math.sin(a) * r0, rnd(), rnd(), rnd(), 1, 0.8, 1));
-        }
+          fl = ["#e8301e", "#ff5fb0", "#ff8a1a", "#ffd23a"][Math.floor(4 * rnd())],
+          v = Math.floor(3 * rnd());
+        add(bushGeo(v), leafGreens[v], S(X, y, Z, 0, rnd() * l, 0, rr(1.2, 1.6) * s, rr(1.1, 1.4) * s, rr(1.2, 1.6) * s));
         for (let k = 0; k < 7; k++) {
           const a = rnd() * l,
-            r0 = rr(0.45, 0.75) * s;
-          add(T.cone(0.12 * s, 0.14 * s, 5), fl, S(X + Math.cos(a) * r0, y + rr(0.5, 0.95) * s, Z + Math.sin(a) * r0, Math.PI, 0, 0));
+            u = rr(0.3, 1.1),
+            fs = 0.11 * s;
+          add(flowerGeo, fl, S(X + Math.sin(u) * Math.cos(a) * 0.72 * s, y + (0.4 + 0.65 * Math.cos(u)) * 1.15 * s, Z + Math.sin(u) * Math.sin(a) * 0.72 * s, Math.sin(a) * u * 0.8, 0, -Math.cos(a) * u * 0.8, fs, fs, fs));
         }
       },
       fern = (X, Z, s) => {
         const y = groundY(X, Z);
-        for (let k = 0; k < 7; k++) frond(X, y + 0.08, Z, (k / 7) * l + rnd(), rr(0.9, 1.3) * s, 0.22 * s, rr(-0.75, -0.35), k % 2 ? "#5aa83a" : "#4a9a32");
+        for (let k = 0; k < 8; k++) frond(X, y + 0.06, Z, (k / 8) * l + rnd(), rr(0.9, 1.4) * s, 0.22 * s, rr(-0.75, -0.35), k % 2 ? "#5aa83a" : "#4a9a32");
       },
       rock = (X, Z, s) => {
         const y = groundY(X, Z);
-        add(T.dodeca(1, 0), rnd() < 0.5 ? "#6a6460" : "#7a726a", S(X, y + 0.25 * s, Z, rnd(), rnd() * l, rnd(), 1.3 * s, 0.8 * s, 1.1 * s));
-        rnd() < 0.6 && add(T.dodeca(1, 0), "#5a8a3a", S(X, y + 0.62 * s, Z, rnd(), rnd() * l, 0, 0.9 * s, 0.25 * s, 0.8 * s));
-      };
+        add(rockGeo(Math.floor(6 * rnd())), rnd() < 0.5 ? "#ffffff" : "#f0ece4", S(X, y + 0.2 * s, Z, 0, rnd() * l, 0, 1.25 * s, 0.95 * s, 1.1 * s));
+        rnd() < 0.5 && add(rockGeo(Math.floor(6 * rnd())), "#ffffff", S(X + 0.9 * s, y + 0.1 * s, Z + 0.3 * s, 0, rnd() * l, 0, 0.45 * s, 0.4 * s, 0.4 * s));
+      },
+      tuft = (X, Z, s, col) => add(tuftGeo(Math.floor(4 * rnd())), col, S(X, groundY(X, Z), Z, 0, rnd() * l, 0, s, s * rr(0.8, 1.3), s));
 
     // dense tropical jungle around the clearing (thinned in the mobile test mode)
     const LOD = window.__jgpMobile ? 0.4 : 1;
@@ -16087,6 +16321,25 @@ const JGP = (() => {
       placed++;
     }
 
+    // grass tufts and tiny wildflowers across the clearing (kept off the garden and the stations)
+    const tuftCols = ["#5f9a32", "#6faa3a", "#4f8a2a", "#7ab842"];
+    for (let k = 0; k < 2400 * LOD; k++) {
+      const a = rnd() * l,
+        r = rr(GARDEN_R + 1.5, 51),
+        X = Math.cos(a) * r,
+        Z = Math.sin(a) * r;
+      if (keepAt.some(([x0, z0]) => Math.hypot(X - x0, Z - z0) < 3.2)) continue;
+      tuft(X, Z, rr(0.8, 1.5), tuftCols[k % 4]);
+      k % 9 || add(flowerGeo, ["#ffffff", "#ffd23a", "#ff9ad8", "#c8a8ff"][k % 4], S(X + 0.15, groundY(X, Z) + 0.12, Z, 0, rnd() * l, 0, 0.06, 0.06, 0.06));
+    }
+    for (let k = 0; k < 600 * LOD; k++) {
+      const a = rnd() * l,
+        r = rr(47, 70),
+        X = Math.cos(a) * r,
+        Z = Math.sin(a) * r;
+      tuft(X, Z, rr(1.2, 2.2), tuftCols[(k + 1) % 4]);
+    }
+
     // distant hills (kept clear of the volcano so nothing clips into it)
     const vX = -70,
       vZ = -200,
@@ -16096,10 +16349,48 @@ const JGP = (() => {
         r = rr(190, 240),
         h = rr(40, 80);
       if (Math.abs(Math.atan2(Math.sin(a - vA), Math.cos(a - vA))) < 0.55) continue;
-      add(T.cone(rr(40, 65), h, 9), k % 2 ? "#4f7a3a" : "#5a8a42", S(Math.cos(a) * r, groundY(Math.cos(a) * r, Math.sin(a) * r) + h / 2 - 6, Math.sin(a) * r, 0, rnd() * l));
+      const R0 = rr(40, 65);
+      add(hillGeo(k % 3), k % 2 ? "#4f7a3a" : "#5a8a42", S(Math.cos(a) * r, groundY(Math.cos(a) * r, Math.sin(a) * r) - 6, Math.sin(a) * r, 0, rnd() * l, 0, R0, h, R0));
     }
-    const mat = new THREE.MeshLambertMaterial({ vertexColors: !0 });
-    R(v(parts), mat, grp);
+    // merge everything: each vertex colour is the generator's baked shade times the placement tint
+    const vmerge = (list) => {
+      let n = 0;
+      const gs = list.map((pt) => {
+        const g2 = pt.geo.index ? pt.geo.toNonIndexed() : pt.geo.clone();
+        g2.applyMatrix4(pt.matrix);
+        if (pt.matrix.determinant() < 0)
+          ["position", "normal", "color"].forEach((nm) => {
+            const at = g2.attributes[nm];
+            if (!at) return;
+            const ar = at.array;
+            for (let i = 0; i < ar.length; i += 9)
+              for (let j = 0; j < 3; j++) {
+                const tmp = ar[i + 3 + j];
+                (ar[i + 3 + j] = ar[i + 6 + j]), (ar[i + 6 + j] = tmp);
+              }
+          });
+        return (n += g2.attributes.position.count), { g: g2, c: new THREE.Color(pt.color) };
+      });
+      const pos = new Float32Array(3 * n),
+        nor = new Float32Array(3 * n),
+        col = new Float32Array(3 * n);
+      let o = 0;
+      gs.forEach(({ g: g2, c }) => {
+        const cnt = g2.attributes.position.count,
+          ca = g2.attributes.color;
+        pos.set(g2.attributes.position.array, 3 * o), nor.set(g2.attributes.normal.array, 3 * o);
+        for (let k = 0; k < cnt; k++) {
+          const q = 3 * (o + k);
+          (col[q] = c.r * (ca ? ca.getX(k) : 1)), (col[q + 1] = c.g * (ca ? ca.getY(k) : 1)), (col[q + 2] = c.b * (ca ? ca.getZ(k) : 1));
+        }
+        (o += cnt), g2.dispose();
+      });
+      const out = new THREE.BufferGeometry();
+      return out.setAttribute("position", new THREE.BufferAttribute(pos, 3)), out.setAttribute("normal", new THREE.BufferAttribute(nor, 3)), out.setAttribute("color", new THREE.BufferAttribute(col, 3)), out.computeBoundingSphere(), out;
+    };
+    // leaves and blades are single sheets, so the merged scenery is drawn double-sided
+    const mat = new THREE.MeshLambertMaterial({ vertexColors: !0, side: THREE.DoubleSide });
+    R(vmerge(parts), mat, grp);
 
     // ---- the volcano: sculpted lathe cone, jungle skirt -> rock -> basalt, glowing crater,
     // lava streams and a smoke plume. It is unfogged so it reads clearly on the horizon.
@@ -16147,7 +16438,14 @@ const JGP = (() => {
       const th = rnd() * l,
         y = rr(2, VH * 0.22),
         r = rAt(y) * 1.02;
-      slope.push({ geo: T.cone(rr(3, 5), rr(7, 11), 6), color: k % 2 ? "#2f6a2a" : "#3f7a2e", matrix: S(r * Math.cos(th), y + 3, r * Math.sin(th)) });
+      // rounded jungle canopy trees: a short trunk under two or three lumpy crowns
+      const X = r * Math.cos(th),
+        Z = r * Math.sin(th),
+        cr = rr(2.6, 4.2),
+        col = ["#2f6a2a", "#3f7a2e", "#356f28", "#4a842f"][k % 4];
+      slope.push({ geo: T.cyl(0.35, 0.55, 5, 5), color: "#4a3a26", matrix: S(X, y + 2.5, Z) });
+      slope.push({ geo: T.ico(1, 1), color: col, matrix: S(X, y + 5 + 0.5 * cr, Z, rnd(), rnd() * l, 0, cr, 0.75 * cr, cr) });
+      slope.push({ geo: T.ico(1, 1), color: k % 2 ? "#3a7a2a" : "#2a6224", matrix: S(X + 0.6 * cr, y + 4.6 + 0.4 * cr, Z + 0.3 * cr, rnd(), rnd() * l, 0, 0.7 * cr, 0.55 * cr, 0.7 * cr) });
     }
     R(v(slope), new THREE.MeshLambertMaterial({ vertexColors: !0, fog: !1 }), volcano);
     // glowing lava lake in the crater + glow sprite

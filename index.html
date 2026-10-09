@@ -57,7 +57,8 @@ window.__jgpMobile = (() => {
 })();
 const t = {
     debug: !(!window.__gbGuard || !window.__gbGuard.DEBUG),
-    clearingR: 48,
+    clearingR: 36.5, // pickups, wanderers and line-ups stay inside this radius
+    parkHalf: 37.6, // the iron fence around the town square; the player stays inside it
     chapel: { angle: Math.PI / 4, dist: 70 },
     spreadR: 13,
     personalSpace: 7,
@@ -5031,7 +5032,7 @@ function Jt(t, e) {
   (n.x += (s / l) * c), (n.z += (i / l) * c);
 }
 const st = { join() {}, leave() {}, away: () => !1, pos: () => ({ x: 0, z: 0 }) },
-  eo = ["Welcome to", "Jurassic Greeblis Park!"];
+  eo = ["Welcome to", "Greeblis Town USA!"];
 function to(
   t,
   { y: e, z: o, sep: a, r: n = 0.09, pupil: r = 0.56, white: s = !0, color: i = M.nearblack, spread: l = 0.22 },
@@ -11284,8 +11285,9 @@ function Te(e, o) {
     (a.x += e * t.player.speed * o), (a.z += r * t.player.speed * o);
   }
   F.resolve(a, t.player.bodyR), uo.resolve(a, t.player.bodyR, At);
-  const l = Math.hypot(a.x, a.z);
-  l > t.clearingR && ((a.x *= t.clearingR / l), (a.z *= t.clearingR / l)), (a.y = (a.x, a.z, 0));
+  // the park fence is a square: keep the player just inside it
+  const l = t.parkHalf - 0.15 - t.player.bodyR;
+  (a.x = u(a.x, -l, l)), (a.z = u(a.z, -l, l)), (a.y = 0);
 }
 const Re = (() => {
     let t = !1,
@@ -13428,61 +13430,84 @@ const JGP = (() => {
     return () => ((sd = (16807 * sd) % 2147483647) / 2147483647);
   })();
   const rr = (a, b) => a + rnd() * (b - a);
-  // ---- props: general store stand, duck pond, fire blossom --------------------------------
-  // A country general-store stand: plank deck, red board-and-batten back wall, white posts, a
-  // green tin roof with the store's sign standing on the ridge, and a counter of Midwest produce
-  // (sweet corn, apples, pumpkins, tomatoes, honey) beside the Watering Cans for sale. Local +Z
-  // faces the customer; the shopkeeper stands at (0, 0.2, -0.45) behind the counter.
-  function buildShop(o) {
+  // ---- props: the corner kiosks, duck pond, fire blossom ------------------------------------
+  // Every corner of the square has a kiosk on the same frame: plank deck, board-and-batten back
+  // wall, half side walls, white posts, a tin roof with the kiosk's sign standing on the ridge,
+  // and a counter with crates either side (counter top y = 1.12, crate tops y = 1.0). Local +Z
+  // faces the customer. th: {sign, ink, wall, wall2, tin: [r, g, b], spots (white roof spots)}
+  function kioskFrame(o, th) {
     const deck = KIT.surf("wood", "#a8865c", { rep: 2, bump: 0.03, shine: 12 }),
-      red = KIT.surf("wood", "#a8382c", { rep: 1, bump: 0.03, shine: 10 }),
-      red2 = KIT.surf("wood", "#8e2e24", { rep: 1, bump: 0.03, shine: 10 }),
+      wall = KIT.surf("wood", th.wall, { rep: 1, bump: 0.03, shine: 10 }),
+      wall2 = KIT.surf("wood", th.wall2, { rep: 1, bump: 0.03, shine: 10 }),
       white = x.clay("#f6f2e8", { shininess: 30 }),
       crate = KIT.surf("wood", "#c8a070", { rep: 1, bump: 0.03, shine: 10 }),
-      wicker = KIT.surf("thatch", "#b88a4a", { rep: 1, bump: 0.03, shine: 8 }),
+      [tr, tg, tb] = th.tin,
       tinTex = b(64, 64, (c) => {
         for (let k = 0; k < 64; k++) {
           const v2 = Math.sin((k / 64) * 8 * l);
-          (c.fillStyle = `rgb(${(70 + 22 * v2) | 0},${(120 + 30 * v2) | 0},${(84 + 22 * v2) | 0})`), c.fillRect(k, 0, 1, 64);
+          (c.fillStyle = `rgb(${(tr + 22 * v2) | 0},${(tg + 26 * v2) | 0},${(tb + 22 * v2) | 0})`), c.fillRect(k, 0, 1, 64);
         }
       }),
       tin = new THREE.MeshPhongMaterial({ map: tinTex, shininess: 60, specular: 3355443, side: THREE.DoubleSide });
     (tinTex.wrapS = tinTex.wrapT = THREE.RepeatWrapping), tinTex.repeat.set(5, 1);
     // deck, back wall with battens, half side walls, posts and beam
     R(T.box(6.4, 0.2, 5.0), deck, o, [0, 0.1, -0.1]), R(T.box(6.5, 0.08, 0.12), white, o, [0, 0.2, 2.42]);
-    R(T.box(6.2, 3.3, 0.16), red, o, [0, 1.85, -2.45]);
-    for (let k = 0; k < 13; k++) R(T.box(0.08, 3.3, 0.06), red2, o, [-2.9 + 0.483 * k, 1.85, -2.35]);
+    // the back wall stops inside the corner posts (flush end faces would flicker against them)
+    R(T.box(5.96, 3.3, 0.16), wall, o, [0, 1.85, -2.45]);
+    for (let k = 0; k < 11; k++) R(T.box(0.08, 3.3, 0.06), wall2, o, [-2.6 + 0.52 * k, 1.85, -2.35]);
     [-1, 1].forEach((sx) => {
-      R(T.box(0.16, 1.0, 4.6), red, o, [3.0 * sx, 0.7, -0.15]), R(T.box(0.24, 0.08, 4.7), white, o, [3.0 * sx, 1.24, -0.15]);
-      [2.15, -2.4].forEach((pz) => R(T.box(0.2, 3.4, 0.2), white, o, [3.0 * sx, 1.9, pz]));
-      // red gable ends under the roof
+      R(T.box(0.16, 1.0, 4.6), wall, o, [3.0 * sx, 0.7, -0.15]), R(T.box(0.2, 0.08, 4.7), white, o, [3.0 * sx, 1.24, -0.15]);
+      [2.15, -2.42].forEach((pz) => R(T.box(0.24, 3.4, 0.24), white, o, [3.0 * sx, 1.9, pz]));
+      // gable ends under the roof
       const tri = new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(2.6, 3.5), new THREE.Vector2(-2.45, 3.5), new THREE.Vector2(0.12, 4.62)])).rotateY(Math.PI / 2);
-      R(tri, Object.assign(red.clone(), { side: THREE.DoubleSide }), o, [3.08 * sx, 0, 0]);
+      R(tri, Object.assign(wall.clone(), { side: THREE.DoubleSide }), o, [3.08 * sx, 0, 0]);
     });
-    R(T.box(6.4, 0.3, 0.2), white, o, [0, 3.45, 2.15]);
-    // green tin roof and the sign on the ridge
-    R(T.box(6.9, 0.1, 2.95), tin, o, [0, 4.16, 1.24], [0.378, 0, 0]), R(T.box(6.9, 0.1, 2.95), tin, o, [0, 4.16, -1.49], [-0.378, 0, 0]);
+    R(T.box(6.4, 0.28, 0.2), white, o, [0, 3.44, 2.15]);
+    // tin roof (optionally spotted like a toadstool) and the sign on the ridge
+    [
+      [1.24, 0.378],
+      [-1.49, -0.378],
+    ].forEach(([pz, rx], k) => {
+      const slope = new THREE.Group();
+      slope.position.set(0, 4.16, pz), (slope.rotation.x = rx), o.add(slope), R(T.box(6.9, 0.1, 2.95), tin, slope);
+      if (th.spots) {
+        const sr = srand(31 + k),
+          spot = x.clay("#fbf8f0", { shininess: 40 });
+        for (let j = 0; j < 9; j++) R(T.sphere(1, 12, 6), spot, slope, [-3 + 6 * sr(), 0.05, -1.1 + 2.2 * sr()], null, [0.22 + 0.16 * sr(), 0.05, 0.2 + 0.14 * sr()]);
+      }
+    });
     R(T.box(6.95, 0.12, 0.32), white, o, [0, 4.72, -0.12]);
     const signTex = b(
       512,
       128,
       (c) => {
-        (c.fillStyle = "#f6f0dc"), c.fillRect(0, 0, 512, 128), (c.strokeStyle = "#a8382c"), (c.lineWidth = 8), c.strokeRect(10, 10, 492, 108);
-        (c.font = "bold 64px Georgia, 'Times New Roman', serif"), (c.textAlign = "center"), (c.textBaseline = "middle");
-        (c.fillStyle = "rgba(0,0,0,.18)"), c.fillText("GENERAL STORE", 259, 70), (c.fillStyle = "#a8382c"), c.fillText("GENERAL STORE", 256, 66);
+        (c.fillStyle = "#f6f0dc"), c.fillRect(0, 0, 512, 128), (c.strokeStyle = th.ink), (c.lineWidth = 8), c.strokeRect(10, 10, 492, 108);
+        let fs = 64;
+        for (; fs > 24 && ((c.font = "bold " + fs + "px Georgia, 'Times New Roman', serif"), c.measureText(th.sign).width > 450); fs -= 2);
+        (c.textAlign = "center"), (c.textBaseline = "middle");
+        (c.fillStyle = "rgba(0,0,0,.18)"), c.fillText(th.sign, 259, 70), (c.fillStyle = th.ink), c.fillText(th.sign, 256, 66);
       },
       { smooth: !0 },
     );
     [-1.6, 1.6].forEach((px) => R(T.box(0.12, 0.7, 0.12), white, o, [px, 4.95, -0.12]));
     R(T.box(4.3, 1.05, 0.1), white, o, [0, 5.55, -0.12]), R(T.plane(4.1, 1.02), x.world(16777215, { map: signTex }), o, [0, 5.55, -0.06]);
     // the counter, crates on either side
-    R(T.box(3.8, 0.9, 0.1), red, o, [0, 0.65, 1.07]), R(T.box(3.84, 0.08, 0.12), white, o, [0, 0.24, 1.08]);
-    R(T.box(3.95, 0.1, 1.0), crate, o, [0, 1.07, 0.62]);
-    [-1.85, 1.85].forEach((px) => R(T.box(0.1, 0.9, 0.9), red2, o, [px, 0.65, 0.62]));
+    R(T.box(3.8, 0.9, 0.1), wall, o, [0, 0.65, 1.07]), R(T.box(3.84, 0.08, 0.12), white, o, [0, 0.24, 1.08]);
+    // the top overhangs the front panel and the end supports sit inside it, so no faces are flush
+    R(T.box(3.95, 0.1, 1.08), crate, o, [0, 1.07, 0.64]);
+    [-1.82, 1.82].forEach((px) => R(T.box(0.1, 0.9, 0.9), wall2, o, [px, 0.65, 0.56]));
     [-1, 1].forEach((sx) => {
       R(T.box(0.7, 0.8, 1.6), crate, o, [1.42 * sx, 0.6, -0.38]);
-      [0.35, 0.6, 0.85].forEach((yy) => R(T.box(0.72, 0.03, 1.62), red2, o, [1.42 * sx, yy, -0.38]));
+      [0.35, 0.6, 0.85].forEach((yy) => R(T.box(0.72, 0.03, 1.62), wall2, o, [1.42 * sx, yy, -0.38]));
     });
+    return { white, crate, wall, wall2 };
+  }
+  // The General Store: red walls, green tin roof, and a counter of Midwest produce (sweet corn,
+  // apples, pumpkins, tomatoes, honey) beside the Watering Cans for sale. The shopkeeper stands at
+  // (0, 0.2, -0.45) behind the counter.
+  function buildShop(o) {
+    kioskFrame(o, { sign: "GENERAL STORE", ink: "#a8382c", wall: "#a8382c", wall2: "#8e2e24", tin: [70, 120, 84] });
+    const wicker = KIT.surf("thatch", "#b88a4a", { rep: 1, bump: 0.03, shine: 8 });
     // produce
     const fr = (c, sh = 45) => x.clay(c, { shininess: sh }),
       basket = (px, py, pz, r) => R(T.cyl(r, 0.85 * r, 0.22, 12), wicker, o, [px, py + 0.11, pz]),
@@ -13539,6 +13564,268 @@ const JGP = (() => {
     [-1.75, -2.2].forEach((pz, k) => {
       R(T.cyl(0.18, 0.2, 0.5, 14), steel, o, [2.5 - 0.35 * k, 0.45, pz]), R(T.cyl(0.1, 0.18, 0.12, 14), steel, o, [2.5 - 0.35 * k, 0.76, pz]), R(T.cyl(0.11, 0.11, 0.08, 14), steel, o, [2.5 - 0.35 * k, 0.86, pz]);
     });
+  }
+
+  // small goods are collected per kiosk and merged into one vertex-coloured mesh
+  const goods = () => {
+    const list = [],
+      UBX = T.box(1, 1, 1),
+      m = (px, py, pz, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1) => S(px, py, pz, rx, ry, rz, sx, sy, sz);
+    return {
+      UBX,
+      m,
+      add: (geo, color, mat) => list.push({ geo, color, matrix: mat }),
+      box: (color, px, py, pz, w, h, d, rx = 0, ry = 0, rz = 0) => list.push({ geo: UBX, color, matrix: m(px, py, pz, rx, ry, rz, w, h, d) }),
+      done: (o) => list.length && R(v(list), V.kioskM || (V.kioskM = new THREE.MeshPhongMaterial({ vertexColors: !0, shininess: 25, specular: 1118481 })), o),
+    };
+  };
+  const capGeo = new THREE.SphereGeometry(1, 16, 8, 0, l, 0, Math.PI / 2),
+    kioskGeo = {},
+    cachedGeo = (key, mk) => kioskGeo[key] || (kioskGeo[key] = mk());
+
+  // The Post Office: navy walls, red roof, and letters piled up everywhere: stacked on the counter
+  // and the crates, heaped on the deck, spilling from mail sacks, stuffed into the sorting cubbies,
+  // with parcels and a blue collection box.
+  function buildPostOffice(o) {
+    const fx = kioskFrame(o, { sign: "POST OFFICE", ink: "#22325a", wall: "#33508f", wall2: "#26407a", tin: [150, 42, 38] }),
+      G = goods(),
+      rs = srand(707),
+      ENV = ["#fbf8f0", "#f4ecd8", "#e8dcc0", "#d8c49a", "#ffffff", "#e6eef6", "#f6e6ea"];
+    // one envelope (with a stamp now and then) lying at (px, py, pz), turned by ry and tipped a little
+    const letter = (px, py, pz, ry, tip = 0.05) => {
+      const w = 0.24 + 0.06 * rs(),
+        d = 0.12 + 0.04 * rs(),
+        mm = G.m(px, py, pz, tip * (rs() - 0.5), ry, tip * (rs() - 0.5));
+      G.add(G.UBX, ENV[(rs() * ENV.length) | 0], mm.clone().multiply(S(0, 0, 0, 0, 0, 0, w, 0.012, d)));
+      rs() < 0.45 && G.add(G.UBX, rs() < 0.5 ? "#c8282a" : "#2a5aa8", mm.clone().multiply(S(0.36 * w, 0.007, -0.28 * d, 0, 0, 0, 0.035, 0.004, 0.04)));
+    };
+    // a teetering stack of n letters
+    const stack = (px, py, pz, n, spread = 0.05) => {
+      for (let k = 0; k < n; k++) letter(px + spread * (rs() - 0.5) * 2, py + 0.007 + 0.0125 * k, pz + spread * (rs() - 0.5) * 2, rs() * l);
+    };
+    // a heap: letters thrown into a mound of radius r0
+    const heap = (px, py, pz, r0, n, h = 0.45) => {
+      for (let k = 0; k < n; k++) {
+        const u = k / n,
+          a = rs() * l,
+          rd = r0 * Math.sqrt(rs()) * (1 - 0.8 * u);
+        letter(px + rd * Math.cos(a), py + 0.01 + h * u * (1 - rd / r0), pz + rd * Math.sin(a), rs() * l, 0.6);
+      }
+    };
+    // a canvas mail sack with letters spilling out of its mouth
+    const sack = (px, pz, s, lean) => {
+      G.add(T.sphere(1, 14, 10), "#c8b48a", G.m(px, 0.2 + 0.4 * s, pz, lean, 0, 0, 0.36 * s, 0.42 * s, 0.32 * s));
+      G.add(T.cyl(0.14, 0.2, 0.22, 10), "#b8a47a", G.m(px, 0.2 + 0.86 * s, pz + 0.2 * lean, lean, 0, 0));
+      G.box("#3a5a9a", px, 0.2 + 0.45 * s, pz + 0.31 * s, 0.22 * s, 0.12 * s, 0.01);
+      for (let k = 0; k < 6; k++) letter(px + 0.12 * (rs() - 0.5), 0.2 + 0.95 * s + 0.03 * k, pz + 0.2 * lean + 0.1 * (rs() - 0.5), rs() * l, 1.4);
+    };
+    // piles on the counter, bundles tied with string, and more piles on the crates
+    stack(-1.32, 1.12, 0.6, 38), stack(-0.62, 1.12, 0.66, 24), stack(0.12, 1.12, 0.58, 46, 0.07), stack(0.85, 1.12, 0.64, 30), stack(1.45, 1.12, 0.55, 14);
+    [-1.0, 0.5].forEach((px) => {
+      stack(px, 1.12, 0.36, 10, 0.005);
+      G.box("#c8a060", px, 1.19, 0.36, 0.3, 0.13, 0.012), G.box("#c8a060", px, 1.19, 0.36, 0.012, 0.13, 0.17);
+    });
+    [-1, 1].forEach((sx) => (stack(1.42 * sx, 1.0, -0.8, 34, 0.08), stack(1.42 * sx, 1.0, -0.05, 22, 0.08)));
+    // heaps on the deck and one spilling onto the lawn
+    heap(-2.25, 0.2, 1.55, 0.75, 130), heap(2.2, 0.2, 1.7, 0.6, 90), heap(0, 0.2, -1.6, 0.9, 120, 0.55), heap(-2.9, 0, 2.85, 0.6, 50, 0.2);
+    sack(-2.35, -1.75, 1, -0.15), sack(2.35, -1.85, 1.1, 0.12), sack(-1.85, -2.05, 0.8, 0.2);
+    // sorting cubbies on the back wall, every slot stuffed
+    const cw = 2.6,
+      ch = 1.4;
+    G.box("#8a5a32", 0, 2.75, -2.2, cw + 0.1, ch + 0.1, 0.38);
+    G.box("#5a3a20", 0, 2.75, -2.06, cw - 0.04, ch - 0.04, 0.1);
+    for (let k = 0; k <= 6; k++) G.box("#a8784a", -cw / 2 + (k * cw) / 6, 2.75, -2.02, 0.04, ch, 0.36);
+    for (let k = 0; k <= 4; k++) G.box("#a8784a", 0, 2.75 - ch / 2 + (k * ch) / 4, -2.02, cw, 0.04, 0.36);
+    for (let i = 0; i < 6; i++)
+      for (let j = 0; j < 4; j++)
+        for (let k = 0; k < 3; k++) G.box(ENV[(i + j + k) % ENV.length], -cw / 2 + ((i + 0.5) * cw) / 6 + 0.08 * (k - 1), 2.75 - ch / 2 + ((j + 0.5) * ch) / 4 - 0.02, -1.92, 0.012, 0.22, 0.28, 0, 0, 0.12 * (k - 1));
+    // parcels tied with twine
+    [
+      [2.35, 0.36, -0.95, 0.6, 0.32, 0.45, 0.2],
+      [2.32, 0.66, -0.98, 0.45, 0.28, 0.38, -0.3],
+      [2.38, 0.92, -0.92, 0.32, 0.22, 0.3, 0.5],
+    ].forEach(([px, py, pz, w, h, d, ry]) => {
+      G.box("#b88a52", px, py, pz, w, h, d, 0, ry), G.box("#e8dcb0", px, py, pz, w + 0.01, h + 0.01, 0.02, 0, ry), G.box("#e8dcb0", px, py, pz, 0.02, h + 0.01, d + 0.01, 0, ry);
+    });
+    // a blue collection box by the front corner
+    G.box("#2a4a8a", 3.6, 0.75, 1.9, 0.6, 0.9, 0.5), G.add(T.cyl(0.25, 0.25, 0.6, 14), "#2a4a8a", G.m(3.6, 1.2, 1.9, 0, 0, Math.PI / 2));
+    G.box("#1a2a4a", 3.6, 1.05, 2.16, 0.36, 0.05, 0.02);
+    [-1, 1].forEach((a) => [-1, 1].forEach((c2) => G.box("#1e2226", 3.6 + 0.24 * a, 0.15, 1.9 + 0.2 * c2, 0.06, 0.3, 0.06)));
+    G.done(o);
+  }
+
+  // The Sheriff's, in a mushroom theme: toadstool-red tin roof with white spots, mushroom-brown
+  // walls, a gold star, wanted posters of mushroom outlaws, a little mushroom behind the jail bars,
+  // toadstool stools, mushrooms sprouting round the posts, and a cowboy hat on the counter.
+  function buildSheriff(o) {
+    const fx = kioskFrame(o, { sign: "SHERIFF'S", ink: "#6a3a1a", wall: "#8a5a3a", wall2: "#6e4628", tin: [184, 40, 34], spots: !0 }),
+      G = goods(),
+      rs = srand(909),
+      CAPS = ["#c82a24", "#d8442a", "#b8862a", "#8a5a3a", "#e8b048"];
+    // a toadstool: stem and a domed cap, white spots on the red ones
+    const shroom = (px, py, pz, s, cap, tilt = 0) => {
+      const mm = G.m(px, py, pz, tilt * (rs() - 0.5), rs() * l, tilt * (rs() - 0.5));
+      G.add(T.cyl(0.07, 0.09, 0.3, 10), "#f2ead6", mm.clone().multiply(S(0, 0.15 * s, 0, 0, 0, 0, s, s, s)));
+      G.add(capGeo, cap, mm.clone().multiply(S(0, 0.28 * s, 0, 0, 0, 0, 0.2 * s, 0.14 * s, 0.2 * s)));
+      if ("#c82a24" === cap || "#d8442a" === cap)
+        for (let k = 0; k < 6; k++) {
+          const a = (k / 6) * l + rs(),
+            ph = 0.5 + 0.7 * rs();
+          G.add(T.sphere(1, 6, 4), "#fbf8f0", mm.clone().multiply(S(0.2 * s * Math.sin(ph) * Math.cos(a), 0.28 * s + 0.14 * s * Math.cos(ph), 0.2 * s * Math.sin(ph) * Math.sin(a), 0, 0, 0, 0.03 * s, 0.015 * s, 0.03 * s)));
+        }
+    };
+    const cluster = (px, py, pz, n, s) => {
+      for (let k = 0; k < n; k++) shroom(px + 0.25 * s * (rs() - 0.5) * 2, py, pz + 0.25 * s * (rs() - 0.5) * 2, s * (0.5 + 0.6 * rs()), CAPS[k % CAPS.length], 0.4);
+    };
+    // gold sheriff's star on the back wall
+    const star = new THREE.Shape();
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * l + Math.PI / 2,
+        r2 = k % 2 ? 0.26 : 0.55;
+      k ? star.lineTo(r2 * Math.cos(a), r2 * Math.sin(a)) : star.moveTo(r2 * Math.cos(a), r2 * Math.sin(a));
+    }
+    G.add(new THREE.ExtrudeGeometry(star, { depth: 0.06, bevelEnabled: !1 }), "#e8b830", G.m(0, 2.9, -2.33));
+    for (let k = 0; k < 6; k++) G.add(T.sphere(0.06, 8, 6), "#f2c84a", G.m(0.55 * Math.cos((k / 6) * l + Math.PI / 2), 2.9 + 0.55 * Math.sin((k / 6) * l + Math.PI / 2), -2.27));
+    // jail bars across the left side, with a small mushroom inmate sitting behind them
+    for (let k = 0; k < 9; k++) G.add(T.cyl(0.025, 0.025, 2.1, 6), "#2a2a2e", G.m(-3.0, 2.33, -2.1 + 0.5 * k));
+    [1.3, 3.36].forEach((py) => G.box("#2a2a2e", -3.0, py, -0.1, 0.06, 0.06, 4.2));
+    shroom(-2.45, 1.0, -1.4, 2.2, "#c82a24");
+    [-0.1, 0.1].forEach((dx) => G.add(T.sphere(0.035, 8, 6), "#1a1a1e", G.m(-2.45 + dx * 1.2, 1.36, -1.22)));
+    // wanted posters (mushroom outlaws) are textured planes, added below
+    // counter: cowboy hat, coffee mug, keys, a potted toadstool
+    G.add(T.cyl(0.3, 0.3, 0.02, 20), "#7a4a24", G.m(-1.0, 1.14, 0.6)), G.add(T.cyl(0.15, 0.17, 0.2, 16), "#7a4a24", G.m(-1.0, 1.25, 0.6)), G.add(T.cyl(0.172, 0.172, 0.04, 16), "#3a2414", G.m(-1.0, 1.19, 0.6));
+    G.add(T.cyl(0.06, 0.055, 0.13, 12), "#f4f0e6", G.m(0.2, 1.185, 0.7)), G.add(new THREE.TorusGeometry(0.035, 0.012, 6, 10), "#f4f0e6", G.m(0.27, 1.19, 0.7));
+    G.add(new THREE.TorusGeometry(0.06, 0.01, 6, 14), "#c8a040", G.m(0.6, 1.125, 0.5, Math.PI / 2, 0, 0));
+    [0.56, 0.64].forEach((px, k) => G.box("#c8a040", px + 0.04, 1.125, 0.42 - 0.04 * k, 0.03, 0.01, 0.12, 0, k));
+    G.add(T.cyl(0.13, 0.1, 0.2, 12), "#c0603a", G.m(-0.35, 1.22, 0.62)), cluster(-0.35, 1.32, 0.62, 3, 0.7);
+    // crates: a stack of papers and a lantern, a basket of mushrooms
+    for (let k = 0; k < 8; k++) G.box(k % 2 ? "#f4ecd8" : "#fbf8f0", 1.42, 1.01 + 0.012 * k, -0.7, 0.3, 0.012, 0.22, 0, 0.1 * (k - 4));
+    G.add(T.cyl(0.08, 0.1, 0.05, 10), "#2a2a2e", G.m(1.42, 1.03, -0.1)), G.add(T.cyl(0.07, 0.07, 0.18, 10), "#ffe08a", G.m(1.42, 1.15, -0.1)), G.add(T.cone(0.09, 0.08, 10), "#2a2a2e", G.m(1.42, 1.28, -0.1));
+    G.add(T.cyl(0.26, 0.22, 0.2, 12), "#b88a4a", G.m(-1.42, 1.1, -0.4)), cluster(-1.42, 1.18, -0.4, 6, 0.8);
+    // mushrooms growing round the posts, toadstool stools in front, a giant one by the corner
+    [-1, 1].forEach((sx) => [2.15, -2.42].forEach((pz) => cluster(3.2 * sx, 0, pz + 0.25 * Math.sign(pz), 4, 1.0)));
+    [-1.3, 1.3].forEach((px) => {
+      G.add(T.cyl(0.16, 0.2, 0.42, 12), "#f2ead6", G.m(px, 0.21, 3.0));
+      G.add(capGeo, "#c82a24", G.m(px, 0.42, 3.0, 0, 0, 0, 0.36, 0.14, 0.36));
+      for (let k = 0; k < 5; k++) G.add(T.sphere(1, 6, 4), "#fbf8f0", G.m(px + 0.22 * Math.cos(1.3 * k), 0.5, 3.0 + 0.22 * Math.sin(1.3 * k), 0, 0, 0, 0.05, 0.02, 0.05));
+    });
+    G.add(T.cyl(0.22, 0.3, 1.6, 14), "#f2ead6", G.m(3.75, 0.8, 1.6)), G.add(capGeo, "#c82a24", G.m(3.75, 1.55, 1.6, 0.1, 0, 0.1, 0.95, 0.55, 0.95));
+    for (let k = 0; k < 9; k++) {
+      const a = (k / 9) * l,
+        ph = 0.45 + 0.6 * (k % 3) * 0.5;
+      G.add(T.sphere(1, 8, 6), "#fbf8f0", G.m(3.75 + 0.95 * Math.sin(ph) * Math.cos(a), 1.6 + 0.55 * Math.cos(ph), 1.6 + 0.95 * Math.sin(ph) * Math.sin(a), 0, 0, 0, 0.13, 0.05, 0.13));
+    }
+    // small caps topping the sign posts on the ridge
+    [-1.6, 1.6].forEach((px) => G.add(capGeo, "#c82a24", G.m(px, 6.08, -0.12, 0, 0, 0, 0.2, 0.12, 0.2)));
+    G.done(o);
+    // wanted posters: a mushroom outlaw on parchment
+    const poster = (cap, seed) =>
+      b(
+        128,
+        160,
+        (c) => {
+          (c.fillStyle = "#efe0b8"), c.fillRect(0, 0, 128, 160), (c.fillStyle = "#3a2414"), (c.font = "bold 26px Georgia, serif"), (c.textAlign = "center"), c.fillText("WANTED", 64, 28);
+          (c.fillStyle = "#f2ead6"), c.fillRect(54, 84, 20, 40), (c.fillStyle = cap), c.beginPath(), c.ellipse(64, 86, 40, 30, 0, Math.PI, 0), c.fill();
+          c.fillStyle = "#ffffff";
+          for (let k = 0; k < 4; k++) c.beginPath(), c.arc(40 + 16 * k + 4 * Math.sin(seed + k), 72 + 4 * Math.cos(seed * k), 4, 0, l), c.fill();
+          (c.fillStyle = "#1a1a1e"), c.fillRect(58, 98, 4, 6), c.fillRect(66, 98, 4, 6);
+          (c.fillStyle = "#3a2414"), (c.font = "bold 16px Georgia, serif"), c.fillText("REWARD", 64, 146);
+        },
+        { smooth: !0 },
+      );
+    [
+      [-1.9, 2.75, "#c82a24", 0.08],
+      [1.9, 2.8, "#b8862a", -0.06],
+      [1.5, 1.9, "#d8442a", 0.1],
+    ].forEach(([px, py, cap, rz], k) => R(T.plane(0.62, 0.78), x.world(16777215, { map: poster(cap, k + 1) }), o, [px, py, -2.35], [0, 0, rz]));
+  }
+
+  // Garden Supplies: sage walls, terracotta roof, and plants everywhere: potted shrubs, flowers,
+  // ferns, succulents and little trees, seedling trays, hanging baskets, bags of soil, a
+  // wheelbarrow of flowers and tools leaning on the wall.
+  function buildGardenSupplies(o) {
+    const fx = kioskFrame(o, { sign: "GARDEN SUPPLIES", ink: "#2f5a2a", wall: "#6f8f5a", wall2: "#5a7a48", tin: [168, 92, 58] }),
+      G = goods(),
+      rs = srand(313),
+      GREENS = ["#3f7a2a", "#4f8a30", "#5a9a3a", "#2f6a2a", "#6aa83e"],
+      BLOOM = ["#e8303a", "#ffd23a", "#9a5ae0", "#ffffff", "#ff8a1a", "#ff7ab8", "#4a8ae8"];
+    const leafy = cachedGeo("kleafy", () => new THREE.IcosahedronGeometry(1, 1));
+    // a terracotta pot with one of five kinds of plant
+    const pot = (px, py, pz, s, kind) => {
+      const pc = rs() < 0.3 ? "#a85a3a" : rs() < 0.5 ? "#c8703e" : "#b86a48";
+      G.add(T.cyl(0.16, 0.12, 0.26, 12), pc, G.m(px, py + 0.13 * s, pz, 0, 0, 0, s, s, s)), G.add(T.cyl(0.18, 0.18, 0.05, 12), pc, G.m(px, py + 0.27 * s, pz, 0, 0, 0, s, s, s));
+      G.add(T.cyl(0.15, 0.15, 0.02, 12), "#4a3424", G.m(px, py + 0.28 * s, pz, 0, 0, 0, s, s, s));
+      const top = py + 0.3 * s,
+        gc = GREENS[(rs() * GREENS.length) | 0];
+      if (0 === kind || 1 === kind) {
+        for (let k = 0; k < 4; k++) G.add(leafy, gc, G.m(px + 0.1 * s * Math.cos(2 * k), top + 0.12 * s + 0.06 * s * k, pz + 0.1 * s * Math.sin(2 * k), rs(), rs(), 0, 0.16 * s, 0.14 * s, 0.16 * s));
+        if (1 === kind) {
+          const fc = BLOOM[(rs() * BLOOM.length) | 0];
+          for (let k = 0; k < 7; k++) G.add(T.sphere(1, 6, 4), fc, G.m(px + 0.2 * s * (rs() - 0.5) * 2, top + 0.2 * s + 0.18 * s * rs(), pz + 0.2 * s * (rs() - 0.5) * 2, 0, 0, 0, 0.045 * s, 0.035 * s, 0.045 * s));
+        }
+      } else if (2 === kind)
+        for (let k = 0; k < 9; k++) {
+          const a = (k / 9) * l;
+          G.add(T.cone(0.05, 0.5, 4), gc, G.m(px + 0.12 * s * Math.cos(a), top + 0.18 * s, pz + 0.12 * s * Math.sin(a), 0.55 * Math.sin(a), 0, -0.55 * Math.cos(a), s, s, 0.4 * s));
+        }
+      else if (3 === kind) {
+        G.add(T.cyl(0.07, 0.09, 0.34, 8), "#4f8a4a", G.m(px, top + 0.17 * s, pz, 0, 0, 0, s, s, s)), G.add(T.sphere(0.07, 8, 6), "#4f8a4a", G.m(px, top + 0.34 * s, pz, 0, 0, 0, s, s, s));
+        [-1, 1].forEach((sx) => G.add(T.cyl(0.04, 0.05, 0.14, 8), "#4f8a4a", G.m(px + 0.09 * s * sx, top + 0.18 * s, pz, 0, 0, -0.5 * sx, s, s, s)));
+        G.add(T.sphere(0.03, 6, 4), "#ff7ab8", G.m(px, top + 0.42 * s, pz, 0, 0, 0, s, s, s));
+      } else {
+        G.add(T.cyl(0.02, 0.03, 0.5, 6), "#6a4a2a", G.m(px, top + 0.25 * s, pz, 0, 0, 0, s, s, s));
+        G.add(leafy, gc, G.m(px, top + 0.62 * s, pz, rs(), rs(), 0, 0.24 * s, 0.22 * s, 0.24 * s)), G.add(leafy, GREENS[(rs() * 5) | 0], G.m(px + 0.1 * s, top + 0.52 * s, pz, rs(), rs(), 0, 0.14 * s, 0.13 * s, 0.14 * s));
+      }
+    };
+    // counter: seedling trays, pots, a sunflower tray
+    [-1.3, -0.45].forEach((px) => {
+      G.box("#2a2a2e", px, 1.15, 0.6, 0.7, 0.06, 0.5);
+      for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) G.add(T.cone(0.03, 0.09, 4), GREENS[(i + j) % 5], G.m(px - 0.27 + 0.108 * i, 1.22, 0.42 + 0.12 * j, 0.2 * (rs() - 0.5), rs() * l, 0.2 * (rs() - 0.5)));
+    });
+    [0.3, 0.75, 1.2, 1.6].forEach((px, k) => pot(px, 1.12, 0.6 + 0.08 * (k % 2), 0.9 + 0.2 * (k % 2), [1, 0, 2, 3][k]));
+    // crates: shelves of pots
+    [-1, 1].forEach((sx) => [-0.95, -0.38, 0.2].forEach((pz, k) => pot(1.42 * sx, 1.0, pz, 0.85, (k + (sx > 0 ? 1 : 3)) % 5)));
+    // a plank shelf on the back wall with small pots
+    G.box("#8a6a48", 0, 2.6, -2.2, 4.4, 0.06, 0.32);
+    [-1, 1].forEach((sx) => G.box("#6a4a2a", 1.8 * sx, 2.45, -2.25, 0.05, 0.3, 0.28, 0.6 * sx));
+    for (let k = 0; k < 7; k++) pot(-1.95 + 0.65 * k, 2.63, -2.2, 0.6, k % 5);
+    // hanging baskets from the front beam
+    [-2.2, -0.8, 0.8, 2.2].forEach((px, k) => {
+      G.add(T.cyl(0.006, 0.006, 0.5, 4), "#3a3a3e", G.m(px, 3.05, 2.15));
+      G.add(capGeo, "#8a6a3a", G.m(px, 2.78, 2.15, Math.PI, 0, 0, 0.22, 0.16, 0.22));
+      for (let j = 0; j < 4; j++) G.add(leafy, GREENS[(k + j) % 5], G.m(px + 0.12 * Math.cos(1.6 * j), 2.8, 2.15 + 0.12 * Math.sin(1.6 * j), rs(), rs(), 0, 0.12, 0.1, 0.12));
+      for (let j = 0; j < 6; j++) {
+        const a = (j / 6) * l;
+        G.box(GREENS[j % 5], px + 0.2 * Math.cos(a), 2.55, 2.15 + 0.2 * Math.sin(a), 0.04, 0.4, 0.02, 0, -a, 0);
+        G.add(T.sphere(1, 6, 4), BLOOM[(k + j) % BLOOM.length], G.m(px + 0.21 * Math.cos(a), 2.36, 2.15 + 0.21 * Math.sin(a), 0, 0, 0, 0.04, 0.03, 0.04));
+      }
+    });
+    // rows of pots on the deck and on the lawn beside the kiosk
+    for (let k = 0; k < 10; k++) pot(-2.6 + 0.42 * (k % 3), 0.2, 1.0 + 0.45 * Math.floor(k / 3), 1.1 + 0.3 * rs(), k % 5);
+    for (let k = 0; k < 6; k++) pot(2.2 + 0.42 * (k % 2), 0.2, 0.9 + 0.5 * Math.floor(k / 2), 1.2, (k + 2) % 5);
+    [-1, 1].forEach((sx) => [0, 1, 2].forEach((k) => pot(4.0 * sx, 0, -1.8 + 1.4 * k, 1.6 + 0.4 * (k % 2), k === 1 ? 4 : 1)));
+    // bags of soil and compost
+    [
+      [-2.4, -1.4, "#6a4a2a"],
+      [-2.4, -2.0, "#5a3e24"],
+      [-1.8, -1.9, "#4a6a3a"],
+    ].forEach(([px, pz, c]) => {
+      G.box(c, px, 0.36, pz, 0.5, 0.32, 0.7, 0, 0.2), G.box("#f4ecd8", px, 0.4, pz + 0.36, 0.3, 0.14, 0.01, 0, 0.2);
+    });
+    // a wheelbarrow of flowers out front
+    const wb = (px, pz) => {
+      G.box("#2f6a8a", px, 0.55, pz, 0.7, 0.3, 1.0), G.box("#4a3424", px, 0.7, pz, 0.62, 0.02, 0.9);
+      G.add(T.cyl(0.18, 0.18, 0.08, 12), "#2a2a2e", G.m(px, 0.18, pz + 0.65, 0, 0, Math.PI / 2));
+      [-1, 1].forEach((sx) => {
+        G.box("#6a4a2a", px + 0.28 * sx, 0.5, pz - 0.6, 0.05, 0.05, 0.8, 0.4), G.box("#6a4a2a", px + 0.28 * sx, 0.2, pz - 0.2, 0.05, 0.4, 0.05);
+      });
+      for (let k = 0; k < 14; k++) G.add(T.sphere(1, 6, 4), k % 3 ? BLOOM[k % BLOOM.length] : GREENS[k % 5], G.m(px + 0.25 * (rs() - 0.5) * 2, 0.78 + 0.08 * rs(), pz + 0.4 * (rs() - 0.5) * 2, 0, 0, 0, 0.09, 0.07, 0.09));
+    };
+    wb(2.6, 3.4);
+    // a rake and a shovel leaning on the side wall
+    G.box("#8a6a48", 3.25, 1.0, -1.6, 0.04, 2.0, 0.04, 0.12), G.box("#7a7a80", 3.25, 0.04, -1.47, 0.04, 0.04, 0.5, 0.12);
+    G.box("#8a6a48", 3.25, 0.9, -0.9, 0.04, 1.6, 0.04, -0.12), G.box("#7a7a80", 3.25, 0.14, -1.0, 0.03, 0.28, 0.22, -0.12);
+    G.done(o);
   }
 
   // A duck pond with a grassy bank, limestone rocks, cattails, lily pads and a little dock
@@ -13897,6 +14184,8 @@ const JGP = (() => {
     for (const c of garden.cans)
       c.rotation.z = live ? 0.7 * Math.max(0, Math.sin(1.3 * tt + c.userData.ph)) : 0.06 * Math.sin(1.4 * tt + c.userData.ph);
   });
+  const GAZEBO = [5, -31];
+  const JGP_K = { post: (g) => buildPostOffice(g), garden: (g) => buildGardenSupplies(g), sheriff: (g) => buildSheriff(g) };
   function swapWorld() {
     // keep the working stations (garden, shop, pond, phone, sign, obelisk, portal) and
     // everything that is not scenery; drop the engine's own scenery, then build the town.
@@ -15038,17 +15327,16 @@ const JGP = (() => {
           Z = 27 * uz + 2.7 * sd * pz;
         bench(X, Z, Math.atan2(-sd * px, -sd * pz)), sd > 0 && trashCan(X + 1.6 * ux, Z + 1.6 * uz);
       });
-      lampPost(33 * ux - 2.4 * px, 33 * uz - 2.4 * pz);
     });
-    gazebo(21, -31);
+    gazebo(GAZEBO[0], GAZEBO[1]);
     flowerBed(14, 26, 2.2), flowerBed(-16, 28, 2.2);
     [
-      [-24, 33, 1.25, 1],
-      [24, 34, 1.2, 0],
-      [30, -37, 1.15, 0],
-      [-30, -37, 1.2, 1],
-      [16, 36, 0.95, 0],
-      [-12, 36, 1.0, 2],
+      [-26, 34, 1.25, 1],
+      [22, 34, 1.2, 0],
+      [31, -33.5, 1.15, 0],
+      [-31, -33.5, 1.2, 1],
+      [9, 34.5, 0.95, 0],
+      [-12, 34, 1.0, 2],
     ].forEach(([X, Z, s, kind]) => (tree(X, Z, s, kind, 2), E.add(X, Z, 1.2 * s, "scenery")));
     // hydrant and a blue mailbox by the south walk
     put("plain", ucyl(10), "#c8282a", S(3.2, 0.38, 40.2, 0, 0, 0, 0.36, 0.76, 0.36)), put("plain", usph(10, !0), "#c8282a", S(3.2, 0.76, 40.2, 0, 0, 0, 0.36, 0.3, 0.36));
@@ -15294,6 +15582,48 @@ const JGP = (() => {
       }),
     );
 
+    // ---- the park fence: black iron pickets between brick pillars, with a closed double gate
+    // where the south walk meets the sidewalk. It marks the edge of the play area.
+    {
+      const FH = t.parkHalf,
+        iron = "#1e2226",
+        pillar = (X, Z) => {
+          put("brick", UB, "#9a4a36", S(X, 0.65, Z, 0, 0, 0, 0.6, 1.3, 0.6)), put("stone", UB, "#e2d8c2", S(X, 1.35, Z, 0, 0, 0, 0.74, 0.12, 0.74));
+          put("plain", usph(10), iron, S(X, 1.52, Z, 0, 0, 0, 0.26, 0.26, 0.26));
+        };
+      [-1, 1].forEach((sx) => [-1, 1].forEach((sz) => pillar(sx * FH, sz * FH)));
+      [-1.65, 1.65].forEach((X) => pillar(X, FH));
+      // one run of fence from a to b along x (alongX) or z, at the fixed coordinate c
+      const run = (a, b2, c, alongX) => {
+        const len = b2 - a,
+          mid = (a + b2) / 2,
+          at = (u, y, w, h, d) => (alongX ? S(u, y, c, 0, 0, 0, w, h, d) : S(c, y, u, 0, 0, 0, d, h, w));
+        [0.18, 0.9].forEach((y) => put("plain", UBs(segs(len), 1), iron, at(mid, y, len, 0.05, 0.05)));
+        for (let u = a + 0.16; u < b2 - 0.08; u += 0.16 / LOD) put("plain", UB, iron, at(u, 0.52, 0.03, 1.04, 0.03));
+        for (let u = a + 2.4; u < b2 - 0.5; u += 2.4) put("plain", UB, iron, at(u, 0.6, 0.08, 1.2, 0.08)), put("plain", ucone(4), iron, at(u, 1.27, 0.1, 0.16, 0.1));
+      };
+      run(-FH + 0.35, FH - 0.35, -FH, !0), run(-FH + 0.35, FH - 0.35, -FH, !1), run(-FH + 0.35, FH - 0.35, FH, !1);
+      run(-FH + 0.35, -1.95, FH, !0), run(1.95, FH - 0.35, FH, !0);
+      // the gate: two leaves with a scrolled top rail, latched shut
+      [-1, 1].forEach((sd) => {
+        const g0 = 1.32 * sd;
+        [0.2, 0.95].forEach((y) => put("plain", UB, iron, S(g0 / 2 + 0.06 * sd, y, FH, 0, 0, 0, 1.3, 0.05, 0.05)));
+        for (let k = 0; k <= 8; k++) put("plain", UB, iron, S(sd * (0.06 + 0.16 * k), 0.58 + 0.04 * Math.sin((k / 8) * Math.PI), FH, 0, 0, 0, 0.03, 1.08 + 0.1 * Math.sin((k / 8) * Math.PI), 0.03));
+        put("plain", cached("gatescroll", () => new THREE.TorusGeometry(0.22, 0.02, 4, 12, Math.PI)), iron, S(0.7 * sd, 1.0, FH));
+      });
+      put("plain", UB, "#c8a040", S(0, 0.6, FH + 0.04, 0, 0, 0, 0.08, 0.14, 0.06));
+    }
+
+    // ---- kiosks in the other three corners of the square (the General Store has the fourth) ----
+    [
+      [24.75, -24.75, JGP_K.post],
+      [24.75, 24.75, JGP_K.garden],
+      [-24.75, 24.75, JGP_K.sheriff],
+    ].forEach(([X, Z, build]) => {
+      const k0 = new THREE.Group();
+      k0.position.set(X, 0, Z), (k0.rotation.y = A(X, Z)), (k0.userData.keepInFinale = !0), C.add(k0), build(k0), H(k0), E.add(X, Z, 4.4, "scenery"), keepAt.push([X, Z]);
+    });
+
     // ---- the lawn: short tufts, clover and dandelions (off the walks, garden and stations) ------
     const onWalk = (X, Z) => {
       const r = Math.hypot(X, Z);
@@ -15339,6 +15669,9 @@ const JGP = (() => {
     addCan: (c) => garden.cans.push(c),
     buildShop,
     buildPond,
+    buildPostOffice,
+    buildSheriff,
+    buildGardenSupplies,
     fireBlossom,
     beforeSpawn() {
       try {
@@ -15353,6 +15686,8 @@ const JGP = (() => {
       }
       // no collision on anything in the play area except NPCs (and the player)
       F.list.forEach((f) => (f.stage = !1));
+      // ...except the gazebo's raised platform
+      F.list.push({ x: GAZEBO[0], z: GAZEBO[1], r: 3.75, blocks: !0, stage: !0 });
     },
   };
 })();

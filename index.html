@@ -12681,9 +12681,8 @@ const JGP = (() => {
 
   // SOMLET = GRATELET + SOMNUX.
   // A floating cotton puffball (GRATELET) squared off like SOMNUX's box body, with SOMNUX's sleepy
-  // face (lashes, blush, little "o" mouth) and GRATELET's swirl, SOMNUX's starry blue nightcap,
-  // GRATELET's cream-puff hands and dangling root tentacles, tinted plum between GRATELET's red and
-  // the nightcap's blue.
+  // face (lashes, blush, little "o" mouth) and GRATELET's swirl, a mail carrier's cap, GRATELET's
+  // cream-puff hands and dangling root tentacles, tinted plum between GRATELET's red and SOMNUX's blue.
   BORN.somlet = (g) => {
     const cream = KIT.surf("felt", "#f2e4b4", { rep: 2, bump: 0.025, shine: 12 }),
       cream2 = KIT.surf("felt", "#ead6a0", { rep: 2, bump: 0.025, shine: 12 }),
@@ -12726,21 +12725,24 @@ const JGP = (() => {
       }
       R(ao(pts, 0.012, 0.012, 40, 4), cream2, puff);
     });
-    // SOMNUX's nightcap
+    // a mail carrier's peaked cap: navy band, flared crown with white piping, black visor and
+    // a gold badge with a little envelope on it
     const cap = new THREE.Group();
-    (cap.position.y = 0.7), puff.add(cap);
-    R(T.torus(0.62, 0.11, 8, 28), x.clay("#fbf8ee", { shininess: 20 }), cap, [0, 0, 0], [Math.PI / 2, 0, 0], [1, 0.9, 1]);
-    const capPts = [[0, 0, 0], [0, 0.4, -0.04], [0.1, 0.72, -0.08], [0.36, 0.88, -0.1], [0.62, 0.78, -0.08]],
-      capCurve = new THREE.CatmullRomCurve3(capPts.map((q) => new c0(...q))),
-      navy = KIT.surf("felt", "#3a4ab8", { rep: 2, bump: 0.02, shine: 15 });
-    R(ao(capPts, 0.58, 0.07, 24, 18), navy, cap);
-    const starM = x.clay("#ffd23a", { shininess: 40 });
-    [[0.18, 0.4], [0.35, 2.1], [0.5, 4.0], [0.62, 1.2], [0.28, 5.2], [0.72, 3.0]].forEach(([u, a]) => {
-      const pp = capCurve.getPointAt(u),
-        rr = 0.58 + (0.07 - 0.58) * u + 0.01;
-      R(starGeo(), starM, cap, [pp.x + rr * Math.cos(a), pp.y, pp.z + rr * Math.sin(a)], [0, Math.PI / 2 - a, 0], 0.06);
-    });
-    const pom = R(T.sphere(0.13, 12, 10), x.clay("#fbf8ee", { shininess: 20 }), cap, [0.64, 0.74, -0.08]);
+    (cap.position.y = 0.7), (cap.rotation.x = -0.08), puff.add(cap);
+    const navy = KIT.surf("felt", "#2a3a6a", { rep: 2, bump: 0.02, shine: 15 }),
+      blackM = x.clay("#141418", { shininess: 90, specular: 8947848 }),
+      goldM = x.clay("#e8b830", { shininess: 90, specular: 16777215 });
+    R(T.cyl(0.5, 0.48, 0.22, 28), x.clay("#1e2440", { shininess: 30 }), cap, [0, 0.07, 0]);
+    R(T.cyl(0.6, 0.5, 0.2, 28), navy, cap, [0, 0.27, 0]), R(T.cyl(0.6, 0.6, 0.05, 28), navy, cap, [0, 0.39, 0]);
+    R(T.torus(0.6, 0.018, 6, 32), x.clay("#f6f4ee"), cap, [0, 0.37, 0], [Math.PI / 2, 0, 0]);
+    R(T.torus(0.495, 0.015, 6, 32), x.clay("#f6f4ee"), cap, [0, 0.17, 0], [Math.PI / 2, 0, 0]);
+    R(new THREE.CircleGeometry(0.5, 24, Math.PI, Math.PI), blackM, cap, [0, 0.0, 0.42], [-Math.PI / 2 + 0.38, 0, 0], [1, 0.75, 1]);
+    R(T.box(0.62, 0.035, 0.03), blackM, cap, [0, 0.0, 0.48], [0, 0, 0]);
+    const badge = new THREE.Group();
+    badge.position.set(0, 0.24, 0.53), (badge.rotation.x = -0.25), cap.add(badge);
+    R(T.cyl(0.11, 0.11, 0.025, 6), goldM, badge, [0, 0, 0], [Math.PI / 2, 0, Math.PI / 6]);
+    R(T.box(0.11, 0.07, 0.01), x.clay("#fbf8ee"), badge, [0, 0, 0.016]);
+    [-1, 1].forEach((sx) => R(T.box(0.07, 0.008, 0.012), x.clay("#c8a040"), badge, [0.026 * sx, 0.013, 0.02], [0, 0, -0.55 * sx]));
     // GRATELET's cream-puff hands
     const hands = [-1, 1].map((sx) => {
       const h = new THREE.Group();
@@ -12762,7 +12764,7 @@ const JGP = (() => {
       height: 3.0,
       step(t, dt, tk) {
         (fl.position.y = 1.35 + 0.1 * Math.sin(1.2 * t)), puff.scale.set(1 + 0.02 * Math.sin(1.6 * t), 1 - 0.02 * Math.sin(1.6 * t), 1);
-        (cap.rotation.z = 0.06 * Math.sin(1.1 * t)), (pom.position.y = 0.74 + 0.03 * Math.sin(2.2 * t));
+        (cap.rotation.z = 0.04 * Math.sin(1.1 * t));
         tents.forEach((tg, k) => ((tg.rotation.x = 0.18 * Math.sin(1.4 * t + k)), (tg.rotation.z = 0.12 * Math.sin(1.1 * t + 2 * k))));
         hands.forEach((h, k) => (h.position.y = -0.18 + 0.05 * Math.sin(1.8 * t + k * 2) + 0.1 * tk));
       },
@@ -12803,6 +12805,70 @@ const JGP = (() => {
         pz = rr * Math.cos(a);
       R(T.cyl(0.012, 0.016, h, 5), vine, sprouts, [px, yy + h / 2, pz], [0.3 * Math.cos(a), 0, -0.3 * Math.sin(a)]);
       R(new THREE.SphereGeometry(0.035, 8, 5, 0, l, 0, Math.PI / 2), x.clay(capCols[k % 4], { shininess: 50 }), sprouts, [px * 1.05, yy + h, pz * 1.05]);
+    }
+    // more mushrooms: toadstools and buttons sprouting from his crown, shoulders, back and mossy skirt
+    const prof = [[0, 0.36], [0.2, 0.49], [0.45, 0.52], [0.82, 0.52], [1.35, 0.52], [1.66, 0.45], [1.82, 0.3], [1.86, 0.02]],
+      radAt = (yy) => {
+        for (let k = 1; k < prof.length; k++)
+          if (yy <= prof[k][0]) {
+            const [y0, r0] = prof[k - 1],
+              [y1, r1] = prof[k];
+            return r0 + ((r1 - r0) * (yy - y0)) / (y1 - y0);
+          }
+        return 0.02;
+      },
+      stemM = x.clay("#f2ead6", { shininess: 20 }),
+      spotM = x.clay("#fbf8f0", { shininess: 30 }),
+      capM = {};
+    [
+      [1.8, 0.5, 1.4, "#d8302a"],
+      [1.76, 2.6, 1.1, "#e8802a"],
+      [1.72, -2.2, 0.95, "#c8a060"],
+      [1.85, -0.9, 0.7, "#d8302a"],
+      [1.82, 1.6, 0.6, "#ffd23a"],
+      [1.55, 2.35, 0.95, "#d8302a"],
+      [1.55, -2.45, 0.85, "#8a5a3a"],
+      [1.5, 3.1, 1.0, "#e8802a"],
+      [1.12, 2.85, 0.9, "#d8302a"],
+      [1.0, -2.9, 0.7, "#c8a060"],
+      [0.8, 2.3, 0.75, "#ff5fb0"],
+      [0.32, 0.95, 0.85, "#d8302a"],
+      [0.28, -0.95, 0.75, "#e8802a"],
+      [0.34, 2.0, 0.9, "#c8a060"],
+      [0.3, -2.0, 0.8, "#d8302a"],
+      [0.26, 3.0, 0.7, "#ffd23a"],
+    ].forEach(([yy, a, sc, col]) => {
+      const rr = radAt(yy),
+        up = yy > 1.65 ? 2.2 : yy < 0.5 ? 0.35 : 0.7,
+        nrm = new c0(Math.sin(a), up, Math.cos(a)).normalize(),
+        m = new THREE.Group();
+      m.position.set(0.97 * rr * Math.sin(a), yy, 0.97 * rr * Math.cos(a)), m.quaternion.setFromUnitVectors(new c0(0, 1, 0), nrm), m.scale.setScalar(1.75 * sc), body.add(m);
+      R(T.cyl(0.028, 0.036, 0.13, 8), stemM, m, [0, 0.06, 0]);
+      R(new THREE.SphereGeometry(0.085, 14, 7, 0, l, 0, Math.PI / 2), capM[col] || (capM[col] = x.clay(col, { shininess: 45 })), m, [0, 0.12, 0], null, [1, 0.75, 1]);
+      if ("#d8302a" === col)
+        for (let k = 0; k < 5; k++) {
+          const sa = 1.3 * k + yy;
+          R(T.sphere(0.014, 6, 4), spotM, m, [0.055 * Math.cos(sa), 0.165, 0.055 * Math.sin(sa)], null, [1, 0.45, 1]);
+        }
+    });
+    // a gold sheriff's star pinned on his chest
+    {
+      const star = new THREE.Shape();
+      for (let k = 0; k < 12; k++) {
+        const sa = (k / 12) * l + Math.PI / 2,
+          r2 = k % 2 ? 0.065 : 0.14;
+        k ? star.lineTo(r2 * Math.cos(sa), r2 * Math.sin(sa)) : star.moveTo(r2 * Math.cos(sa), r2 * Math.sin(sa));
+      }
+      const gold = x.clay("#f2c230", { shininess: 120, specular: 16777215 }),
+        badge = new THREE.Group(),
+        ba = 0.62;
+      badge.position.set(0.52 * Math.sin(ba), 0.97, 0.52 * Math.cos(ba) + 0.005), (badge.rotation.y = ba), body.add(badge);
+      R(new THREE.ExtrudeGeometry(star, { depth: 0.025, bevelEnabled: !1 }), gold, badge);
+      for (let k = 0; k < 6; k++) {
+        const sa = (k / 6) * l + Math.PI / 2;
+        R(T.sphere(0.022, 8, 6), gold, badge, [0.14 * Math.cos(sa), 0.14 * Math.sin(sa), 0.015]);
+      }
+      R(T.cyl(0.045, 0.045, 0.02, 14), x.clay("#c8962a", { shininess: 90 }), badge, [0, 0, 0.03], [Math.PI / 2, 0, 0]);
     }
     // City's goggles, grille and chest panels
     const lens = x.clay("#2aa8c8", { shininess: 120, specular: 16777215 }),
@@ -13269,6 +13335,20 @@ const JGP = (() => {
       R(T.cone(0.045 * (1.2 - u), 0.12 * (1.2 - u), 5), spikeM, tail, [pp.x, pp.y + 0.2 * (1 - u) + 0.03, pp.z], [-0.4, 0, 0]);
     }
     for (let k = 0; k < 4; k++) R(T.cone(0.045, 0.12, 5), spikeM, body, [0, 2.0 - 0.25 * k, -0.36], [-0.6, 0, 0]);
+    // shopkeeper's apron: a white canvas bib over his chest and belly, a skirt over the thighs, a
+    // red-trimmed pocket with a pencil, a neck strap and waist ties bowed at the back
+    const apronM = x.clay("#f8f6f0", { shininess: 18 }),
+      trimM = x.clay("#c8302a", { shininess: 30 }),
+      bib = new THREE.SphereGeometry(1, 20, 12, Math.PI / 2 - 0.95, 1.9, 1.08, 1.62);
+    R(bib, apronM, body, [0, 1.45, 0], null, [0.53, 0.65, 0.5]);
+    const skirt = new THREE.CylinderGeometry(1, 1, 1, 16, 1, !0, -0.95, 1.9);
+    R(skirt, apronM, body, [0, 0.83, 0.02], null, [0.5, 0.42, 0.48]);
+    R(new THREE.CylinderGeometry(1, 1, 1, 16, 1, !0, -0.95, 1.9), trimM, body, [0, 0.64, 0.02], null, [0.505, 0.05, 0.485]);
+    R(T.box(0.3, 0.2, 0.03), apronM, body, [0, 1.15, 0.5], [-0.12, 0, 0]), R(T.box(0.3, 0.035, 0.035), trimM, body, [0, 1.24, 0.505], [-0.12, 0, 0]);
+    R(T.cyl(0.012, 0.012, 0.2, 6), x.clay("#f2c21a"), body, [0.09, 1.28, 0.5], [0, 0, 0.15]), R(T.cone(0.012, 0.03, 6), x.clay("#3a3a3e"), body, [0.105, 1.17, 0.5], [Math.PI, 0, 0.15]);
+    [-1, 1].forEach((sx) => R(ao([[0.16 * sx, 1.77, 0.42], [0.21 * sx, 1.98, 0.24], [0.16 * sx, 2.1, 0.0], [0, 2.14, -0.12]], 0.018, 0.018, 10, 5), apronM, body));
+    R(T.torus(0.415, 0.016, 5, 32), apronM, body, [0, 1.06, 0], [Math.PI / 2, 0, 0], [1, 0.96, 1]);
+    [-1, 1].forEach((sx) => R(T.torus(0.05, 0.014, 5, 10), apronM, body, [0.05 * sx, 1.06, -0.41], [0, 0, 0], [1.4, 1, 1]));
     return born(g, {
       height: 2.8,
       head,
@@ -14433,7 +14513,7 @@ const JGP = (() => {
 
     // ---- sign atlas: every painted sign, awning, clock and flag on one texture ---------------
     const ATW = 2048,
-      ATH = 1024,
+      ATH = 2048,
       slots = {},
       shelf = { x: 0, y: 0, h: 0 },
       paints = [];
@@ -14511,6 +14591,8 @@ const JGP = (() => {
       ["s_gas", "GAS", "#c8202a", "#ffffff", { face: SANS, size: 0.7 }],
       ["s_coop", "FARMERS CO-OP", "#e8e2d4", "#2a4a2a", { face: SANS }],
       ["s_hotel", "HOTEL", "#2a3a2a", "#f0e2b0", { edge: "#f0e2b0" }],
+      ["s_mgum", "Mistergummery's", "#c8282a", "#ffffff", { edge: "#ffc81e", face: SANS, shadow: "rgba(0,0,0,.25)" }],
+      ["s_bolt", "BOLT BURGERS", "#fbf1dc", "#c8282a", { face: SANS, size: 0.6 }],
     ].forEach(([key, txt, bg, fg, o2]) => slot(key, 384, 96, board(txt, bg, fg, o2)));
     [
       ["st_main", "MAIN ST"],
@@ -14528,6 +14610,25 @@ const JGP = (() => {
       ["aw_pink", "#e87aa0", "#f8f4ec"],
       ["aw_brown", "#6a4028", "#e8d8b0"],
     ].forEach(([key, a, b2]) => slot(key, 512, 64, stripes(a, b2)));
+    // the drive-thru menu: burger, fries and a shake over price lines
+    slot("menu", 256, 192, (cx, w, h) => {
+      (cx.fillStyle = "#1e1e24"), cx.fillRect(0, 0, w, h), (cx.fillStyle = "#c8282a"), cx.fillRect(0, 0, w, 34);
+      (cx.fillStyle = "#ffc81e"), (cx.font = "bold 24px 'Trebuchet MS', Arial, sans-serif"), (cx.textAlign = "center"), (cx.textBaseline = "middle"), cx.fillText("MENU", w / 2, 18);
+      [
+        [44, "#d8902e", "#5a3420"],
+        [128, "#ffd23a", "#c8282a"],
+        [212, "#f4c8d8", "#ffffff"],
+      ].forEach(([x0, c1, c2], k) => {
+        (cx.fillStyle = "#2e2e36"), cx.fillRect(x0 - 38, 44, 76, 70);
+        if (0 === k) (cx.fillStyle = c1), cx.beginPath(), cx.arc(x0, 82, 24, Math.PI, 0), cx.fill(), (cx.fillStyle = c2), cx.fillRect(x0 - 24, 84, 48, 9), (cx.fillStyle = c1), cx.fillRect(x0 - 24, 95, 48, 8);
+        else if (1 === k) {
+          (cx.fillStyle = c2), cx.fillRect(x0 - 16, 76, 32, 30), (cx.fillStyle = c1);
+          for (let j = 0; j < 6; j++) cx.fillRect(x0 - 14 + 5 * j, 56 + (j % 2) * 5, 4, 24);
+        } else (cx.fillStyle = c1), cx.fillRect(x0 - 12, 66, 24, 40), (cx.fillStyle = c2), cx.beginPath(), cx.arc(x0, 66, 13, Math.PI, 0), cx.fill(), (cx.fillStyle = "#c8282a"), cx.fillRect(x0 + 3, 46, 3, 20);
+      });
+      (cx.fillStyle = "#e8e2d0");
+      for (let k = 0; k < 3; k++) cx.fillRect(16, 128 + 20 * k, 150, 7), (cx.fillStyle = "#ffc81e"), cx.fillRect(196, 128 + 20 * k, 44, 7), (cx.fillStyle = "#e8e2d0");
+    });
     shelf.y + shelf.h > ATH && vo(new Error("sign atlas overflow"), "jgp-town");
     const atlasTx = b(
       ATW,
@@ -15051,6 +15152,106 @@ const JGP = (() => {
       B.geo("sign", cached("wtband", () => onSlot("wtower", new THREE.CylinderGeometry(6.56, 6.56, 2.6, 40, 1, !0, -Math.PI / 2, Math.PI))), "#ffffff", 0, legH + 4.6, 0);
       return B;
     };
+    // Mistergummery's: Greeblis Town's own burger drive-in (a fast-food parody). Red and cream tiled
+    // walls under a red mansard roof, wraparound windows, a giant bolt burger on the roof, golden
+    // "M" arches on a tall pylon sign, a drive-thru lane with a menu board and speaker, umbrella
+    // tables, a little red slide, and a parking lot. Local +Z faces the street.
+    const MISTERGUMMERYS = (X, Z) => {
+      const B = place(X, Z, 0),
+        red = "#c8282a",
+        gold = "#ffc81e",
+        cream = "#fbf1dc",
+        chrome = "#c8ccd4",
+        w = 13,
+        d = 9,
+        h = 4.2,
+        bx = -2,
+        bz = -4,
+        fz = bz + d / 2;
+      // the lot: asphalt, parking stalls with curb stops, drive-thru arrows down the right
+      B.box("asphalt", "#2c2c30", 0, -0.04, 0, 20, 0.08, 24);
+      for (let k = 0; k <= 4; k++) B.box("plain", "#f2f0ea", -9 + 3 * k, 0.005, 9, 0.12, 0.02, 5);
+      for (let k = 0; k < 4; k++) B.box("plain", gold, -7.5 + 3 * k, 0.08, 6.9, 1.6, 0.16, 0.25);
+      [-6, -1, 4].forEach((pz) =>
+        B.box("plain", "#f2f0ea", 7.5, 0.005, pz, 0.22, 0.02, 1.8)
+          .box("plain", "#f2f0ea", 7.2, 0.005, pz - 0.75, 0.22, 0.02, 0.8, 0, -0.6, 0)
+          .box("plain", "#f2f0ea", 7.8, 0.005, pz - 0.75, 0.22, 0.02, 0.8, 0, 0.6, 0),
+      );
+      // the restaurant: red tile skirt, cream tile walls, chrome-framed wraparound windows
+      B.box("concrete", "#c8c2b6", bx, 0.15, bz, w + 0.6, 0.3, d + 0.6);
+      B.box("concrete", red, bx, 0.8, bz, w, 1.0, d).box("concrete", cream, bx, 1.3 + (h - 1.3) / 2, bz, w, h - 1.3, d);
+      B.box("lit", "#8fc8e8", bx, 2.45, fz + 0.02, w - 1.4, 2.0, 0.06);
+      for (let k = 0; k <= 6; k++) B.box("plain", chrome, bx - (w - 1.4) / 2 + (k * (w - 1.4)) / 6, 2.45, fz + 0.07, 0.1, 2.0, 0.08);
+      [1.42, 3.47].forEach((yy) => B.box("plain", chrome, bx, yy, fz + 0.07, w - 1.3, 0.1, 0.08));
+      B.box("plain", chrome, bx - 3.2, 1.25, fz + 0.1, 1.6, 2.5, 0.08).box("lit", "#9ad8f2", bx - 3.2, 1.25, fz + 0.15, 1.3, 2.3, 0.04).box("plain", gold, bx - 2.75, 1.25, fz + 0.18, 0.06, 0.5, 0.04);
+      [-1, 1].forEach((sx) => {
+        const Sd = B.sub(bx + (sx * w) / 2, bz, (sx * Math.PI) / 2);
+        Sd.box("lit", "#8fc8e8", 0, 2.45, 0.02, d - 2.4, 1.8, 0.06);
+        for (let k = 0; k <= 4; k++) Sd.box("plain", chrome, -(d - 2.4) / 2 + (k * (d - 2.4)) / 4, 2.45, 0.07, 0.1, 1.8, 0.08);
+        sx > 0 && Sd.box("plain", chrome, -2.6, 1.6, 0.1, 1.5, 1.3, 0.12).box("lit", "#9ad8f2", -2.6, 1.6, 0.16, 1.2, 1.0, 0.04).box("plain", red, -2.6, 2.5, 0.55, 2.0, 0.1, 1.1, 0.25);
+      });
+      // red mansard roof with a gold trim line and the name on front and back
+      const mans = cached("mansard", () => new THREE.CylinderGeometry(0.86 * Math.SQRT1_2, Math.SQRT1_2, 1, 4, 1).rotateY(Math.PI / 4));
+      B.geo("shingle", mans, red, bx, h + 0.7, bz, w + 1.4, 1.4, d + 1.4).box("plain", gold, bx, h + 0.04, bz, w + 1.5, 0.16, d + 1.5);
+      B.sign("s_mgum", bx, h + 0.75, fz + 0.8, 6.4, 1.6).sign("s_mgum", bx, h + 0.75, bz - d / 2 - 0.8, 6.4, 1.6, Math.PI);
+      // a giant bolt burger on the roof, skewered by a lightning bolt
+      const ux = bx - 2.6,
+        uz = bz - 0.5,
+        uy = h + 1.4,
+        bun = "#d8902e";
+      B.geo("plain", ucyl(20), bun, ux, uy + 0.3, uz, 3.0, 0.6, 3.0).geo("plain", ucyl(20), "#5a3420", ux, uy + 0.8, uz, 3.2, 0.42, 3.2);
+      B.box("plain", "#ffd23a", ux, uy + 1.05, uz, 2.5, 0.08, 2.5, 0, Math.PI / 4, 0).geo("plain", ucyl(20), "#5aa83a", ux, uy + 1.12, uz, 3.3, 0.12, 3.3);
+      B.geo("plain", usph(20, !0), bun, ux, uy + 1.18, uz, 3.1, 2.2, 3.1);
+      for (let k = 0; k < 12; k++) {
+        const a = 2.4 * k,
+          ph = 0.35 + 0.08 * (k % 5);
+        B.geo("plain", usph(6), cream, ux + 1.5 * Math.sin(ph) * Math.cos(a), uy + 1.18 + 1.1 * Math.cos(ph), uz + 1.5 * Math.sin(ph) * Math.sin(a), 0.12, 0.06, 0.08, 0, a, 0);
+      }
+      B.box("plain", gold, ux + 0.1, uy + 2.6, uz, 0.32, 1.1, 0.2, 0, 0, 0.45)
+        .box("plain", gold, ux - 0.05, uy + 3.1, uz, 0.85, 0.28, 0.2, 0, 0, -0.25)
+        .box("plain", gold, ux + 0.15, uy + 3.65, uz, 0.32, 1.0, 0.2, 0, 0, 0.45);
+      // the pylon: name board, BOLT BURGERS board, golden "M" arches on top
+      const px0 = 7.6,
+        pz0 = 10.4,
+        arch = [];
+      // tall enough that the arches peek over the Main Street rooftops from the square
+      B.geo("plain", ucyl(12), "#8a8e96", px0, 7.6, pz0, 0.8, 15.2, 0.8);
+      B.box("plain", red, px0, 14.1, pz0, 6.4, 1.9, 0.5).sign("s_mgum", px0, 14.1, pz0 + 0.26, 6.0, 1.5).sign("s_mgum", px0, 14.1, pz0 - 0.26, 6.0, 1.5, Math.PI);
+      B.box("plain", cream, px0, 12.55, pz0, 4.8, 1.05, 0.4).sign("s_bolt", px0, 12.55, pz0 + 0.21, 4.1, 1.02).sign("s_bolt", px0, 12.55, pz0 - 0.21, 4.1, 1.02, Math.PI);
+      [-1, 1].forEach((sd) => {
+        const pts = [],
+          a0 = sd < 0 ? px0 - 3.3 : px0;
+        for (let k = 0; k <= 16; k++) {
+          const t2 = k / 16;
+          pts.push([a0 + 3.3 * t2, 15.05 + 5.4 * (1 - (2 * t2 - 1) ** 2), pz0]);
+        }
+        B.geo("plain", ao(pts, 0.36, 0.36, 40, 8), gold);
+      });
+      // drive-thru menu board and speaker post beside the lane
+      [-1.1, 1.1].forEach((pz) => B.box("plain", "#3a3a3e", 9.3, 1.1, -3 + pz, 0.12, 2.2, 0.12));
+      B.box("plain", "#2a2a2e", 9.3, 1.9, -3, 0.2, 1.7, 2.5).sign("menu", 9.18, 1.9, -3, 2.3, 1.72, -Math.PI / 2);
+      B.box("plain", "#5a5a60", 9.0, 0.6, 0.6, 0.1, 1.2, 0.1).box("plain", red, 9.0, 1.3, 0.6, 0.3, 0.45, 0.35).box("plain", "#1a1a1e", 8.84, 1.32, 0.6, 0.02, 0.25, 0.22);
+      // umbrella tables on a patio in front
+      B.box("concrete", "#d0c8bc", -5.4, 0.02, fz + 2.2, 8, 0.06, 3.6);
+      [-8, -4.4].forEach((px, k) => {
+        B.geo("plain", ucyl(14), "#f4f0e6", px, 0.75, fz + 2.2, 1.3, 0.06, 1.3).geo("plain", ucyl(8), "#5a5a60", px, 0.38, fz + 2.2, 0.12, 0.75, 0.12);
+        [-1, 1].forEach((sz) => B.box("plain", k ? gold : red, px, 0.45, fz + 2.2 + 0.95 * sz, 1.4, 0.08, 0.35));
+        B.geo("plain", ucyl(6), "#d8dce0", px, 1.6, fz + 2.2, 0.06, 1.7, 0.06).geo("plain", ucone(12), k ? red : gold, px, 2.65, fz + 2.2, 2.6, 0.55, 2.6);
+      });
+      // a little red slide out back
+      const sx0 = -6.5,
+        sz0 = -10.3;
+      [-0.6, 0.6].forEach((a) => [-0.6, 0.6].forEach((c2) => B.box("plain", gold, sx0 + a, 0.9, sz0 + c2, 0.12, 1.8, 0.12)));
+      B.box("plain", "#2a6ac8", sx0, 1.5, sz0, 1.4, 0.1, 1.4).geo("plain", ucone(4), red, sx0, 2.25, sz0, 1.9, 0.7, 1.9, 0, Math.PI / 4, 0);
+      B.box("plain", red, sx0 + 1.7, 0.8, sz0, 2.6, 0.08, 0.8, 0, 0, -0.55);
+      for (let k = 0; k < 4; k++) B.box("plain", "#5a5a60", sx0 - 0.75, 0.3 + 0.35 * k, sz0, 0.06, 0.06, 0.9);
+      // parked cars nose-in at the stalls
+      [-7.5, -1.5, 1.5].forEach((px, k) => {
+        const wpos = new THREE.Vector3(px, 0, 9).applyMatrix4(B.M0);
+        car(wpos.x, wpos.z, Math.PI, 3 + 2 * k);
+      });
+      return B;
+    };
     const ELEVATOR = (X, Z) => {
       const B = place(X, Z, 0),
         conc = "#d6d0c2",
@@ -15433,6 +15634,8 @@ const JGP = (() => {
     SCHOOL(-82, 60, Math.PI);
     // north-east: the gas station on the corner and the water tower behind it
     GAS_STATION(72, -62), WATER_TOWER(86, -86);
+    // Mistergummery's drive-in on the lot between the gas station and the water tower
+    MISTERGUMMERYS(90.5, -64);
     // north-west: the grain elevator by the railroad
     ELEVATOR(-76, -80);
     // parked cars: angle parking on Main Street, parallel parking by the courthouse and the houses
@@ -15459,6 +15662,7 @@ const JGP = (() => {
       [-90, -74, 52, 76],
       [62, 82, -72, -52],
       [78, 94, -94, -78],
+      [80, 101, -77, -51],
       [-98, -54, -102, -70],
       [-322, 322, -107, -99],
     ];
@@ -20159,12 +20363,7 @@ if (
                   n = new THREE.Group(),
                   r = { moving: !1 };
                 n.position.set(0, a.crownY, 0.02), n.rotation.set(-0.08, 0, 0.1), (a.head || o).add(n);
-                // the shopkeeper's top hat, as Greeblis City puts it on SHOPKEEPER LARRY
-                const s = x.clay(i.hat);
-                R(T.cyl(0.3, 0.3, 0.045, 20), s, n, [0, 0.02, 0]),
-                  R(T.cyl(0.23, 0.25, 0.46, 18), s, n, [0, 0.27, 0]),
-                  R(T.cyl(0.255, 0.255, 0.08, 18), x.clay(i.band), n, [0, 0.1, 0]),
-                  R(T.cyl(0.23, 0.23, 0.02, 18), x.clay("#3a3346"), n, [0, 0.505, 0]);
+                // (no hat: LARRY wears his shopkeeper's apron instead; the empty group keeps his greeting nod)
                 t.updateMatrixWorld(!0);
                 const l = t.rotation.y,
                   h = new c();

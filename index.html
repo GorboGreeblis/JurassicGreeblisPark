@@ -7079,9 +7079,9 @@ function Lt(e, o, a, n) {
     uo.solid(e) && uo.resolve(s, uo.radius(e), e),
     De(e, o, a, Math.hypot(s.x - i, s.z - l)),
     e.moving && Math.hypot(s.x - i, s.z - l) < 0.1 * a && (e.moving = !1);
-  const f = Math.hypot(s.x, s.z),
-    u = t.clearingR + 1;
-  f > u && ((s.x *= u / f), (s.z *= u / f)), fo(e, o);
+  // creatures stay inside the square park fence (a circular limit cut off the ends of the rows)
+  const f = t.parkHalf - 0.6;
+  (s.x = Math.max(-f, Math.min(f, s.x))), (s.z = Math.max(-f, Math.min(f, s.z))), fo(e, o);
 }
 const Ut = (() => {
     const t = [],
@@ -8439,9 +8439,9 @@ const le = (() => {
       n = 0,
       r = null;
     const s = (e, o, a, n, r = 1.6) => {
-        const s = t.clearingR - 0.5,
-          i = Math.hypot(o, a);
-        i > s && ((o *= s / i), (a *= s / i));
+        // walk targets are kept inside the square park fence, like the creatures themselves
+        const s = t.parkHalf - 1.1;
+        (o = Math.max(-s, Math.min(s, o))), (a = Math.max(-s, Math.min(s, a)));
         const l = e.group.position,
           c = o - l.x,
           h = a - l.z,
@@ -11599,6 +11599,9 @@ const JGP = (() => {
         ["frog", "FORTIZMO", "fortizmoPick", {"color": "#e8742a", "bodyR": 0.95, "modelScale": 0.78, "talkR": 4.2}, [-3.9, -21]],
         ["wanderer", "CHERUBI", "city_cherubi", {"color": "#6a54b4", "bodyR": 0.95}, [0.3, -21]],
         ["kingdino", "SUNNY", "city_sunny", {"bodyR": 1.1, "modelScale": 0.82}, [3.9, -21]],
+        // for testing: the shopkeeper's and the pizza courier's models in the line-up
+        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [-8.2, -21]],
+        ["t_nextessa", "NEXTESSA", "born_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [8.2, -21]],
       ],
     },
     // same-named and requested merges across games (west)

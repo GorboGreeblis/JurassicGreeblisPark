@@ -7583,111 +7583,75 @@ function te(t, e) {
   t.onTalk && t.onTalk(t), qt.open(o.name, o.color, n, r || void 0);
 }
 const ee = (function () {
-    const e = 60 / 132,
+    // "Backpacka's Rain Strut": FORTIZMO's horn tune for the garden's climax. A slow, sultry swing
+    // at 88 bpm in C minor, 24 bars timed to BACKPACKA's visit: a brushed intro as he flies in, the
+    // head (muted-sounding trumpet over sax harmony and trombone pads) while he drinks, a rising
+    // bridge as he flies heavily to the garden, a full shout chorus while he sprays that lifts a
+    // whole step half way through, and a tag that ends on a long high D.
+    const e = 60 / 88,
       o = 4 * e,
       a = (e) => 440 * Math.pow(2, (e - 69) / 12),
-      n = { 7: [0, 4, 7, 10], m7: [0, 3, 7, 10], d7: [0, 3, 6, 9] },
+      n = { 7: [0, 4, 7, 10], m7: [0, 3, 7, 10], d7: [0, 3, 6, 9], M7: [0, 4, 7, 11], h: [0, 3, 6, 10], m6: [0, 3, 7, 9] },
+      // chords per bar: [root pitch class, quality], a second chord from beat 3
       r = [
-        [[5, 7]],
-        [[10, 7]],
-        [[5, 7]],
-        [
-          [0, "m7"],
-          [5, 7],
-        ],
-        [[10, 7]],
-        [[11, "d7"]],
-        [[5, 7]],
-        [[2, 7]],
-        [[7, "m7"]],
-        [[0, 7]],
-        [
-          [5, 7],
-          [2, 7],
-        ],
-        [
-          [7, "m7"],
-          [0, 7],
-        ],
+        [[8, 7]],
+        [[7, 7]],
+        [[0, "m7"]],
+        [[0, "m7"], [5, 7]],
+        [[10, "m7"], [3, 7]],
+        [[8, "M7"]],
+        [[2, "h"], [7, 7]],
+        [[0, "m7"]],
+        [[3, "m7"], [8, 7]],
+        [[1, "M7"]],
+        [[2, "m7"], [7, 7]],
+        [[8, "M7"], [7, 7]],
+        [[0, "m7"], [5, 7]],
+        [[10, "m7"], [3, 7]],
+        [[8, "M7"], [1, 7]],
+        [[7, 7]],
+        [[2, "m7"], [7, 7]],
+        [[0, "m7"], [5, 7]],
+        [[10, "M7"], [3, 7]],
+        [[9, 7]],
+        [[2, "m7"]],
+        [[3, 7]],
+        [[2, "m6"]],
+        [[2, "m6"]],
       ],
-      s = [
-        [
-          [0, 72, 1],
-          [1, 75, 1],
-          [2, 77, 2],
-          [4, 75, 1],
-          [5, 72, 1],
-          [6, 68, 1],
-          [7, 69, 1],
-        ],
-        [
-          [0, 65, 3, "v"],
-          [4, 72, 1],
-          [5, 70, 1],
-          [6, 69, 1],
-          [7, 68, 1],
-        ],
+      BARS = r.length,
+      // the lead line per bar: [eighth slot, midi note, length in eighths, "v" vibrato | "f" fall]
+      shout = [
+        [[0, 79, 1], [1, 79, 1], [2, 82, 2], [4, 79, 1], [5, 77, 1], [6, 75, 2]],
+        [[0, 77, 1], [1, 77, 1], [2, 80, 2], [4, 77, 1], [5, 75, 1], [6, 73, 2]],
+        [[0, 72, 1], [1, 75, 1], [2, 79, 1], [3, 84, 3, "v"], [6, 82, 1], [7, 79, 1]],
       ],
+      up2 = (bar) => bar.map(([s0, m0, l0, f0]) => [s0, m0 + 2, l0, f0]),
       i = [
-        s[0],
-        s[1],
-        s[0],
-        [
-          [0, 65, 2],
-          [3, 67, 1],
-          [4, 70, 1],
-          [5, 72, 1],
-          [6, 75, 2, "f"],
-        ],
-        s[0].map(([e, o, a]) => [e, o + 5, a]),
-        [
-          [0, 70, 3, "v"],
-          [4, 77, 1],
-          [5, 75, 1],
-          [6, 74, 1],
-          [7, 73, 1],
-        ],
-        s[0],
-        [
-          [0, 65, 2],
-          [2, 69, 1],
-          [3, 72, 1],
-          [4, 74, 1],
-          [5, 78, 1],
-          [6, 77, 2],
-        ],
-        [
-          [0, 74, 1],
-          [1, 72, 1],
-          [2, 70, 1],
-          [3, 69, 1],
-          [4, 67, 2],
-          [6, 70, 1],
-          [7, 74, 1],
-        ],
-        [
-          [0, 76, 3, "v"],
-          [3, 74, 1],
-          [4, 72, 1],
-          [5, 70, 1],
-          [6, 67, 2],
-        ],
-        [
-          [0, 65, 2],
-          [2, 69, 1],
-          [3, 72, 1],
-          [4, 74, 1],
-          [5, 72, 1],
-          [6, 69, 1],
-          [7, 66, 1],
-        ],
-        [
-          [0, 67, 2],
-          [2, 70, 1],
-          [3, 74, 1],
-          [4, 76, 2],
-          [6, 77, 2, "f"],
-        ],
+        [[4, 63, 2], [6, 65, 1], [7, 66, 1]],
+        [[0, 67, 4, "v"], [5, 63, 1], [6, 65, 1], [7, 66, 1]],
+        [[0, 67, 1], [1, 70, 1], [2, 72, 3, "v"], [5, 75, 1], [6, 74, 1], [7, 72, 1]],
+        [[0, 70, 2], [2, 67, 1], [3, 69, 1], [4, 72, 2], [6, 75, 2]],
+        [[0, 77, 3, "v"], [3, 75, 1], [4, 73, 1], [5, 70, 1], [6, 67, 2]],
+        [[0, 72, 2], [2, 68, 1], [3, 70, 1], [4, 72, 4, "v"]],
+        [[0, 74, 1], [1, 72, 1], [2, 71, 1], [3, 68, 1], [4, 67, 2], [6, 65, 1], [7, 66, 1]],
+        [[0, 67, 5, "f"], [6, 70, 1], [7, 72, 1]],
+        [[0, 73, 1], [1, 75, 1], [2, 78, 2], [4, 77, 1], [5, 75, 1], [6, 73, 2]],
+        [[0, 77, 3, "v"], [3, 80, 1], [4, 77, 1], [5, 72, 1], [6, 73, 2]],
+        [[0, 74, 1], [1, 77, 1], [2, 79, 1], [3, 81, 2], [5, 79, 1], [6, 77, 1], [7, 74, 1]],
+        [[0, 75, 2], [2, 72, 1], [3, 79, 3, "v"], [6, 77, 1], [7, 79, 1]],
+        shout[0],
+        shout[1],
+        shout[2],
+        [[0, 83, 2], [2, 82, 1], [3, 79, 1], [4, 77, 1], [5, 74, 1], [6, 71, 2, "f"]],
+        up2(shout[0]),
+        up2(shout[1]),
+        up2(shout[2]),
+        [[0, 85, 2], [2, 84, 1], [3, 81, 1], [4, 79, 1], [5, 76, 1], [6, 73, 2, "f"]],
+        [[0, 74, 1], [1, 77, 1], [2, 81, 3, "v"], [5, 79, 1], [6, 77, 2]],
+        [[0, 79, 1], [1, 82, 1], [2, 85, 3, "v"], [5, 82, 1], [6, 79, 2]],
+        [[0, 86, 8, "v"]],
+        [],
       ],
       l = [0, 3, 5, 6, 7, 10];
     let c = !1,
@@ -7927,88 +7891,73 @@ const ee = (function () {
       return r;
     }
     function W(o, a) {
-      const n = o % 12,
-        s = Math.floor(o / 12) % 4,
+      if (o >= BARS) return void (c = !1);
+      const n = o,
+        sec = o < 2 ? "intro" : o < 8 ? "A" : o < 12 ? "B" : o < 20 ? "S" : "T",
         l = (function (e) {
           return () => (
             (e = (e + 1831565813) | 0),
             (e = Math.imul(e ^ (e >>> 15), 1 | e)),
             (((e ^= e + Math.imul(e ^ (e >>> 7), 61 | e)) ^ (e >>> 14)) >>> 0) / 4294967296
           );
-        })(97 * Math.floor(o / 12) + n + 1),
-        c = (o) => a + e * (Math.floor(o / 2) + (o % 2 ? 2 / 3 : 0)),
-        h = (e, o) => c(e + o) - c(e),
-        p = r[(n + 1) % 12][0][0];
-      for (let o = 0; o < 4; o++) {
-        const a = A(n, 2 * o),
-          s = P(a);
-        let i;
-        (i =
-          0 === o || (r[n].length > 1 && 2 === o)
-            ? z([a[0]], 34, 45, 40)
-            : 3 === o
-              ? z([p], 34, 45, 40) + (l() < 0.5 ? 1 : -1)
-              : z(s, 34, 47, 40 + Math.round(6 * (l() - 0.5)))),
-          R(c(2 * o), i, 0.92 * e);
+        })(131 * o + 7),
+        c2 = (o) => a + e * (Math.floor(o / 2) + (o % 2 ? 2 / 3 : 0)),
+        h = (e, o) => c2(e + o) - c2(e),
+        nextRoot = r[Math.min(BARS - 1, n + 1)][0][0],
+        loud = { intro: 0.55, A: 0.72, B: 0.95, S: 1.5, T: 1.5 }[sec];
+      // bass: a pedal in the intro, a walking line after, a held root to finish
+      if ("intro" === sec) for (const k of [0, 2]) R(c2(4 * k), z([A(n, 0)[0]], 34, 45, 38), 1.8 * e);
+      else if (o >= 22) R(c2(0), z([2], 34, 45, 38), 3.8 * e);
+      else
+        for (let k = 0; k < 4; k++) {
+          const ch = A(n, 2 * k),
+            pcs = P(ch);
+          R(c2(2 * k), 0 === k || (r[n].length > 1 && 2 === k) ? z([ch[0]], 34, 45, 40) : 3 === k ? z([nextRoot], 34, 45, 40) + (l() < 0.5 ? 1 : -1) : z(pcs, 34, 47, 40 + Math.round(6 * (l() - 0.5))), 0.92 * e);
+        }
+      // drums: brushes, then ride and hats, crashes into the shout and the tag, a roll into each section
+      for (let k = 0; k < 4; k++) {
+        const g0 = ("intro" === sec ? 0.03 : 0.058) * loud;
+        H(c2(2 * k), "intro" === sec ? 3200 : 6800, "intro" === sec ? 0.7 : 0, k % 2 ? 1.25 * g0 : g0, "intro" === sec ? 0.5 : 0.32);
+        "intro" !== sec && k % 2 && (H(c2(2 * k + 1), 6800, 0, 0.04 * loud, 0.2), H(c2(2 * k), 9e3, 0, 0.045, 0.045));
+        "intro" !== sec && ("S" === sec || "T" === sec || 0 === k || 2 === k) && v(c2(2 * k), 95, 48, ("S" === sec ? 0.07 : 0.05) * loud, 0.14);
       }
-      for (let e = 0; e < 4; e++)
-        H(c(2 * e), 6800, 0, e % 2 ? 0.075 : 0.058, 0.32),
-          e % 2 && (H(c(2 * e + 1), 6800, 0, 0.04, 0.2), H(c(2 * e), 9e3, 0, 0.045, 0.045)),
-          v(c(2 * e), 95, 48, 0.05, 0.14);
-      l() < 0.45 && (H(c(7), 1800, 0.9, 0.06, 0.12), v(c(7), 210, 180, 0.03, 0.08, "triangle")),
-        11 === n &&
-          [4, 5, 6, 7].forEach((e) => {
-            H(c(e), 1800, 0.9, 0.09, 0.14), v(c(e), 220, 170, 0.04, 0.09, "triangle");
-          });
-      const f = (e) => {
-        const o = e[0],
-          a = e[1];
-        return ("m7" === a ? [3, 10, 14] : "d7" === a ? [3, 6, 9] : [4, 10, 14]).map((e) =>
-          z([(o + e) % 12], 52, 67, 58 + e / 2),
-        );
+      (12 === o || 16 === o || 20 === o || 22 === o) && H(c2(0), 5200, 0, 0.13, 1.6);
+      (1 === o || 7 === o || 11 === o || 15 === o || 19 === o) && [4, 5, 6, 7].forEach((k) => (H(c2(k), 1800, 0.9, 0.05 + 0.012 * (k - 4), 0.12), v(c2(k), 220, 170, 0.035, 0.09, "triangle")));
+      // piano: a pad under the intro and the last chord, comping in between
+      const f = (ch) => {
+        const q = ch[1],
+          iv = "m7" === q ? [3, 10, 14] : "d7" === q ? [3, 6, 9] : "M7" === q ? [4, 11, 14] : "h" === q ? [3, 6, 10] : "m6" === q ? [3, 9, 14] : [4, 10, 14];
+        return iv.map((x0) => z([(ch[0] + x0) % 12], 52, 67, 58 + x0 / 2));
       };
-      if ((S(c(0), f(A(n, 0)), 0.8 * h(0, 2), 0.026), S(c(3), f(A(n, 4)), 0.8 * h(3, 2), 0.024), 0 === s || 3 === s)) {
-        for (const [e, o, a, r] of i[n]) {
-          const i = A(n, e),
-            l = 0.9 * h(e, a);
-          T("tpt", c(e), o, l, 0.07, r),
-            T("sax", c(e), k(P(i), o), l, 0.05, r),
-            3 === s && T("tbn", c(e), k(P(i), k(P(i), o)) - 12, l, 0.045, r);
+      if ("intro" === sec || o >= 22) S(c2(0), f(A(n, 0)), 0.95 * h(0, 8), 0.022);
+      else S(c2(0), f(A(n, 0)), 0.8 * h(0, 2), 0.024), S(c2(3), f(A(n, 4)), 0.8 * h(3, 2), 0.022), r[n].length > 1 && S(c2(5), f(A(n, 4)), 0.6 * h(5, 1), 0.018);
+      // horns
+      const lead = i[n] || [];
+      if ("intro" === sec) {
+        for (const [s0, m0, l0, fl] of lead) T("tpt", c2(s0), m0, 0.9 * h(s0, l0), 0.05, fl);
+        const ch = A(n, 0);
+        T("sax", c2(0), z([(ch[0] + 4) % 12], 58, 68, 63), 0.95 * h(0, 8), 0.022), T("tbn", c2(0), z([(ch[0] + 10) % 12], 50, 60, 55), 0.95 * h(0, 8), 0.022);
+      } else
+        for (const [s0, m0, l0, fl] of lead) {
+          const ch = A(n, s0),
+            d0 = 0.9 * h(s0, l0);
+          T("tpt", c2(s0), m0, d0, 0.064 * loud, fl);
+          T("sax", c2(s0), k(P(ch), m0), d0, ("A" === sec ? 0.036 : 0.048) * loud, fl);
+          ("B" === sec || "S" === sec || "T" === sec) && T("tbn", c2(s0), k(P(ch), k(P(ch), m0)) - 12, d0, 0.042 * loud, fl);
         }
-        if (0 === s)
-          for (const e of [0, 4])
-            if (0 === e || r[n].length > 1) {
-              const o = A(n, e);
-              T(
-                "tbn",
-                c(e),
-                z([(o[0] + ("m7" === o[1] ? 3 : 4)) % 12], 50, 60, 55),
-                0.95 * h(e, r[n].length > 1 ? 4 : 8),
-                0.03,
-              );
-            }
-        if (3 === s)
-          for (const e of [3, 7]) {
-            const o = A(n, 7 === e ? 4 : 0);
-            P(o), T("tbn", c(e), z([o[0]], 41, 52, 46), 0.8 * h(e, 1), 0.06);
-          }
-      } else if (1 === s) {
-        for (const [e, o, a, r] of V(l, n, 65, 84)) T("tpt", c(e), o, 0.9 * h(e, a), 0.068, r);
-        const e = A(n, 0),
-          o = e[0];
-        T("sax", c(0), z([(o + ("m7" === e[1] ? 3 : 4)) % 12], 58, 68, 63), 0.95 * h(0, 8), 0.03),
-          T("tbn", c(0), z([(o + 10) % 12], 50, 60, 55), 0.95 * h(0, 8), 0.028);
-      } else {
-        for (const [e, o, a, r] of V(l, n, 55, 75)) T("sax", c(e), o, 0.9 * h(e, a), 0.062, r);
-        for (const [e, o] of [
-          [0, 2],
-          [3, 1],
-        ]) {
-          const a = A(n, e),
-            r = a[0];
-          T("tpt", c(e), z([(r + ("m7" === a[1] ? 3 : 4)) % 12], 67, 76, 71), 0.85 * h(e, o), 0.04),
-            T("tbn", c(e), z([(r + 10) % 12], 50, 60, 55), 0.85 * h(e, o), 0.038);
+      // trombone pads under the head, and stabs on 2-and and 4-and in the shout
+      if ("A" === sec && o % 2 === 0) {
+        const ch = A(n, 0);
+        T("tbn", c2(0), z([(ch[0] + 10) % 12], 50, 60, 55), 0.95 * h(0, 8), 0.024);
+      }
+      if ("S" === sec)
+        for (const s0 of [3, 7]) {
+          const ch = A(n, 7 === s0 ? 4 : 0);
+          T("tbn", c2(s0), z([ch[0]], 41, 52, 46), 0.8 * h(s0, 1), 0.06);
         }
+      // the last bar: everyone holds the final chord
+      if (23 === o) {
+        T("tpt", c2(0), 81, 3.2 * e, 0.05, "v"), T("sax", c2(0), 77, 3.2 * e, 0.045, "v"), T("tbn", c2(0), 65, 3.2 * e, 0.045, "v");
       }
     }
     return y;
@@ -9474,7 +9423,7 @@ const le = (() => {
             Kt.rewards.seeds
               ? ((bt.live = !0), (bt.t0 = t), JGP.beginPlanting(s, t))
               : ((bt.t0 = t - (o.durationS - JGP.NO_SEEDS_S)), s.forEach((t) => Ut.above(t, "?", M.white)));
-        if (t - bt.t0 > o.durationS && "dialogue" !== jt.top) return void this.wrap();
+        if (t - bt.t0 > o.durationS && "dialogue" !== jt.top && !JGP.backpacka.busy()) return void this.wrap();
         s.forEach((o) => {
           const a = o.finaleSlot;
           if (!a) return;
@@ -11610,6 +11559,8 @@ const JGP = (() => {
         ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [-34, 31.99]],
         ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [-34, 36.24]],
         ["t_nextessa", "NEXTESSA", "born_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [-34, 40.43]],
+        // for testing: the garden event's BACKPACKA
+        ["t_backpacka", "BACKPACKA", "born_backpacka", {"color": "#d48e64", "bodyR": 1.4}, [-34, 45.6]],
       ],
     },
   };
@@ -13809,6 +13760,24 @@ const JGP = (() => {
     });
   };
 
+  // BACKPACKA standing in the line-up for testing: the event's model, hovering on his wings, half
+  // full, his neck swaying and his legs dangling
+  BORN.backpacka = (g) => {
+    const hold = new THREE.Group();
+    (hold.position.y = 2.75), (hold.scale.setScalar(0.8)), g.add(hold);
+    const P = BP.buildModel(hold);
+    return born(g, {
+      height: 4.6,
+      step(t, dt, tk) {
+        (hold.position.y = 2.75 + 0.12 * Math.sin(1.7 * t)), (P.tilt.rotation.x = 0.04 * Math.sin(1.3 * t)), (P.tilt.rotation.z = 0.04 * Math.sin(0.9 * t));
+        BP.shape(P, 0.35 + 0.05 * Math.sin(0.8 * t), 0, 0, t), BP.flapWings(P, 0.3, 20, t);
+        P.jaw.rotation.x = 0.12 + 0.06 * Math.sin(3 * t);
+        const bl = ((t % 4.1) + 4.1) % 4.1 < 0.14;
+        P.eyes.forEach((ld) => (ld.rotation.x = bl ? 0.35 : -0.6));
+      },
+    });
+  };
+
   for (const k in BORN)
     so["born_" + k] = (g, d, opts) => {
       try {
@@ -14507,6 +14476,7 @@ const JGP = (() => {
   // A duck pond with a grassy bank, limestone rocks, cattails, lily pads and a little dock
   // (it replaces the city fountain); o sits at the pool station.
   function buildPond(o) {
+    PONDO = o;
     // the flat layers sit 4 cm apart (bank, mud, water, pads) so none of them can win the depth test
     // over the one above it at a distance or a grazing angle
     R(T.circle(4.9, 36), KIT.surf("grass", "#4c7a2c", { rep: 4, shine: 6 }), o, [0, 0.03, 0], [-Math.PI / 2, 0, 0]);
@@ -14817,7 +14787,7 @@ const JGP = (() => {
     });
   }
   function plantTick(ent, now) {
-    if (ent.moving || now < (ent.plantNext || 0)) return;
+    if (ent.moving || now < (ent.plantNext || 0) || ent.hornWant) return;
     ent.plantNext = now + rr(5, 9);
     ent.plantCount = (ent.plantCount || 0) + 1;
     const p = ent.group.position;
@@ -14859,6 +14829,511 @@ const JGP = (() => {
     for (const c of garden.cans)
       c.rotation.z = live ? 0.7 * Math.max(0, Math.sin(1.3 * tt + c.userData.ph)) : 0.06 * Math.sin(1.4 * tt + c.userData.ph);
   });
+
+  // ---- BACKPACKA: the garden event's climax -------------------------------------------------
+  // Once the seeds are in, BACKPACKA flies in, skinny: a tan, crackle-skinned pear of a body with
+  // glassy coloured patches, two pairs of veined teal dragonfly wings, a long banded neck with a
+  // green stripe up to a little open-mouthed head, a stubby tail, and four tube legs ending in open
+  // pipes. He hovers at the duck pond and dips his head in; gulps run up his neck as he swells up
+  // fat; he lifts his head, dripping, and flies heavily to the middle of the garden, where he spins
+  // slowly and sprays the water out of his feet in four arcs that sweep the whole garden. Plants
+  // bloom where it lands, a rainbow comes out, and he slims back down and flies off.
+  // Everything is a function of the time since he set off (pose(e)), so any moment can be shown.
+  let PONDO = null;
+  const BP = (() => {
+    const D = { inA: 9, down: 11.5, drink: 22, up: 24.5, toGarden: 33, splay: 35, spray: 55, unsplay: 57, gone: 65 },
+      N = 10, // neck segments
+      SEG = 0.27;
+    let made = null,
+      active = !1,
+      t0 = 0,
+      lastE = -1,
+      plantedAt = 0,
+      flags = {};
+    const V = (a = 0, b2 = 0, c = 0) => new THREE.Vector3(a, b2, c),
+      ease = (q) => (q <= 0 ? 0 : q >= 1 ? 1 : q * q * (3 - 2 * q)),
+      seg = (e, a, b2) => ease((e - a) / (b2 - a)),
+      bez = (a, m, b2, q) => V().copy(a).multiplyScalar((1 - q) * (1 - q)).addScaledVector(m, 2 * q * (1 - q)).addScaledVector(b2, q * q);
+    // a leaf-shaped wing panel: teal centre, green rim, a dark midrib, side veins and a mosaic of cells
+    const wingTex = () =>
+      b(128, 512, (c) => {
+        const outline = () => {
+          c.beginPath(), c.moveTo(64, 508), c.bezierCurveTo(4, 430, 10, 160, 64, 4), c.bezierCurveTo(118, 160, 124, 430, 64, 508), c.closePath();
+        };
+        outline();
+        const g1 = c.createLinearGradient(0, 0, 128, 0);
+        g1.addColorStop(0, "#2f5a26"), g1.addColorStop(0.22, "#3f8a4a"), g1.addColorStop(0.5, "#2aa08e"), g1.addColorStop(0.78, "#3f8a4a"), g1.addColorStop(1, "#2f5a26");
+        (c.fillStyle = g1), c.fill(), c.save(), outline(), c.clip();
+        const r2 = srand(51);
+        (c.strokeStyle = "rgba(40,30,20,.55)"), (c.lineWidth = 1.2);
+        for (let k = 0; k < 420; k++) {
+          const x0 = 128 * r2(),
+            y0 = 512 * r2();
+          c.beginPath(), c.moveTo(x0, y0), c.lineTo(x0 + 10 * (r2() - 0.5), y0 + 14 * (r2() - 0.5)), c.lineTo(x0 + 12 * (r2() - 0.5), y0 + 18 * (r2() - 0.5)), c.stroke();
+        }
+        (c.strokeStyle = "#3a2a18"), (c.lineWidth = 4), c.beginPath(), c.moveTo(64, 508), c.lineTo(64, 20), c.stroke(), (c.lineWidth = 2.2);
+        for (let y = 470; y > 60; y -= 34)
+          [-1, 1].forEach((sd) => {
+            c.beginPath(), c.moveTo(64, y), c.quadraticCurveTo(64 + 26 * sd, y - 20, 64 + 56 * sd, y - 60), c.stroke();
+          });
+        (c.fillStyle = "rgba(160,230,190,.22)");
+        for (let k = 0; k < 40; k++) c.fillRect(20 + 88 * r2(), 40 + 440 * r2(), 6 + 8 * r2(), 6 + 10 * r2());
+        c.restore(), outline(), (c.strokeStyle = "#a8e878"), (c.lineWidth = 5), c.stroke(), (c.strokeStyle = "#4a3a22"), (c.lineWidth = 1.5), c.stroke();
+      });
+    const dotTex = () =>
+      b(32, 32, (c) => {
+        const g1 = c.createRadialGradient(16, 16, 1, 16, 16, 15);
+        g1.addColorStop(0, "rgba(255,255,255,1)"), g1.addColorStop(0.45, "rgba(220,244,255,.8)"), g1.addColorStop(1, "rgba(200,235,255,0)"), (c.fillStyle = g1), c.fillRect(0, 0, 32, 32);
+      });
+    const streakTex = () => {
+      const t = b(32, 128, (c) => {
+        (c.fillStyle = "#b8e6ff"), c.fillRect(0, 0, 32, 128);
+        const r2 = srand(9);
+        for (let k = 0; k < 40; k++) (c.fillStyle = r2() < 0.5 ? "rgba(255,255,255,.85)" : "rgba(120,190,230,.6)"), c.fillRect(32 * r2(), 128 * r2(), 1 + 2 * r2(), 10 + 30 * r2());
+      });
+      return (t.wrapS = t.wrapT = THREE.RepeatWrapping), t;
+    };
+    // the model itself, built into root (the event's flying copy, or the line-up's)
+    function buildModel(root) {
+      const tilt = new THREE.Group();
+      root.add(tilt);
+      const skin = gradMat("skin", { rep: 6, bump: 0.05, shine: 30 }),
+        skinS = KIT.surf("skin", "#d48e64", { rep: 3, bump: 0.05, shine: 30 }),
+        stripe = KIT.surf("skin", "#7ab83a", { rep: 2, bump: 0.02, shine: 50 }),
+        dark = x.clay("#141210", { shininess: 40 });
+      // the body: a pear along +z, fuller at the back, warm tan above and paler beneath
+      const bodyG = new THREE.Group();
+      tilt.add(bodyG);
+      const bgeo = latheGeo(smoothProfile([[0, -1.15], [0.55, -1.02], [0.86, -0.62], [0.95, -0.1], [0.86, 0.42], [0.62, 0.82], [0.42, 1.02], [0, 1.1]], 40), 40).rotateX(Math.PI / 2);
+      keepR(gradient(bgeo, [[-0.95, "#ecb88e"], [-0.2, "#da9a6c"], [0.9, "#c47a4c"]]), skin, bodyG);
+      // glassy coloured patches, crackled like the skin
+      [
+        [[-0.55, 0.72, 0.05], [0.36, 0.24], "#f06a1a"],
+        [[-0.9, 0.15, -0.35], [0.3, 0.2], "#f0c81a"],
+        [[-0.8, 0.1, -0.85], [0.22, 0.16], "#c8941e"],
+        [[0.05, 0.98, -0.25], [0.34, 0.16], "#e02a7a"],
+        [[0.75, 0.45, -0.1], [0.32, 0.22], "#f0c81a"],
+        [[0.85, 0.05, 0.35], [0.26, 0.18], "#f06a1a"],
+        [[0.6, 0.6, -0.75], [0.22, 0.18], "#e02a7a"],
+      ].forEach(([d, [w, h], col]) => {
+        onEllipsoid(bodyG, T.box(1, 1, 1), KIT.surf("sand", col, { rep: 1, bump: 0.05, shine: 110, spec: 16777215 }), [0, 0, 0], [0.92, 0.92, 1.05], d, [1.8 * w, 1.8 * h, 0.05], 0.99);
+        onEllipsoid(bodyG, T.box(1, 1, 1), x.clay("#f4e0c0", { shininess: 30 }), [0, 0, 0], [0.92, 0.92, 1.05], d, [1.8 * w + 0.07, 1.8 * h + 0.07, 0.04], 0.985);
+      });
+      // attachment points that follow the body as it swells, without being stretched by it
+      const att = (name) => {
+        const a = new THREE.Group();
+        return (a.name = name), tilt.add(a), a;
+      };
+      const neckBase = att("neck"),
+        tailA = att("tail"),
+        hips = [
+          [-1, 1],
+          [1, 1],
+          [-1, -1],
+          [1, -1],
+        ].map(([sx, sz]) => Object.assign(att("hip"), { userData: { sx, sz } })),
+        wingA = [
+          [-1, 1],
+          [1, 1],
+          [-1, -1],
+          [1, -1],
+        ].map(([sx, fore]) => Object.assign(att("wing"), { userData: { sx, fore: fore > 0 } }));
+      // the neck: a chain of tapering segments with a green stripe along the top
+      const segs = [];
+      let par = neckBase;
+      for (let k = 0; k < N; k++) {
+        const r0 = 0.3 - 0.0125 * k,
+          r1 = 0.3 - 0.0125 * (k + 1),
+          sg = new THREE.Group();
+        k && (sg.position.z = SEG), par.add(sg), segs.push(sg), (par = sg);
+        R(new THREE.CylinderGeometry(r1, r0, SEG + 0.02, 16, 1, !0).rotateX(Math.PI / 2).translate(0, 0, SEG / 2), skinS, sg);
+        R(T.sphere(r0, 16, 10), skinS, sg);
+        R(T.box(0.07 + 0.012 * k, 0.04, SEG + 0.02), stripe, sg, [0, r0 * 0.93, SEG / 2]);
+      }
+      [0.05, 0.12, 0.19].forEach((z, k) => R(T.torus(0.305, 0.028, 6, 24), k % 2 ? x.clay("#8ac83a", { shininess: 60 }) : dark, segs[1], [0, 0, z]));
+      // the head: a little skull, a big eye each side of the green crest, and an open mouth
+      const head = new THREE.Group();
+      (head.position.z = SEG), segs[N - 1].add(head);
+      R(T.sphere(1, 20, 14), skinS, head, [0, 0.05, 0.1], null, [0.21, 0.19, 0.28]);
+      R(T.sphere(1, 16, 10), skinS, head, [0, 0.0, 0.34], null, [0.16, 0.085, 0.2]);
+      const jaw = new THREE.Group();
+      jaw.position.set(0, -0.07, 0.12), head.add(jaw);
+      R(T.sphere(1, 16, 10), skinS, jaw, [0, -0.03, 0.18], null, [0.14, 0.055, 0.2]);
+      R(T.sphere(1, 12, 8), x.clay("#a83a3a", { shininess: 20 }), head, [0, -0.06, 0.28], null, [0.12, 0.05, 0.15]);
+      R(T.sphere(1, 12, 8), x.clay("#e8707a", { shininess: 30 }), jaw, [0, 0.0, 0.2], null, [0.09, 0.025, 0.12]);
+      R(T.sphere(1, 14, 8), stripe, head, [0, 0.2, 0.06], null, [0.1, 0.06, 0.3]);
+      const eyes = [];
+      [-1, 1].forEach((sx) => {
+        const eg = new THREE.Group();
+        eg.position.set(0.12 * sx, 0.19, 0.16), (eg.rotation.y = 0.5 * sx), (eg.rotation.x = -0.25), head.add(eg);
+        R(T.sphere(0.1, 18, 12), x.clay("#fbf8f0", { shininess: 90 }), eg);
+        R(T.circle(0.06, 18), x.clay("#7a4a1e", { shininess: 80 }), eg, [0, 0, 0.1]);
+        R(T.circle(0.03, 14), x.basic("#0c0c10"), eg, [0, 0, 0.101]);
+        R(T.sphere(0.012, 6, 4), x.basic("#ffffff"), eg, [0.025, 0.025, 0.1]);
+        const lid = R(new THREE.SphereGeometry(0.108, 18, 8, 0, l, 0, Math.PI / 2), stripe, eg, [0, 0, 0], [-0.6, 0, 0]);
+        eyes.push(lid);
+        R(T.torus(0.1, 0.018, 6, 20), stripe, eg, [0, 0, 0.02]);
+      });
+      [-1, 1].forEach((sx) => R(T.sphere(0.012, 6, 4), dark, head, [0.04 * sx, 0.07, 0.53]));
+      // a stubby tail
+      R(ao([[0, 0, 0.1], [0, 0.06, -0.18], [0, 0.2, -0.34], [0, 0.32, -0.38]], 0.16, 0.035, 14, 10), skinS, tailA);
+      // the legs: long tubes down to open pipe feet
+      const pipeIn = x.clay("#3a1a12", { shininess: 10, side: THREE.DoubleSide });
+      const legs = hips.map((h) => {
+        const lg = new THREE.Group();
+        h.add(lg);
+        const sx = h.userData.sx,
+          sz = h.userData.sz;
+        R(ao([[0, 0.15, 0], [0.12 * sx, -0.5, 0.04 * sz], [0.14 * sx, -1.0, 0.1 * sz], [0.1 * sx, -1.62, 0.04 * sz]], 0.2, 0.15, 24, 14), skinS, lg);
+        const foot = new THREE.Group();
+        foot.position.set(0.1 * sx, -1.62, 0.04 * sz), lg.add(foot);
+        R(new THREE.CylinderGeometry(0.155, 0.17, 0.3, 18, 1, !0), Object.assign(skinS.clone(), { side: THREE.DoubleSide }), foot, [0, -0.1, 0]);
+        R(T.torus(0.165, 0.025, 8, 24), KIT.surf("skin", "#e8a87a", { rep: 1, bump: 0.02, shine: 40 }), foot, [0, -0.25, 0], [Math.PI / 2, 0, 0]);
+        R(T.circle(0.15, 18), pipeIn, foot, [0, -0.04, 0], [Math.PI / 2, 0, 0]);
+        return { lg, foot, sx, sz };
+      });
+      // the wings: two pairs a side, fanned like leaves
+      const wmat = new THREE.MeshPhongMaterial({ map: wingTex(), alphaTest: 0.45, side: THREE.DoubleSide, shininess: 90, specular: 8947848, emissive: new THREE.Color("#0c2a22") }),
+        wgeo = new THREE.PlaneGeometry(0.62, 1, 1, 4).translate(0, 0.5, 0).rotateY(Math.PI / 2);
+      const wings = wingA.map((wa) => {
+        const flap = new THREE.Group();
+        wa.add(flap);
+        const fore = wa.userData.fore,
+          blades = fore
+            ? [
+                [0.75, 2.4],
+                [1.02, 2.15],
+                [1.28, 1.85],
+              ]
+            : [
+                [0.22, 1.7],
+                [0.48, 1.5],
+              ];
+        blades.forEach(([fan, len], k) => {
+          const fg = new THREE.Group();
+          (fg.rotation.x = -fan), (fg.rotation.z = wa.userData.sx * 0.08 * k), flap.add(fg);
+          R(wgeo, wmat, fg, [0, 0, 0], null, [1, 1.25 * len, 1.25 + 0.15 * k]);
+        });
+        return { flap, sx: wa.userData.sx, fore };
+      });
+      // the gulp: a swallow of water travelling up the neck
+      const gulp = R(T.sphere(1, 14, 10), skinS, root);
+      gulp.visible = !1;
+      return { root, tilt, bodyG, neckBase, tailA, hips, wingA, segs, head, jaw, eyes, legs, wings, gulp };
+    }
+    function make() {
+      const root = new THREE.Group();
+      (root.userData.jgpKeep = !0), (root.userData.keepInFinale = !0), (root.visible = !1), C.add(root);
+      const M0 = buildModel(root),
+        { legs } = M0;
+      // pond ripples, water jets, droplets and the rainbow live in world space
+      const ripples = [0, 1, 2].map(() => {
+        const m = R(T.torus(1, 0.03, 4, 32), x.basic("#e8f6ff", { unique: !0, transparent: !0, opacity: 0, depthWrite: !1 }), C, [0, 0, 0], [Math.PI / 2, 0, 0]);
+        return (m.visible = !1), (m.userData.keepInFinale = !0), m;
+      });
+      const NP = 22,
+        NR = 8,
+        jetMat = new THREE.MeshPhongMaterial({ map: streakTex(), color: "#d8f2ff", emissive: new THREE.Color("#3a6a80"), transparent: !0, opacity: 0.5, shininess: 120, specular: 16777215, depthWrite: !1, side: THREE.DoubleSide }),
+        jets = legs.map(() => {
+          const geo = new THREE.BufferGeometry(),
+            pos = new Float32Array(NP * NR * 3),
+            nor = new Float32Array(NP * NR * 3),
+            uv = new Float32Array(NP * NR * 2),
+            idx = [];
+          for (let i = 0; i < NP; i++)
+            for (let j = 0; j < NR; j++) {
+              (uv[2 * (i * NR + j)] = j / (NR - 1)), (uv[2 * (i * NR + j) + 1] = (3 * i) / (NP - 1));
+              if (i < NP - 1 && j < NR - 1) {
+                const a = i * NR + j;
+                idx.push(a, a + NR, a + 1, a + 1, a + NR, a + NR + 1);
+              }
+            }
+          geo.setAttribute("position", new THREE.BufferAttribute(pos, 3)), geo.setAttribute("normal", new THREE.BufferAttribute(nor, 3)), geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2)), geo.setIndex(idx);
+          const m = new THREE.Mesh(geo, jetMat);
+          return (m.frustumCulled = !1), (m.visible = !1), (m.userData.keepInFinale = !0), (m.renderOrder = 3), C.add(m), { m, geo, pos, nor, land: V(), on: 0 };
+        });
+      const NDROP = 420,
+        dgeo = new THREE.BufferGeometry(),
+        dpos = new Float32Array(3 * NDROP).fill(-200),
+        dvel = new Float32Array(3 * NDROP),
+        dlife = new Float32Array(NDROP);
+      dgeo.setAttribute("position", new THREE.BufferAttribute(dpos, 3));
+      const drops = new THREE.Points(dgeo, new THREE.PointsMaterial({ map: dotTex(), color: "#e8f8ff", size: 0.16, transparent: !0, opacity: 0.9, depthWrite: !1 }));
+      (drops.frustumCulled = !1), (drops.userData.keepInFinale = !0), (drops.renderOrder = 4), C.add(drops);
+      let dnext = 0;
+      const spawn = (px, py, pz, vx, vy, vz, life) => {
+        const k = dnext;
+        (dnext = (dnext + 1) % NDROP), (dpos[3 * k] = px), (dpos[3 * k + 1] = py), (dpos[3 * k + 2] = pz), (dvel[3 * k] = vx), (dvel[3 * k + 1] = vy), (dvel[3 * k + 2] = vz), (dlife[k] = life);
+      };
+      const rbGeo = new THREE.RingGeometry(12.2, 14.2, 64, 7, 0, Math.PI),
+        rbc = new Float32Array(3 * rbGeo.attributes.position.count),
+        bands = ["#e8302a", "#ff8a1a", "#ffd23a", "#4ac83a", "#3a9ae8", "#5a4ad8", "#a04ad8"].map((h) => new THREE.Color(h));
+      for (let k = 0; k < rbGeo.attributes.position.count; k++) {
+        const r0 = Math.hypot(rbGeo.attributes.position.getX(k), rbGeo.attributes.position.getY(k)),
+          q = Math.max(0, Math.min(0.999, (r0 - 12.2) / 2)) * (bands.length - 1),
+          i0 = Math.floor(q),
+          cc = bands[bands.length - 1 - i0].clone().lerp(bands[Math.max(0, bands.length - 2 - i0)], q - i0);
+        (rbc[3 * k] = cc.r), (rbc[3 * k + 1] = cc.g), (rbc[3 * k + 2] = cc.b);
+      }
+      rbGeo.setAttribute("color", new THREE.BufferAttribute(rbc, 3));
+      const rainbow = R(rbGeo, new THREE.MeshBasicMaterial({ vertexColors: !0, transparent: !0, opacity: 0, side: THREE.DoubleSide, depthWrite: !1 }), C, [0, -2.5, -7]);
+      (rainbow.visible = !1), (rainbow.userData.keepInFinale = !0);
+      return Object.assign(M0, { ripples, jets, drops, dpos, dvel, dlife, spawn, dgeo, jetMat, rainbow });
+    }
+    // the neck's two poses: held high and curving forward, or reaching down and forward to drink
+    const UP = [-0.34, -0.18, -0.12, -0.2, -0.24, -0.2, -0.04, 0.12, 0.24, 0.3],
+      DOWN = [0.85, 0.35, 0.16, 0.06, 0.0, 0.0, -0.05, -0.08, -0.1, -0.1];
+    function shape(P, fat, neckDown, spr, t) {
+      const fx = 0.52 + 0.58 * fat,
+        fy = 0.58 + 0.46 * fat,
+        fz = 0.92 + 0.26 * fat;
+      P.bodyG.scale.set(fx, fy, fz);
+      P.neckBase.position.set(0, 0.42 * fy, 0.86 * fz), (P.tailA.position.z = -1.08 * fz), (P.tailA.position.y = 0.18 * fy);
+      P.hips.forEach((h) => h.position.set(0.42 * fx * h.userData.sx, -0.6 * fy, (h.userData.sz > 0 ? 0.48 : -0.55) * fz));
+      P.wingA.forEach((w) => w.position.set(0.16 * fx * w.userData.sx, 0.86 * fy, (w.userData.fore ? 0.18 : -0.38) * fz));
+      P.segs.forEach((sg, k) => (sg.rotation.x = UP[k] + (DOWN[k] - UP[k]) * neckDown + 0.03 * Math.sin(1.3 * t + 0.6 * k) * (1 - neckDown)));
+      P.head.rotation.x = -0.25 + 0.55 * neckDown;
+      P.legs.forEach((L0, k) => {
+        (L0.lg.rotation.x = (0.18 + 0.08 * Math.sin(2.1 * t + k) - 1.3 * neckDown) * (1 - spr) - 0.55 * L0.sz * spr), (L0.lg.rotation.z = (0.05 * Math.sin(1.7 * t + 2 * k)) * (1 - spr) + 0.6 * L0.sx * spr);
+      });
+    }
+    function flapWings(P, amp, freq, t) {
+      P.wings.forEach((w, k) => {
+        const ph = w.fore ? 0 : 1.4;
+        w.flap.rotation.z = -w.sx * (0.9 + amp * (0.5 + 0.5 * Math.sin(freq * t + ph)));
+      });
+    }
+    // world positions for the drinking hover, worked out from the drinking pose itself
+    function drinkSpot(P) {
+      const pond = PONDO ? PONDO.getWorldPosition(V()) : V(24.6, 0, 0),
+        water = pond.y + 0.11,
+        toC = V(-pond.x, 0, -pond.z).normalize(),
+        face = Math.atan2(toC.x, toC.z);
+      // he hovers over the far bank, facing the garden (and everyone watching), and reaches in: his
+      // head goes into the water 1.2 m from the pond's centre
+      P.root.position.set(0, 0, 0), (P.root.rotation.y = face), (P.tilt.rotation.x = 0.3), shape(P, 0.5, 1, 0, 0), P.root.updateMatrixWorld(!0);
+      const hp = P.head.localToWorld(V(0, -0.02, 0.36)),
+        tgt = V(pond.x - toC.x * 1.2, water - 0.06, pond.z - toC.z * 1.2);
+      return { pos: tgt.sub(hp), face, water, pond, hp };
+    }
+    function pose(e, dt) {
+      const P = made,
+        t = e;
+      P.root.visible = !0;
+      const ds = flags.ds || (flags.ds = drinkSpot(P)),
+        above = V().copy(ds.pos).add(V(0, 1.3, 0)),
+        far = flags.far || (flags.far = V(ds.pond.x + 60, 26, ds.pond.z - 70)),
+        gardenHover = V(0, 4.9, 0),
+        away = flags.away || (flags.away = V(-70, 40, 60));
+      let pos = V(),
+        face = ds.face,
+        pitch = 0.05,
+        fat = 0,
+        neck = 0,
+        spr = 0,
+        amp = 0.35,
+        freq = 22;
+      if (e < D.inA) {
+        const q = seg(e, 0, D.inA),
+          m = V((far.x + above.x) / 2, 18, (far.z + above.z) / 2);
+        pos = bez(far, m, above, q);
+        const ahead = bez(far, m, above, Math.min(1, q + 0.02));
+        q < 0.98 && (face = Math.atan2(ahead.x - pos.x, ahead.z - pos.z) * (1 - ease((q - 0.7) / 0.3)) + ds.face * ease((q - 0.7) / 0.3));
+        pitch = 0.15 * (1 - q);
+      } else if (e < D.down) {
+        const q = seg(e, D.inA, D.down);
+        pos.copy(above).lerp(ds.pos, q), (neck = q), (pitch = 0.05 + 0.25 * q), (amp = 0.3 - 0.15 * q), (freq = 18);
+      } else if (e < D.drink) {
+        const q = seg(e, D.down, D.drink);
+        pos.copy(ds.pos), (pos.y += 0.04 * Math.sin(2 * e)), (neck = 1), (pitch = 0.3), (fat = q + 0.04 * Math.sin(5.2 * e) * Math.min(1, 3 * q)), (amp = 0.12), (freq = 14);
+      } else if (e < D.up) {
+        const q = seg(e, D.drink, D.up);
+        pos.copy(ds.pos).lerp(above, q), (pos.y -= 0.25 * q), (neck = 1 - q), (pitch = 0.3 - 0.28 * q), (fat = 1), (amp = 0.28), (freq = 26);
+      } else if (e < D.toGarden) {
+        const q = seg(e, D.up, D.toGarden),
+          a0 = V().copy(above).add(V(0, -0.25, 0)),
+          m = V((a0.x + gardenHover.x) / 2, 7.5, (a0.z + gardenHover.z) / 2);
+        pos = bez(a0, m, gardenHover, q);
+        const ahead = bez(a0, m, gardenHover, Math.min(1, q + 0.02));
+        q < 0.97 && (face = Math.atan2(ahead.x - pos.x, ahead.z - pos.z));
+        q >= 0.97 && (face = flags.gface || ds.face), (flags.gface = face), (fat = 1), (pitch = 0.1), (amp = 0.42), (freq = 28), (pos.y -= 0.35 * Math.sin(Math.PI * q));
+      } else if (e < D.spray) {
+        const q = seg(e, D.toGarden, D.splay),
+          qs = Math.max(0, (e - D.splay) / (D.spray - D.splay));
+        pos.copy(gardenHover), (pos.y += 0.12 * Math.sin(1.6 * e)), (spr = q), (fat = 1 - 0.85 * ease(qs)), (face = (flags.gface || 0) + 3 * l * 0.5 * ease(qs)), (amp = 0.32), (freq = 24), (pitch = 0.0);
+      } else if (e < D.unsplay) {
+        const q = seg(e, D.spray, D.unsplay);
+        pos.copy(gardenHover), (pos.y += 0.3 * q), (spr = 1 - q), (fat = 0.15), (face = (flags.gface || 0) + 3 * l * 0.5), (amp = 0.3), (freq = 22);
+      } else {
+        const q = seg(e, D.unsplay, D.gone),
+          a0 = V(0, 5.2, 0),
+          m = V(0, 16, 0);
+        pos = bez(a0, m, away, q);
+        const ahead = bez(a0, m, away, Math.min(1, q + 0.02));
+        (face = Math.atan2(ahead.x - pos.x, ahead.z - pos.z)), (pitch = -0.25 * Math.sin(Math.PI * q)), (fat = 0.15), (amp = 0.4), (freq = 24);
+      }
+      P.root.position.copy(pos), (P.root.rotation.y = face), (P.tilt.rotation.x = pitch), (P.tilt.rotation.z = 0.05 * Math.sin(1.1 * e));
+      shape(P, Math.max(0, fat), neck, ease(spr), t), flapWings(P, amp, freq, t);
+      P.jaw.rotation.x = neck > 0.9 ? 0.25 : 0.12 + 0.06 * Math.sin(3 * e);
+      // blink now and then
+      const bl = ((e % 4.1) + 4.1) % 4.1 < 0.14;
+      P.eyes.forEach((ld) => (ld.rotation.x = bl ? 0.35 : -0.6));
+      P.root.updateMatrixWorld(!0);
+      effects(P, e, dt || 0, fat, spr, neck, ds);
+    }
+    // ripples, gulps, drips, jets, spray, blooming plants, the rainbow, and everyone's reactions
+    function effects(P, e, dt, fat, spr, neck, ds) {
+      const drinking = e > D.down - 0.3 && e < D.drink;
+      P.ripples.forEach((m, k) => {
+        const on = e > D.down - 0.4 && e < D.up + 0.4,
+          a = (0.6 * e + k / 3) % 1;
+        (m.visible = on), on && (m.position.set(ds.pos.x + ds.hp.x * 0 + 0, ds.water + 0.03, 0), m.position.copy(P.head.localToWorld(V(0, 0, 0.3))).setY(ds.water + 0.03), m.scale.setScalar(0.2 + 1.6 * a), (m.material.opacity = 0.55 * (1 - a)));
+      });
+      // a swallow running up the neck every so often
+      if (drinking && e > D.down + 0.3) {
+        const q = (1.15 * (e - D.down)) % 1,
+          kf = (N - 1) * (1 - q),
+          k = Math.floor(kf),
+          wp = P.segs[k].localToWorld(V(0, 0, SEG * (kf - k)));
+        P.gulp.visible = !0, P.gulp.position.copy(P.root.worldToLocal(wp)), P.gulp.scale.setScalar(0.33 - 0.015 * k + 0.04 * Math.sin(Math.PI * q));
+      } else P.gulp.visible = !1;
+      // drips from the mouth after drinking, splashes at the pond surface
+      const mouth = P.head.localToWorld(V(0, -0.05, 0.4));
+      if (dt) {
+        e > D.drink && e < D.toGarden && Math.random() < 0.5 && P.spawn(mouth.x, mouth.y, mouth.z, 0.3 * (Math.random() - 0.5), -0.2, 0.3 * (Math.random() - 0.5), 1.4);
+        if ((Math.abs(e - D.down) < 0.35 || Math.abs(e - D.drink) < 0.4) && Math.random() < 0.9)
+          for (let k = 0; k < 4; k++) P.spawn(mouth.x, ds.water + 0.05, mouth.z, 1.6 * (Math.random() - 0.5), 1.4 + 1.6 * Math.random(), 1.6 * (Math.random() - 0.5), 1.2);
+      }
+      // the four jets
+      const spraying = e > D.splay - 0.2 && e < D.spray + 0.3,
+        pressure = spraying ? Math.min(1, (e - D.splay + 0.2) / 0.8) * Math.min(1, (D.spray + 0.3 - e) / 0.8) : 0;
+      P.jets.forEach((J, k) => {
+        J.m.visible = pressure > 0.02;
+        if (!J.m.visible) return;
+        const L0 = P.legs[k],
+          F = L0.foot.localToWorld(V(0, -0.26, 0)),
+          dir = L0.foot.localToWorld(V(0, -1, 0)).sub(L0.foot.localToWorld(V(0, 0, 0))).normalize(),
+          hz = V(dir.x, 0, dir.z),
+          hl = hz.length() || 1;
+        hz.multiplyScalar(1 / hl);
+        const reach = (4.2 + 4.6 * (0.5 + 0.5 * Math.sin(1.25 * e + 1.7 * k)) + 3.2 * fat) * pressure,
+          up0 = 0.9,
+          side = V(-hz.z, 0, hz.x),
+          pts = [];
+        for (let i = 0; i < 22; i++) {
+          const q = i / 21;
+          pts.push(V(F.x + hz.x * reach * q, F.y + up0 * q - (up0 + F.y) * q * q, F.z + hz.z * reach * q));
+        }
+        J.land.copy(pts[21]);
+        for (let i = 0; i < 22; i++) {
+          const tg = (i < 21 ? V().subVectors(pts[i + 1], pts[i]) : V().subVectors(pts[i], pts[i - 1])).normalize(),
+            nrm = V().crossVectors(side, tg).normalize(),
+            rad = (0.1 + 0.13 * (i / 21)) * (0.6 + 0.4 * pressure);
+          for (let j = 0; j < 8; j++) {
+            const a = (j / 7) * l,
+              ox = Math.cos(a),
+              oy = Math.sin(a),
+              q = 3 * (i * 8 + j);
+            (J.nor[q] = side.x * ox + nrm.x * oy), (J.nor[q + 1] = side.y * ox + nrm.y * oy), (J.nor[q + 2] = side.z * ox + nrm.z * oy);
+            (J.pos[q] = pts[i].x + rad * J.nor[q]), (J.pos[q + 1] = pts[i].y + rad * J.nor[q + 1]), (J.pos[q + 2] = pts[i].z + rad * J.nor[q + 2]);
+          }
+        }
+        (J.geo.attributes.position.needsUpdate = !0), (J.geo.attributes.normal.needsUpdate = !0), J.geo.computeBoundingSphere();
+        if (dt) {
+          // spray mist off the stream and a splash where it lands
+          for (let n = 0; n < 3; n++) {
+            const q = Math.random(),
+              pp = pts[Math.floor(q * 21)];
+            P.spawn(pp.x, pp.y, pp.z, hz.x * reach * 0.45 + 0.8 * (Math.random() - 0.5), 0.6 * Math.random(), hz.z * reach * 0.45 + 0.8 * (Math.random() - 0.5), 0.8);
+          }
+          for (let n = 0; n < 3; n++) P.spawn(J.land.x, 0.05, J.land.z, 2.2 * (Math.random() - 0.5), 1.2 + 2 * Math.random(), 2.2 * (Math.random() - 0.5), 0.9);
+          // plants bloom where the water lands
+          for (const pl of garden.plants) {
+            const dx = pl.g.position.x - J.land.x,
+              dz = pl.g.position.z - J.land.z;
+            if (dx * dx + dz * dz < 2.6) {
+              pl.grow = Math.min(1, pl.grow + 2.5 * dt);
+              if (pl.grow >= 1 && !pl.bloomed) (pl.bloomed = !0), Math.random() < 0.35 && Ut.at(pl.g.position.x, 0.9, pl.g.position.z, "✿", f(PLANT_COLS));
+            }
+          }
+        }
+      });
+      P.jetMat.map.offset.y = -2.2 * e;
+      // droplets
+      if (dt) {
+        const dp = P.dpos,
+          dv = P.dvel,
+          dl = P.dlife;
+        for (let k = 0; k < dl.length; k++) {
+          if (dl[k] <= 0) continue;
+          (dl[k] -= dt), (dv[3 * k + 1] -= 9.8 * dt), (dp[3 * k] += dv[3 * k] * dt), (dp[3 * k + 1] += dv[3 * k + 1] * dt), (dp[3 * k + 2] += dv[3 * k + 2] * dt);
+          (dl[k] <= 0 || dp[3 * k + 1] < -0.05) && ((dl[k] = 0), (dp[3 * k + 1] = -200));
+        }
+        P.dgeo.attributes.position.needsUpdate = !0;
+      }
+      // the rainbow
+      const rb = Math.min(seg(e, D.splay + 3, D.splay + 7), 1 - seg(e, D.unsplay, D.gone));
+      (P.rainbow.visible = rb > 0.01), (P.rainbow.material.opacity = 0.42 * rb);
+      // everyone reacts
+      if (dt) {
+        const fin = It.all.filter((en) => "finale" === en.busy),
+          once = (key, at, fn) => e >= at && !flags[key] && ((flags[key] = !0), fn());
+        once("arrive", 3, () => fin.forEach((en) => Ut.above(en, "!", M.yellow)));
+        once("drink", D.down + 2, () => fin.forEach((en) => Math.random() < 0.6 && Ut.above(en, "?", M.teal)));
+        once("fat", D.drink - 1, () => fin.forEach((en) => Ut.above(en, "!", M.pink)));
+        once("spray", D.splay, () => {
+          try {
+            G.jingle();
+          } catch (err) {}
+        });
+        e > D.splay && e < D.spray && Math.random() < 1.2 * dt && fin.length && Ut.above(f(fin), f(["♥", "✿", "♪"]), f([M.pink, M.yellow, M.lime, M.teal]));
+      }
+    }
+    function hideAll() {
+      if (!made) return;
+      const P = made;
+      (P.root.visible = !1), P.ripples.forEach((m) => (m.visible = !1)), P.jets.forEach((J) => (J.m.visible = !1)), (P.rainbow.visible = !1), P.dlife.fill(0), P.dpos.fill(-200), (P.dgeo.attributes.position.needsUpdate = !0);
+    }
+    function start(now) {
+      made || (made = make()), (active = !0), (t0 = now), (lastE = -1), (flags = {});
+      // FORTIZMO raises her horn and plays "Backpacka's Rain Strut" for the whole visit
+      try {
+        gcHorn.play();
+      } catch (err) {}
+    }
+    function stopHorn() {
+      try {
+        "off" !== gcHorn.phase && "lowering" !== gcHorn.phase && gcHorn.finish();
+      } catch (err) {}
+    }
+    L.push((tt, dt) => {
+      // he sets off once the planting has got going (30 s in, or 40 plants in the ground)
+      const live = me.active && bt.live;
+      // the event ended early (or was left): put everything away
+      active && !me.active && ((active = !1), hideAll(), stopHorn());
+      if (!live) plantedAt = 0;
+      else if (!plantedAt) plantedAt = tt;
+      if (!active && live && plantedAt && (tt - plantedAt > 30 || garden.plants.length >= 40)) start(tt);
+      if (!active) return;
+      const e = tt - t0;
+      if (e > D.gone + 2.5) return (active = !1), hideAll(), void stopHorn();
+      e > D.gone && (made.root.visible = !1);
+      pose(e, lastE < 0 ? 0 : Math.min(0.1, e - lastE)), (lastE = e);
+    });
+    return {
+      buildModel,
+      shape,
+      flapWings,
+      busy: () => active,
+      start: (now) => start(null == now ? Re.t : now),
+      // for testing: show him at time e of his visit (no side effects except the effects' state)
+      preview: (e) => {
+        made || (made = make()), (flags = flags || {}), pose(e, 0.016);
+        return made.root;
+      },
+      D,
+    };
+  })();
   const GAZEBO = [5, -31];
   let UFO_FLY = null; // set by the town: sends the UFO over right away (for testing)
   const JGP_K = { post: (g) => buildPostOffice(g), garden: (g) => buildGardenSupplies(g), sheriff: (g) => buildSheriff(g) };
@@ -16620,6 +17095,7 @@ const JGP = (() => {
     buildGardenSupplies,
     fireBlossom,
     ufoNow: () => UFO_FLY && UFO_FLY(),
+    backpacka: BP,
     KIT,
     beforeSpawn() {
       try {

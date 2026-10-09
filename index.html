@@ -3,6 +3,34 @@
 <script>"undefined"!=typeof THREE&&["MeshPhongMaterial","MeshLambertMaterial","MeshBasicMaterial"].forEach(function(e){var t=THREE[e];function a(e){return new t(Object.assign({side:THREE.DoubleSide},e||{}))}t&&(a.prototype=t.prototype,THREE[e]=a)});</script>
  <script>!function(){try{var t=HTMLCanvasElement.prototype,e=t.getContext;t.getContext=function(t){var a=e.apply(this,arguments);try{a&&"2d"===t&&(a.imageSmoothingEnabled=!1)}catch(t){}return a}}catch(t){}try{if("undefined"==typeof THREE||!THREE.CanvasTexture)return;var a=window.__gbTexReg=[],n=THREE.CanvasTexture;THREE.CanvasTexture=class extends n{constructor(){super(...arguments);try{if(this.image&&"CANVAS"===this.image.tagName){a.push(this);var t=this;this.addEventListener("dispose",function(){t.__gbRetired=1;var e=a.indexOf(t);e>=0&&a.splice(e,1)})}}catch(t){}}}}catch(t){}}();</script>
 <script>
+  // UI safety net: any canvas text that would run past the edge of its canvas is condensed to fit
+  // (only for untransformed draws; text that already fits is drawn exactly as before)
+  (function () {
+    const P = CanvasRenderingContext2D.prototype,
+      f0 = P.fillText,
+      s0 = P.strokeText;
+    function room(ctx, txt, x, mw) {
+      const m = ctx.getTransform ? ctx.getTransform() : null;
+      if (!m || m.a !== 1 || m.b !== 0 || m.c !== 0 || m.d !== 1) return mw;
+      const W = ctx.canvas.width,
+        X = x + m.e,
+        al = ctx.textAlign,
+        avail = "center" === al ? 2 * Math.min(X, W - X) - 4 : "right" === al || "end" === al ? X - 2 : W - X - 2;
+      if (!(avail > 8)) return mw;
+      const w = ctx.measureText(txt).width;
+      return w > avail ? Math.min(void 0 === mw ? 1 / 0 : mw, avail) : mw;
+    }
+    P.fillText = function (t, x, y, mw) {
+      const r = room(this, String(t), x, mw);
+      return void 0 === r ? f0.call(this, t, x, y) : f0.call(this, t, x, y, r);
+    };
+    P.strokeText = function (t, x, y, mw) {
+      const r = room(this, String(t), x, mw);
+      return void 0 === r ? s0.call(this, t, x, y) : s0.call(this, t, x, y, r);
+    };
+  })();
+</script>
+<script>
 "use strict";
 // JGP mobile test mode flag (temporary): phones (not Quest) or ?mobile=1; ?mobile=0 forces it off
 window.__jgpMobile = (() => {
@@ -9708,6 +9736,12 @@ const xe = (() => {
           .forEach((e) => {
             let n = "";
             e.split(" ").forEach((e) => {
+              // a single word wider than the box is broken across lines
+              for (; e.length > 1 && t.measureText(e).width > o; ) {
+                let k = e.length - 1;
+                for (; k > 1 && t.measureText(e.slice(0, k)).width > o; ) k--;
+                n && (a.push(n), (n = "")), a.push(e.slice(0, k)), (e = e.slice(k));
+              }
               const r = n ? n + " " + e : e;
               n && t.measureText(r).width > o ? (a.push(n), (n = e)) : (n = r);
             }),
@@ -9718,19 +9752,35 @@ const xe = (() => {
     }
     function k(t, e, o, a, n, r, s = "bold") {
       let i;
-      for (; n >= r && ((t.font = s + " " + n + "px " + d), (i = P(t, e, o)), !(i.length * n * 1.3 <= a)); n -= 2);
-      return (n = Math.max(n, r)), (t.font = s + " " + n + "px " + d), { lines: i || [], size: n };
+      const r2 = Math.max(12, Math.round(0.75 * r));
+      for (; n >= r2 && ((t.font = s + " " + n + "px " + d), (i = P(t, e, o)), !(i.length * n * 1.3 <= a)); n -= 2);
+      (n = Math.max(n, r2)), (t.font = s + " " + n + "px " + d), (i = P(t, e, o));
+      // still too long at the smallest size: keep what fits and end the last line with an ellipsis
+      const maxL = Math.max(1, Math.floor(a / (1.3 * n)));
+      if (i.length > maxL) {
+        i = i.slice(0, maxL);
+        let last = i[maxL - 1];
+        for (; last && t.measureText(last + "…").width > o; ) last = last.slice(0, -1);
+        i[maxL - 1] = last + "…";
+      }
+      return { lines: i, size: n };
     }
+    // V() remembers the width it fitted to; the A() call it feeds condenses text to that width if needed
+    let vW = 0,
+      vS = 0;
     function A(t, e, o, a, n, r, s = "left", i = "bold") {
-      (t.font = i + " " + n + "px " + d),
+      const mw = n === vS ? vW : 0;
+      (vS = vW = 0),
+        (t.font = i + " " + n + "px " + d),
         (t.fillStyle = r),
         (t.textAlign = s),
         (t.textBaseline = "middle"),
-        t.fillText(e, o, a);
+        mw ? t.fillText(e, o, a, mw) : t.fillText(e, o, a);
     }
     function V(t, e, o, a, n) {
-      for (; a > n && ((t.font = "bold " + a + "px " + d), !(t.measureText(e).width <= o)); a -= 2);
-      return a;
+      const n2 = Math.max(10, Math.round(0.8 * n));
+      for (; a > n2 && ((t.font = "bold " + a + "px " + d), !(t.measureText(e).width <= o)); a -= 2);
+      return (vW = o), (vS = a), a;
     }
     const F = {};
     function W(e = 0) {
@@ -10657,7 +10707,7 @@ const xe = (() => {
                     const a = i + 78 * n + 6,
                       r = "done" === t.hover;
                     S(o, 332, a, 360, 66, 14, r ? "#ffffff" : M.lime, E, 4),
-                      A(o, e.done.label, 512, a + 34, 36, M.ink, "center"),
+                      A(o, e.done.label, 512, a + 34, V(o, e.done.label, 330, 36, 26), M.ink, "center"),
                       t.rect("done", 332, a, 360, 66, () => _t.confirm());
                   }
                 }));
@@ -10787,7 +10837,7 @@ const xe = (() => {
                 S(t, 4, 4, 248, 168, 16, "rgba(13,13,26,.85)", E, 3);
                 const e = (e, o, a, n) => {
                     S(t, 12, e - 20, 232, 42, 10, "rgba(255,255,255,.06)", null, 0),
-                      A(t, o, 22, e + 1, 20, n),
+                      A(t, o, 22, e + 1, V(t, o, 180, 20, 14), n),
                       A(t, a, 234, e + 1, 26, "#ffffff", "right");
                   },
                   o = (t) => (t ? "☑" : "☐");
@@ -11107,8 +11157,12 @@ const xe = (() => {
         dkPlaceUI();
       {
         const hh = 0.62 * Math.tan((B.fov * Math.PI) / 360),
-          hw = hh * B.aspect;
-        dk.grip.position.set(-hw + 0.1, MOB ? hh - 0.11 : -hh + 0.15, -0.62);
+          hw = hh * B.aspect,
+          off = dk.hudOff || (dk.hudOff = new c(0, 0.05, 0.06).applyEuler(dk.grip.rotation)),
+          k2 = (0.62 - off.z) / 0.62, // the HUD is nearer the camera than the grip, so less of it fits
+          m = 0.012;
+        // on phones the HUD sits just below the fps / quality chip at the top of the screen
+        dk.grip.position.set(-hw * k2 + 0.075 + m - off.x, (MOB ? hh * k2 * 0.9 - 0.0516 - m : -hh * k2 + 0.0516 + m) - off.y, -0.62);
       }
     }
     // screen-aligned placement of the dialogue / panel (VR places them in the world instead)

@@ -58,7 +58,8 @@ window.__jgpMobile = (() => {
 const t = {
     debug: !(!window.__gbGuard || !window.__gbGuard.DEBUG),
     clearingR: 36.5, // pickups, wanderers and line-ups stay inside this radius
-    parkHalf: 37.6, // the iron fence around the town square; the player stays inside it
+    parkHalf: 37.6, // the iron fence around the town square (east, west and north); the player stays inside it
+    parkSouth: 49.6, // the square runs longer to the south so the whole line-up fits along the west side
     chapel: { angle: Math.PI / 4, dist: 70 },
     spreadR: 13,
     personalSpace: 7,
@@ -7077,7 +7078,7 @@ function Lt(e, o, a, n) {
     e.moving && Math.hypot(s.x - i, s.z - l) < 0.1 * a && (e.moving = !1);
   // creatures stay inside the square park fence (a circular limit cut off the ends of the rows)
   const f = t.parkHalf - 0.6;
-  (s.x = Math.max(-f, Math.min(f, s.x))), (s.z = Math.max(-f, Math.min(f, s.z))), fo(e, o);
+  (s.x = Math.max(-f, Math.min(f, s.x))), (s.z = Math.max(-f, Math.min(t.parkSouth - 0.6, s.z))), fo(e, o);
 }
 const Ut = (() => {
     const t = [],
@@ -8437,7 +8438,7 @@ const le = (() => {
     const s = (e, o, a, n, r = 1.6) => {
         // walk targets are kept inside the square park fence, like the creatures themselves
         const s = t.parkHalf - 1.1;
-        (o = Math.max(-s, Math.min(s, o))), (a = Math.max(-s, Math.min(s, a)));
+        (o = Math.max(-s, Math.min(s, o))), (a = Math.max(-s, Math.min(t.parkSouth - 1.1, a)));
         const l = e.group.position,
           c = o - l.x,
           h = a - l.z,
@@ -11283,7 +11284,7 @@ function Te(e, o) {
   F.resolve(a, t.player.bodyR), uo.resolve(a, t.player.bodyR, At);
   // the park fence is a square: keep the player just inside it
   const l = t.parkHalf - 0.15 - t.player.bodyR;
-  (a.x = u(a.x, -l, l)), (a.z = u(a.z, -l, l)), (a.y = 0);
+  (a.x = u(a.x, -l, l)), (a.z = u(a.z, -l, t.parkSouth - 0.15 - t.player.bodyR)), (a.y = 0);
 }
 const Re = (() => {
     let t = !1,
@@ -11584,57 +11585,42 @@ const JGP = (() => {
   // Set FREEZE_NPCS to false to restore the engine's wandering, director scenes and dates.
   const FREEZE_NPCS = !0,
     NO_SINGER = !0; // the old concert singer (frog / FORTIZMO) is a normal cast member now
-  // One row per game, plus a row for the same-named creatures merged across games.
+  // The line-up: every creature in one row.
   // [id, name, builder, def fields, [x, z]]. Ids that already exist in the engine's defs keep their
   // engine role (companions, battles, quests); the rest are added as stationary NPCs.
   const ROWS = {
-    // Greeblis City (north): the engine's own cast ids, which are the Greeblis City characters
-    city: {
-      face: 0,
-      list: [
-        ["frog", "FORTIZMO", "fortizmoPick", {"color": "#e8742a", "bodyR": 0.95, "modelScale": 0.78, "talkR": 4.2}, [0, -21]],
-        // for testing: the shopkeeper's and the pizza courier's models in the line-up
-        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [-4.6, -21]],
-        ["t_nextessa", "NEXTESSA", "born_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [4.6, -21]],
-      ],
-    },
-    // same-named and requested merges across games (west)
-    merged: {
+    // everyone in one line-up along the west side of the square, facing in (the square was
+    // lengthened to the south to fit them). The first three groups come from the earlier rows:
+    // same-named and requested merges, FORTIZMO (Greeblis City), the Greeblis Park NPCs and THE
+    // PROFESSOR (Greeblis Woods), then the test models of the shopkeeper and the pizza courier.
+    lineup: {
       face: Math.PI / 2,
       list: [
-        ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [-34, -20.07]],
-        ["orbiter", "MALTOE", "born_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "talkR": 4.2}, [-34, -15.5]],
-        ["drifter", "MUSHROOM", "born_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [-34, -11.31]],
-        ["hopper", "PATCHOOLEE", "born_patchoolee", {"color": "#8cc63a", "bodyR": 0.85}, [-34, -7.49]],
-        ["blinker", "ANOMALEE", "anomaleePeg", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2}, [-34, -4.1]],
-        ["slugwerth", "SLUGWERTH", "born_slugwerth", {"color": "#2c5fe0", "bodyR": 0.85}, [-34, -1.05]],
-        ["appterix", "APPTERIX", "born_appterix", {"color": "#d8322a", "bodyR": 0.95}, [-34, 2.2]],
-        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [-34, 5.59]],
-        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [-34, 10.13]],
-        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#2a9ccf", "bodyR": 1.1}, [-34, 14.34]],
-        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [-34, 17.21]],
-        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [-34, 20.4]],
-      ],
-    },
-    // Greeblis Park NPCs (east)
-    park: {
-      face: -Math.PI / 2,
-      list: [
-        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [34, -12.57]],
-        ["p_rando", "SEEDRIC", "park_rando", {"color": "#5cc86a", "bodyR": 1, "talkR": 3.6}, [34, -6.54]],
-        ["p_poppup", "INTERSTITIA", "park_poppup", {"color": "#7ac84a", "bodyR": 0.8, "talkR": 3.6}, [34, -0.39]],
-        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [34, 6.78]],
-        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [34, 13.02]],
-      ],
-    },
-    // Greeblis Woods (south)
-    woods: {
-      face: Math.PI,
-      list: [
-        ["w_professor", "THE PROFESSOR", "woods_professor", {"color": "#1c2b44", "bodyR": 0.85, "modelScale": 0.77}, [10.0, 31]],
+        ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [-34, -34.11]],
+        ["orbiter", "MALTOE", "born_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "talkR": 4.2}, [-34, -29.22]],
+        ["drifter", "MUSHROOM", "born_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [-34, -24.65]],
+        ["hopper", "PATCHOOLEE", "born_patchoolee", {"color": "#8cc63a", "bodyR": 0.85}, [-34, -20.75]],
+        ["blinker", "ANOMALEE", "anomaleePeg", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2}, [-34, -17.11]],
+        ["slugwerth", "SLUGWERTH", "born_slugwerth", {"color": "#2c5fe0", "bodyR": 0.85}, [-34, -13.82]],
+        ["appterix", "APPTERIX", "born_appterix", {"color": "#d8322a", "bodyR": 0.95}, [-34, -10.37]],
+        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [-34, -6.78]],
+        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [-34, -1.94]],
+        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#2a9ccf", "bodyR": 1.1}, [-34, 2.47]],
+        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [-34, 5.58]],
+        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [-34, 9.01]],
+        ["frog", "FORTIZMO", "fortizmoPick", {"color": "#e8742a", "bodyR": 0.95, "modelScale": 0.78, "talkR": 4.2}, [-34, 13.11]],
+        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [-34, 17.29]],
+        ["p_rando", "SEEDRIC", "park_rando", {"color": "#5cc86a", "bodyR": 1, "talkR": 3.6}, [-34, 21.87]],
+        ["p_poppup", "INTERSTITIA", "park_poppup", {"color": "#7ac84a", "bodyR": 0.8, "talkR": 3.6}, [-34, 26.86]],
+        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [-34, 31.58]],
+        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [-34, 36.03]],
+        ["w_professor", "THE PROFESSOR", "woods_professor", {"color": "#1c2b44", "bodyR": 0.85, "modelScale": 0.77}, [-34, 39.75]],
+        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [-34, 43.31]],
+        ["t_nextessa", "NEXTESSA", "born_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [-34, 46.74]],
       ],
     },
   };
+
 
   // dance-battle text (system unchanged, text is placeholder)
   const battleText = (n) => ({
@@ -14565,6 +14551,11 @@ const JGP = (() => {
     // elevator by the railroad, a schoolhouse, red-barn farmsteads with windmills, wind turbines,
     // and corn, soybean and wheat fields out to the horizon. Static scenery is merged into one
     // mesh per material (a handful of draw calls, no collision).
+    // the square is ZS longer to the south: the south street, its houses and the south corners move
+    // out by ZS, and Main Street stretches by MK to match
+    const ZS = t.parkSouth - t.parkHalf,
+      SZ = 45 + ZS,
+      MK = (74 + ZS) / 74;
     const LOD = window.__jgpMobile ? 0.5 : 1,
       gcache = new Map(),
       cached = (key, mk) => gcache.get(key) || (gcache.set(key, mk()), gcache.get(key));
@@ -14630,7 +14621,7 @@ const JGP = (() => {
         const X = gp.getX(k),
           Z = gp.getZ(k),
           nz = Dt(0.37 * Math.floor(X / 3) + 1.7 * Math.floor(Z / 3));
-        gp.setY(k, Math.abs(X) < 56 && Math.abs(Z) < 56 ? -0.14 : -0.04);
+        gp.setY(k, Math.abs(X) < 56 && Z > -56 && Z < 56 + ZS ? -0.14 : -0.04);
         Math.abs(X) < 140 && Math.abs(Z) < 140 ? cc.copy(cLawn).lerp(cLawn2, nz) : cc.copy(cLane).lerp(cLawn2, 0.35 * nz);
         cc.multiplyScalar(0.94 + 0.12 * nz), (gc[3 * k] = cc.r), (gc[3 * k + 1] = cc.g), (gc[3 * k + 2] = cc.b);
       }
@@ -15729,21 +15720,29 @@ const JGP = (() => {
         [-100, -49],
         [-41, 41],
         [49, 100],
+      ],
+      SEGZ = [
+        [-100, -49],
+        [-41, SZ - 4],
+        [SZ + 4, 100 + ZS],
       ];
-    [-45, 45].forEach((c0) => {
-      put("asphalt", UHs(64, 1), ROAD, S(0, -0.1, c0, 0, 0, 0, 640, 1, 8)), put("asphalt", UHs(1, 64), ROAD, S(c0, -0.101, 0, 0, 0, 0, 8, 1, 640));
-      for (let u = -318; u < 318; u += 9)
-        if (Math.abs(u + 1.5 - 45) > 6 && Math.abs(u + 1.5 + 45) > 6)
-          put("plain", UH, "#e8c030", S(u + 1.5, -0.09, c0, 0, 0, 0, 3, 1, 0.18)), put("plain", UH, "#e8c030", S(c0, -0.09, u + 1.5, 0, 0, 0, 0.18, 1, 3));
+    // streets along x at z = cz (north and south), along z at x = cx (west and east)
+    [
+      [-45, -45],
+      [SZ, 45],
+    ].forEach(([cz, cx]) => {
+      put("asphalt", UHs(64, 1), ROAD, S(0, -0.1, cz, 0, 0, 0, 640, 1, 8)), put("asphalt", UHs(1, 64), ROAD, S(cx, -0.101, 0, 0, 0, 0, 8, 1, 640));
+      for (let u = -318; u < 318; u += 9) {
+        Math.abs(u + 1.5 - 45) > 6 && Math.abs(u + 1.5 + 45) > 6 && put("plain", UH, "#e8c030", S(u + 1.5, -0.09, cz, 0, 0, 0, 3, 1, 0.18));
+        Math.abs(u + 1.5 - SZ) > 6 && Math.abs(u + 1.5 + 45) > 6 && put("plain", UH, "#e8c030", S(cx, -0.09, u + 1.5, 0, 0, 0, 0.18, 1, 3));
+      }
       [-1, 1].forEach((sd) => {
-        SEGS.forEach(([a0, a1]) => {
-          put("concrete", UBs(segs(a1 - a0), 1), WALK, S((a0 + a1) / 2, -0.1, c0 + 5.5 * sd, 0, 0, 0, a1 - a0, 0.2, 3));
-          put("concrete", UBs(1, segs(a1 - a0)), WALK, S(c0 + 5.5 * sd, -0.1, (a0 + a1) / 2, 0, 0, 0, 3, 0.2, a1 - a0));
-        });
+        SEGS.forEach(([a0, a1]) => put("concrete", UBs(segs(a1 - a0), 1), WALK, S((a0 + a1) / 2, -0.1, cz + 5.5 * sd, 0, 0, 0, a1 - a0, 0.2, 3)));
+        SEGZ.forEach(([a0, a1]) => put("concrete", UBs(1, segs(a1 - a0)), WALK, S(cx + 5.5 * sd, -0.1, (a0 + a1) / 2, 0, 0, 0, 3, 0.2, a1 - a0)));
         // gravel shoulders once the road leaves town
         [-1, 1].forEach((dir) => {
-          put("plain", UHs(22, 1), "#a89a7a", S(dir * 210, -0.07, c0 + 4.6 * sd, 0, 0, 0, 220, 1, 1.2));
-          put("plain", UHs(1, 22), "#a89a7a", S(c0 + 4.6 * sd, -0.07, dir * 210, 0, 0, 0, 1.2, 1, 220));
+          put("plain", UHs(22, 1), "#a89a7a", S(dir * 210, -0.07, cz + 4.6 * sd, 0, 0, 0, 220, 1, 1.2));
+          put("plain", UHs(1, 22), "#a89a7a", S(cx + 4.6 * sd, -0.07, dir * 210, 0, 0, 0, 1.2, 1, 220));
         });
       });
     });
@@ -15751,14 +15750,31 @@ const JGP = (() => {
     [-1, 1].forEach((sx) =>
       [-1, 1].forEach((sz) => {
         for (let k = 0; k < 7; k++) {
-          put("plain", UH, "#f2f0ea", S(39.5 * sx, -0.09, sz * (41.5 + k), 0, 0, 0, 3, 1, 0.5));
-          put("plain", UH, "#f2f0ea", S(sx * (41.5 + k), -0.09, 39.5 * sz, 0, 0, 0, 0.5, 1, 3));
+          put("plain", UH, "#f2f0ea", S(39.5 * sx, -0.09, (sz > 0 ? SZ : 45 * sz) + sz * (k - 3.5), 0, 0, 0, 3, 1, 0.5));
+          put("plain", UH, "#f2f0ea", S(sx * (41.5 + k), -0.09, sz > 0 ? SZ - 5.5 : -39.5, 0, 0, 0, 0.5, 1, 3));
         }
       }),
     );
     // mowed stripes on the green
-    for (let k = 0; k < 26; k++) put("lawn", UHs(1, 8), k % 2 ? "#4a7a2c" : "#3f6c26", S(-38 + (k + 0.5) * (76 / 26), -0.02, 0, 0, 0, 0, 76 / 26, 1, 76));
-    // walks: a ring around the garden, four diagonals to the corners, and the walk from the south
+    for (let k = 0; k < 26; k++) put("lawn", UHs(1, 8), k % 2 ? "#4a7a2c" : "#3f6c26", S(-38 + (k + 0.5) * (76 / 26), -0.02, ZS / 2, 0, 0, 0, 76 / 26, 1, 76 + ZS));
+    // walks: a ring around the garden, four diagonals to the corners, and the walk from the south.
+    // DIAG: the diagonal walk toward corner (dx, dz): it leaves the ring at 45 degrees and runs straight
+    // to the fence corner (the south corners are further out since the square was lengthened)
+    const WALKS = [],
+      LINEUP_X = ROWS.lineup.list[0][4][0],
+      DIAG = (dx, dz) => {
+        const r0 = GARDEN_R + 3.2,
+          x0 = (r0 * dx) / Math.SQRT2,
+          z0 = (r0 * dz) / Math.SQRT2,
+          cx = t.parkHalf * dx,
+          cz = dz > 0 ? t.parkSouth : -t.parkHalf * 1,
+          len = Math.hypot(cx - x0, cz - z0);
+        const ux = (cx - x0) / len,
+          uz = (cz - z0) / len,
+          // the west walks stop short of the line-up instead of running through its ends
+          wl = dx < 0 ? (LINEUP_X + 2.6 - x0) / ux : len + 0.53;
+        return { x0, z0, cx, cz, len, ux, uz, wl };
+      };
     put("concrete", cached("ringwalk", () => new THREE.RingGeometry(GARDEN_R + 1.6, GARDEN_R + 3.4, 72).rotateX(-Math.PI / 2)), WALK, S(0, 0.004, 0));
     [
       [1, -1],
@@ -15766,48 +15782,50 @@ const JGP = (() => {
       [-1, 1],
       [-1, -1],
     ].forEach(([dx, dz]) => {
-      const r0 = GARDEN_R + 3.2,
-        r1 = 53.7,
-        rm = (r0 + r1) / 2;
-      put("concrete", UBs(1, segs(r1 - r0)), WALK, S((rm * dx) / Math.SQRT2, -0.05, (rm * dz) / Math.SQRT2, 0, Math.atan2(dx, dz), 0, 2.6, 0.12, r1 - r0));
+      const d = DIAG(dx, dz),
+        len = d.wl,
+        m = [d.x0 + (d.ux * len) / 2, d.z0 + (d.uz * len) / 2];
+      WALKS.push(d), put("concrete", UBs(1, segs(len)), WALK, S(m[0], -0.05, m[1], 0, Math.atan2(d.ux, d.uz), 0, 2.6, 0.12, len));
     });
-    put("concrete", UBs(1, 2), WALK, S(0, -0.05, (GARDEN_R + 3.2 + 38) / 2, 0, 0, 0, 2.6, 0.12, 38 - GARDEN_R - 3.2));
+    put("concrete", UBs(1, 2), WALK, S(0, -0.05, (GARDEN_R + 3.2 + 38 + ZS) / 2, 0, 0, 0, 2.6, 0.12, 38 + ZS - GARDEN_R - 3.2));
 
     // furnishings on the square (kept clear of the line-ups, the stations and the spawn point)
-    [-30, -15, 0, 15, 30].forEach((u) => (lampPost(40.6, u), lampPost(-40.6, u), u && lampPost(u, 40.6), lampPost(u, -40.6)));
+    [-30, -15, 0, 15, 30].forEach((u) => (u && lampPost(u, 40.6 + ZS), lampPost(u, -40.6)));
+    [-30, -15, 0, 15, 30, 45].forEach((u) => (lampPost(40.6, u), lampPost(-40.6, u)));
     [
       [1, -1],
       [1, 1],
       [-1, 1],
     ].forEach(([dx, dz]) => {
-      const ux = dx / Math.SQRT2,
-        uz = dz / Math.SQRT2,
+      const d = DIAG(dx, dz),
+        ux = d.ux,
+        uz = d.uz,
         px = -uz,
         pz = ux;
       [-1, 1].forEach((sd) => {
-        const X = 27 * ux + 2.7 * sd * px,
-          Z = 27 * uz + 2.7 * sd * pz;
+        const X = d.x0 + 8.8 * ux + 2.7 * sd * px,
+          Z = d.z0 + 8.8 * uz + 2.7 * sd * pz;
         bench(X, Z, Math.atan2(-sd * px, -sd * pz)), sd > 0 && trashCan(X + 1.6 * ux, Z + 1.6 * uz);
       });
     });
     gazebo(GAZEBO[0], GAZEBO[1]);
     flowerBed(14, 26, 2.2), flowerBed(-16, 28, 2.2);
     [
-      [-26, 34, 1.25, 1],
-      [22, 34, 1.2, 0],
+      [-26, 34 + ZS, 1.25, 1],
+      [22, 34 + ZS, 1.2, 0],
       [31, -33.5, 1.15, 0],
-      [-31, -33.5, 1.2, 1],
-      [9, 34.5, 0.95, 0],
-      [-12, 34, 1.0, 2],
+      [-17, -34, 1.2, 1],
+      [9, 34.5 + ZS, 0.95, 0],
+      [-12, 34 + ZS, 1.0, 2],
     ].forEach(([X, Z, s, kind]) => (tree(X, Z, s, kind, 2), E.add(X, Z, 1.2 * s, "scenery")));
     // hydrant and a blue mailbox by the south walk
-    put("plain", ucyl(10), "#c8282a", S(3.2, 0.38, 40.2, 0, 0, 0, 0.36, 0.76, 0.36)), put("plain", usph(10, !0), "#c8282a", S(3.2, 0.76, 40.2, 0, 0, 0, 0.36, 0.3, 0.36));
-    put("plain", ucyl(8), "#d8d8dc", S(3.2, 0.5, 40.2, 0, 0, Math.PI / 2, 0.16, 0.6, 0.16)), E.add(3.2, 40.2, 0.5, "scenery");
+    put("plain", ucyl(10), "#c8282a", S(3.2, 0.38, 40.2 + ZS, 0, 0, 0, 0.36, 0.76, 0.36)), put("plain", usph(10, !0), "#c8282a", S(3.2, 0.76, 40.2 + ZS, 0, 0, 0, 0.36, 0.3, 0.36));
+    put("plain", ucyl(8), "#d8d8dc", S(3.2, 0.5, 40.2 + ZS, 0, 0, Math.PI / 2, 0.16, 0.6, 0.16)), E.add(3.2, 40.2 + ZS, 0.5, "scenery");
     {
-      const B = place(-3.2, 40.3, Math.PI);
+      const B = place(-3.2, 40.3 + ZS, Math.PI);
       B.box("plain", "#2a4a8a", 0, 0.75, 0, 0.6, 0.9, 0.5).geo("plain", ucyl(12, 0.5), "#2a4a8a", 0, 1.2, 0, 0.6, 0.5, 0.5, 0, 0, Math.PI / 2);
       [-1, 1].forEach((sx) => [-1, 1].forEach((sz) => B.box("plain", "#1e2226", sx * 0.24, 0.15, sz * 0.2, 0.06, 0.3, 0.06)));
-      E.add(-3.2, 40.3, 0.6, "scenery");
+      E.add(-3.2, 40.3 + ZS, 0.6, "scenery");
     }
     // street-name blades and stop signs at the corners of the square
     [
@@ -15817,7 +15835,7 @@ const JGP = (() => {
       [-1, -1],
     ].forEach(([sx, sz]) => {
       const X = 41.3 * sx,
-        Z = 41.3 * sz;
+        Z = sz > 0 ? 41.3 + ZS : -41.3;
       put("plain", ucyl(6), "#7a8088", S(X, 1.7, Z, 0, 0, 0, 0.1, 3.4, 0.1));
       const B = place(X, Z, 0);
       B.sign(sx > 0 ? "st_main" : "st_oak", 0, 3.25, 0, 1.6, 0.4, Math.PI / 2).sign(sz > 0 ? "st_maple" : "st_elm", 0, 3.55, 0, 1.6, 0.4);
@@ -15836,7 +15854,7 @@ const JGP = (() => {
       [10, 9, (X, Z, w, h) => STORE(X, Z, -Math.PI / 2, w, h, { col: "#d8c8a0", sign: "s_bakery", awn: "aw_pink", front: "#6a3a28", lintel: "#b8a888" })],
       [11, 9.5, (X, Z, w, h) => STORE(X, Z, -Math.PI / 2, w, h, { col: "#a8402c", sign: "s_diner", awn: "aw_red", front: "#7a1a1a", crest: !0 })],
       [11, 8.5, (X, Z, w, h) => STORE(X, Z, -Math.PI / 2, w, h, { col: "#b86a42", sign: "s_books", awn: "aw_yellow", front: "#22325a" })],
-    ].forEach(([w, h, mk]) => (mk(52.6, zc + w / 2, w, h), (zc += w)));
+    ].forEach(([w, h, mk]) => (mk(52.6, zc + (w * MK) / 2, w * MK, h), (zc += w * MK)));
     // Main Street, west side
     zc = -37;
     [
@@ -15847,7 +15865,7 @@ const JGP = (() => {
       [9, 9, (X, Z, w, h) => STORE(X, Z, Math.PI / 2, w, h, { col: "#7a4a34", sign: "s_antiques", front: "#141416", awn: "aw_brown" })],
       [11, 8, (X, Z, w, h) => FRONTIER(X, Z, Math.PI / 2, w, h, { col: "#9a3a2a", sign: "s_feed", front: "#5a2a20", trim: "#f2ece0" })],
       [9, 8.5, (X, Z, w, h) => STORE(X, Z, Math.PI / 2, w, h, { col: "#c4806a", sign: "s_icecream", awn: "aw_pink", front: "#2a6a6a" })],
-    ].forEach(([w, h, mk]) => (mk(-52.6, -(zc + w / 2), w, h), (zc += w)));
+    ].forEach(([w, h, mk]) => (mk(-52.6, ZS - (zc + (w * MK) / 2), w * MK, h), (zc += w * MK)));
     // north: courthouse with a flagpole, church, fire station; a hotel on the corner
     COURTHOUSE(0, -62), CHURCH(-27, -57), FIRE_STATION(29, -58);
     STORE(-70, -55, 0, 14, 12.5, { col: "#8a3a2c", sign: "s_hotel", awn: "aw_green", front: "#2a3a2a", crest: !0 });
@@ -15864,8 +15882,8 @@ const JGP = (() => {
       [66, { col: "#f4f2ea", roof: "#3a4a5a", door: "#2a4a3a", shutter: "#22325a", w: 9 }],
       [84, { col: "#d8b88a", roof: "#4a4a52", door: "#8a2a2a", shutter: "#5a3a24", w: 9 }],
       [-64, { col: "#f0e6c8", roof: "#4a4a52", door: "#2a4a8a", shutter: "#3a5a3a", w: 9 }],
-    ].forEach(([X, o2]) => HOUSE(X, 60, Math.PI, o2));
-    SCHOOL(-82, 60, Math.PI);
+    ].forEach(([X, o2]) => HOUSE(X, 60 + ZS, Math.PI, o2));
+    SCHOOL(-82, 60 + ZS, Math.PI);
     // north-east: the gas station on the corner and the water tower behind it
     GAS_STATION(72, -62), WATER_TOWER(86, -86);
     // Mistergummery's drive-in on the lot between the gas station and the water tower
@@ -15875,25 +15893,26 @@ const JGP = (() => {
     // parked cars: angle parking on Main Street, parallel parking by the courthouse and the houses
     let ck = 0;
     [-37, -33, -29, -25, -21, -17, 18, 22, 26, 30, 34].forEach((Z, k) => {
-      (k % 3 !== 1 || k > 6) && car(46.9, Z, Math.atan2(1, Z < 0 ? 1 : -1) , ck++);
-      k % 2 === 0 && car(-46.9, -Z, Math.atan2(-1, Z < 0 ? -1 : 1), ck++);
+      const Zm = -37 + (Z + 37) * MK;
+      (k % 3 !== 1 || k > 6) && car(46.9, Zm, Math.atan2(1, Z < 0 ? 1 : -1) , ck++);
+      k % 2 === 0 && car(-46.9, ZS - Zm, Math.atan2(-1, Z < 0 ? -1 : 1), ck++);
     });
     [-31, -24, 22, 31].forEach((X) => car(X, -47.8, X < 0 ? Math.PI / 2 : -Math.PI / 2, ck++));
-    [-25, 27].forEach((X) => car(X, 47.8, X < 0 ? -Math.PI / 2 : Math.PI / 2, ck++));
+    [-25, 27].forEach((X) => car(X, 47.8 + ZS, X < 0 ? -Math.PI / 2 : Math.PI / 2, ck++));
     // lamp posts along Main Street's far sidewalks
-    [-32, -16, 0, 16, 32].forEach((Z) => (lampPost(50.6, Z), lampPost(-50.6, Z)));
+    [-32, -16, 0, 16, 32].forEach((Z) => (lampPost(50.6, ZS / 2 + Z * MK), lampPost(-50.6, ZS / 2 + Z * MK)));
 
     // trees behind and between the buildings (kept off the footprints)
     const FOOT = [
-      [52, 68, -38, 38],
-      [-68, -52, -38, 38],
+      [52, 68, -38, 38 + ZS],
+      [-68, -52, -38, 38 + ZS],
       [-16, 16, -84, -54],
       [-35, -19, -82, -52],
       [19, 41, -76, -52],
       [-78, -62, -71, -52],
-      [-40, 108, 52, 72],
-      [-108, -58, 52, 72],
-      [-90, -74, 52, 76],
+      [-40, 108, 52 + ZS, 72 + ZS],
+      [-108, -58, 52 + ZS, 72 + ZS],
+      [-90, -74, 52 + ZS, 76 + ZS],
       [62, 82, -72, -52],
       [78, 94, -94, -78],
       [80, 101, -77, -51],
@@ -15904,7 +15923,7 @@ const JGP = (() => {
     for (let k = 0, placed = 0; k < 900 && placed < 80 * LOD; k++) {
       const X = rr(-100, 100),
         Z = rr(-100, 100);
-      if (Math.max(Math.abs(X), Math.abs(Z)) < 56 || Math.abs(Math.abs(X) - 45) < 8 || Math.abs(Math.abs(Z) - 45) < 8 || blocked(X, Z, 4)) continue;
+      if ((Math.abs(X) < 56 && Z > -56 && Z < 56 + ZS) || Math.abs(Math.abs(X) - 45) < 8 || Math.abs(Z + 45) < 8 || Math.abs(Z - SZ) < 8 || blocked(X, Z, 4)) continue;
       tree(X, Z, rr(0.9, 1.5), rnd() < 0.15 ? 2 : rnd() < 0.5 ? 1 : 0, 1), placed++;
     }
 
@@ -15919,6 +15938,7 @@ const JGP = (() => {
         [106, 190],
         [196, 320],
       ],
+      CELLZ = CELLS.map(([a0, a1], j) => (3 === j ? [a0, a1 + ZS] : 4 === j ? [a0 + ZS, a1] : [a0, a1])),
       FIELD = { corn: "#4a6a28", soy: "#5a8a2e", wheat: "#d0a850", pasture: "#6a9440", plowed: "#7a5a3c" },
       TYPES = ["corn", "soy", "wheat", "corn", "pasture", "plowed", "soy", "corn", "wheat", "soy"],
       fr = srand(31),
@@ -15951,8 +15971,8 @@ const JGP = (() => {
           alongX = fr() < 0.5,
           x0 = CELLS[i][0] + 2,
           x1 = CELLS[i][1] - 2,
-          z0 = CELLS[j][0] + 2,
-          z1 = CELLS[j][1] - 2,
+          z0 = CELLZ[j][0] + 2,
+          z1 = CELLZ[j][1] - 2,
           cx = (x0 + x1) / 2,
           cz = (z0 + z1) / 2;
         put("pasture" === type ? "lawn" : alongX ? "rows" : "rowsZ", UHs(segs(x1 - x0), segs(z1 - z0)), FIELD[type], S(cx, 0.02, cz, 0, 0, 0, x1 - x0, 1, z1 - z0));
@@ -16027,7 +16047,7 @@ const JGP = (() => {
       [0, 1],
       [0, -1],
     ].forEach(([dx, dz]) =>
-      [-45, 45].forEach((c0) => {
+      (dx ? [-45, SZ] : [-45, 45]).forEach((c0) => {
         let prev = null;
         for (let u = 112; u <= 312; u += 40) {
           const X = dx ? dx * u : c0 + 6,
@@ -16051,13 +16071,14 @@ const JGP = (() => {
     // where the south walk meets the sidewalk. It marks the edge of the play area.
     {
       const FH = t.parkHalf,
+        FS = t.parkSouth,
         iron = "#1e2226",
         pillar = (X, Z) => {
           put("brick", UB, "#9a4a36", S(X, 0.65, Z, 0, 0, 0, 0.6, 1.3, 0.6)), put("stone", UB, "#e2d8c2", S(X, 1.35, Z, 0, 0, 0, 0.74, 0.12, 0.74));
           put("plain", usph(10), iron, S(X, 1.52, Z, 0, 0, 0, 0.26, 0.26, 0.26));
         };
-      [-1, 1].forEach((sx) => [-1, 1].forEach((sz) => pillar(sx * FH, sz * FH)));
-      [-1.65, 1.65].forEach((X) => pillar(X, FH));
+      [-1, 1].forEach((sx) => [-FH, FS].forEach((Z) => pillar(sx * FH, Z)));
+      [-1.65, 1.65].forEach((X) => pillar(X, FS));
       // one run of fence from a to b along x (alongX) or z, at the fixed coordinate c
       const run = (a, b2, c, alongX) => {
         const len = b2 - a,
@@ -16067,24 +16088,27 @@ const JGP = (() => {
         for (let u = a + 0.16; u < b2 - 0.08; u += 0.16 / LOD) put("plain", UB, iron, at(u, 0.52, 0.03, 1.04, 0.03));
         for (let u = a + 2.4; u < b2 - 0.5; u += 2.4) put("plain", UB, iron, at(u, 0.6, 0.08, 1.2, 0.08)), put("plain", ucone(4), iron, at(u, 1.27, 0.1, 0.16, 0.1));
       };
-      run(-FH + 0.35, FH - 0.35, -FH, !0), run(-FH + 0.35, FH - 0.35, -FH, !1), run(-FH + 0.35, FH - 0.35, FH, !1);
-      run(-FH + 0.35, -1.95, FH, !0), run(1.95, FH - 0.35, FH, !0);
+      run(-FH + 0.35, FH - 0.35, -FH, !0), run(-FH + 0.35, FS - 0.35, -FH, !1), run(-FH + 0.35, FS - 0.35, FH, !1);
+      run(-FH + 0.35, -1.95, FS, !0), run(1.95, FH - 0.35, FS, !0);
       // the gate: two leaves with a scrolled top rail, latched shut
       [-1, 1].forEach((sd) => {
         const g0 = 1.32 * sd;
-        [0.2, 0.95].forEach((y) => put("plain", UB, iron, S(g0 / 2 + 0.06 * sd, y, FH, 0, 0, 0, 1.3, 0.05, 0.05)));
-        for (let k = 0; k <= 8; k++) put("plain", UB, iron, S(sd * (0.06 + 0.16 * k), 0.58 + 0.04 * Math.sin((k / 8) * Math.PI), FH, 0, 0, 0, 0.03, 1.08 + 0.1 * Math.sin((k / 8) * Math.PI), 0.03));
-        put("plain", cached("gatescroll", () => new THREE.TorusGeometry(0.22, 0.02, 4, 12, Math.PI)), iron, S(0.7 * sd, 1.0, FH));
+        [0.2, 0.95].forEach((y) => put("plain", UB, iron, S(g0 / 2 + 0.06 * sd, y, FS, 0, 0, 0, 1.3, 0.05, 0.05)));
+        for (let k = 0; k <= 8; k++) put("plain", UB, iron, S(sd * (0.06 + 0.16 * k), 0.58 + 0.04 * Math.sin((k / 8) * Math.PI), FS, 0, 0, 0, 0.03, 1.08 + 0.1 * Math.sin((k / 8) * Math.PI), 0.03));
+        put("plain", cached("gatescroll", () => new THREE.TorusGeometry(0.22, 0.02, 4, 12, Math.PI)), iron, S(0.7 * sd, 1.0, FS));
       });
-      put("plain", UB, "#c8a040", S(0, 0.6, FH + 0.04, 0, 0, 0, 0.08, 0.14, 0.06));
+      put("plain", UB, "#c8a040", S(0, 0.6, FS + 0.04, 0, 0, 0, 0.08, 0.14, 0.06));
     }
 
     // ---- kiosks in the other three corners of the square (the General Store has the fourth) ----
     [
-      [24.75, -24.75, JGP_K.post],
-      [24.75, 24.75, JGP_K.garden],
-      [-24.75, 24.75, JGP_K.sheriff],
-    ].forEach(([X, Z, build]) => {
+      [1, -1, JGP_K.post],
+      [1, 1, JGP_K.garden],
+      [-1, 1, JGP_K.sheriff],
+    ].forEach(([dx, dz, build]) => {
+      const d = DIAG(dx, dz),
+        X = d.cx - 18.17 * d.ux,
+        Z = d.cz - 18.17 * d.uz;
       const k0 = new THREE.Group();
       k0.position.set(X, 0, Z), (k0.rotation.y = A(X, Z)), (k0.userData.keepInFinale = !0), C.add(k0), build(k0), H(k0), E.add(X, Z, 4.4, "scenery"), keepAt.push([X, Z]);
     });
@@ -16092,11 +16116,18 @@ const JGP = (() => {
     // ---- the lawn: short tufts, clover and dandelions (off the walks, garden and stations) ------
     const onWalk = (X, Z) => {
       const r = Math.hypot(X, Z);
-      return (r > GARDEN_R + 1.2 && r < GARDEN_R + 3.8) || (Math.abs(X) < 1.8 && Z > 0) || Math.abs(Math.abs(X) - Math.abs(Z)) < 2.6;
+      return (
+        (r > GARDEN_R + 1.2 && r < GARDEN_R + 3.8) ||
+        (Math.abs(X) < 1.8 && Z > 0) ||
+        WALKS.some((d) => {
+          const q = Math.max(0, Math.min(d.wl, (X - d.x0) * d.ux + (Z - d.z0) * d.uz));
+          return Math.hypot(X - d.x0 - q * d.ux, Z - d.z0 - q * d.uz) < 1.85;
+        })
+      );
     };
-    for (let k = 0; k < 1500 * LOD; k++) {
+    for (let k = 0; k < 1750 * LOD; k++) {
       const X = rr(-37.5, 37.5),
-        Z = rr(-37.5, 37.5);
+        Z = rr(-37.5, 37.5 + ZS);
       if (Math.hypot(X, Z) < GARDEN_R + 0.8 || onWalk(X, Z) || keepAt.some(([x0, z0]) => Math.hypot(X - x0, Z - z0) < 3.4)) continue;
       put("plain", tuftGeo(k & 3), ["#5f9a32", "#6faa3a", "#4f8a2a", "#7ab842"][k & 3], S(X, -0.02, Z, 0, rnd() * l, 0, rr(0.8, 1.4), rr(0.8, 1.3), rr(0.8, 1.4)));
       k % 6 || put("plain", flowerGeo, ["#ffffff", "#ffd23a", "#ffffff", "#f4e04a"][k % 4], S(X + 0.12, 0.08, Z, 0, rnd() * l, 0, 0.05, 0.05, 0.05));

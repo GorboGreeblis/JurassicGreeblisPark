@@ -2336,13 +2336,9 @@ function Se() {
     });
 }
 function gcDanceKey(t) {
-  return t
-    ? t.def && "kingdino" === t.def.__type
-      ? "kingdino"
-      : "gratelet" === t.id || "sparky" === t.id
-        ? t.id
-        : null
-    : null;
+  // only creatures given a battle menu in JGP.BATTLES battle (none for now)
+  if (!t || !JGP.BATTLES[t.id]) return null;
+  return t.def && "kingdino" === t.def.__type ? "kingdino" : t.id;
 }
 const Pe = (() => {
     let t = null,
@@ -7486,7 +7482,7 @@ function te(t, e) {
       (function (t) {
         const e = gcDanceKey(t),
           o = (function (t) {
-            return t
+            return t && !JGP.NO_QUESTS
               ? !t.def || ("cutebex" !== t.def.__type && "orson" !== t.def.__type)
                 ? "slugwerth" === t.id
                   ? "slugwerth"
@@ -7539,7 +7535,7 @@ function te(t, e) {
     (n = o.lines[e % o.lines.length]), (Kt.talkState[t] = e + 1);
   }
   let r =
-    e && "drifter" === a && !JGP.FREEZE_NPCS
+    e && "drifter" === a && !JGP.FREEZE_NPCS && !JGP.NO_QUESTS
       ? () =>
           (function (t) {
             if (!t || t.gcOut || me.active) return;
@@ -11596,47 +11592,39 @@ const JGP = (() => {
     city: {
       face: 0,
       list: [
-        ["frog", "FORTIZMO", "fortizmoPick", {"color": "#e8742a", "bodyR": 0.95, "modelScale": 0.78, "talkR": 4.2}, [-3.9, -21]],
-        ["wanderer", "CHERUBI", "city_cherubi", {"color": "#6a54b4", "bodyR": 0.95}, [0.3, -21]],
-        ["kingdino", "SUNNY", "city_sunny", {"bodyR": 1.1, "modelScale": 0.82}, [3.9, -21]],
+        ["frog", "FORTIZMO", "fortizmoPick", {"color": "#e8742a", "bodyR": 0.95, "modelScale": 0.78, "talkR": 4.2}, [0, -21]],
         // for testing: the shopkeeper's and the pizza courier's models in the line-up
-        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [-8.2, -21]],
-        ["t_nextessa", "NEXTESSA", "born_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [8.2, -21]],
+        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [-4.6, -21]],
+        ["t_nextessa", "NEXTESSA", "born_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [4.6, -21]],
       ],
     },
     // same-named and requested merges across games (west)
     merged: {
       face: Math.PI / 2,
       list: [
-        ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [-34, -20.11]],
-        ["orbiter", "MALTOE", "born_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "talkR": 4.2}, [-34, -15.73]],
-        ["drifter", "MUSHROOM", "born_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [-34, -11.76]],
-        ["hopper", "PATCHOOLEE", "born_patchoolee", {"color": "#8cc63a", "bodyR": 0.85}, [-34, -8.32]],
-        ["blinker", "ANOMALEE", "anomaleePeg", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2}, [-34, -5.22]],
-        ["slugwerth", "SLUGWERTH", "born_slugwerth", {"color": "#2c5fe0", "bodyR": 0.85}, [-34, -2.46]],
-        ["appterix", "APPTERIX", "born_appterix", {"color": "#d8322a", "bodyR": 0.95}, [-34, 0.41]],
-        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [-34, 3.46]],
-        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [-34, 7.82]],
-        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#2a9ccf", "bodyR": 1.1}, [-34, 11.71]],
-        ["mont", "SIRGUMMERY", "born_sirgummery", {"color": "#3edce6", "bodyR": 0.9}, [-34, 14.86]],
-        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [-34, 17.62]],
-        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [-34, 20.53]],
+        ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [-34, -20.07]],
+        ["orbiter", "MALTOE", "born_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "talkR": 4.2}, [-34, -15.5]],
+        ["drifter", "MUSHROOM", "born_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [-34, -11.31]],
+        ["hopper", "PATCHOOLEE", "born_patchoolee", {"color": "#8cc63a", "bodyR": 0.85}, [-34, -7.49]],
+        ["blinker", "ANOMALEE", "anomaleePeg", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2}, [-34, -4.1]],
+        ["slugwerth", "SLUGWERTH", "born_slugwerth", {"color": "#2c5fe0", "bodyR": 0.85}, [-34, -1.05]],
+        ["appterix", "APPTERIX", "born_appterix", {"color": "#d8322a", "bodyR": 0.95}, [-34, 2.2]],
+        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [-34, 5.59]],
+        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [-34, 10.13]],
+        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#2a9ccf", "bodyR": 1.1}, [-34, 14.34]],
+        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [-34, 17.21]],
+        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [-34, 20.4]],
       ],
     },
     // Greeblis Park NPCs (east)
     park: {
       face: -Math.PI / 2,
       list: [
-        ["p_chainy", "IMMUTO", "park_chainy", {"color": "#e8862a", "bodyR": 1.1, "talkR": 3.6}, [34, -18.95]],
-        ["p_minty", "SEALIO", "park_minty", {"color": "#7ee0b8", "bodyR": 1, "talkR": 3.6}, [34, -14.35]],
-        ["p_barsy", "DECIBELLE", "park_barsy", {"color": "#8e5ae8", "bodyR": 1, "talkR": 3.6}, [34, -10.75]],
-        ["p_rando", "SEEDRIC", "park_rando", {"color": "#5cc86a", "bodyR": 1, "talkR": 3.6}, [34, -7.7]],
-        ["p_poppup", "INTERSTITIA", "park_poppup", {"color": "#7ac84a", "bodyR": 0.8, "talkR": 3.6}, [34, -4.05]],
-        ["p_runie", "ETCHELON", "park_runie", {"color": "#d0a23a", "bodyR": 0.9, "talkR": 3.6}, [34, 0.15]],
-        ["p_zorto", "ZORTO", "park_zorto", {"color": "#9a9ae8", "bodyR": 0.9, "talkR": 3.6}, [34, 4.35]],
-        ["p_gemwing", "GEMWING", "park_gemwing", {"color": "#c83aa0", "bodyR": 1, "talkR": 3.6}, [34, 8.6]],
-        ["p_peekay", "AURAMEL", "park_peekay", {"color": "#e87a8a", "bodyR": 1, "talkR": 3.6}, [34, 13.55]],
-        ["p_ripplz", "GIGGLYPH", "park_ripplz", {"color": "#3aa8d8", "bodyR": 0.9, "talkR": 3.6}, [34, 18.95]],
+        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [34, -12.57]],
+        ["p_rando", "SEEDRIC", "park_rando", {"color": "#5cc86a", "bodyR": 1, "talkR": 3.6}, [34, -6.54]],
+        ["p_poppup", "INTERSTITIA", "park_poppup", {"color": "#7ac84a", "bodyR": 0.8, "talkR": 3.6}, [34, -0.39]],
+        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [34, 6.78]],
+        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [34, 13.02]],
       ],
     },
     // Greeblis Woods (south)
@@ -11666,7 +11654,12 @@ const JGP = (() => {
     win: "Placeholder win line",
     doneLabel: "PLACEHOLDER DONE",
   });
-  const BATTLES = { kingdino: battleText(1), gratelet: battleText(2), sparky: battleText(3) };
+  // The three battle menus are kept here, ready to hand to whichever creatures get battles again:
+  // add entries to BATTLES as id: BATTLE_MENUS[n] (e.g. gratelet: BATTLE_MENUS[2]). For now nobody
+  // battles and nobody hands out quest items; every creature has the same Talk and Blossom options.
+  const BATTLE_MENUS = { 1: battleText(1), 2: battleText(2), 3: battleText(3) },
+    BATTLES = {},
+    NO_QUESTS = !0;
 
   // ---- model detail toolkit ---------------------------------------------------
   // Shared by every hand-built creature: procedural surfaces (colour + bump map),
@@ -12237,6 +12230,19 @@ const JGP = (() => {
   const BORN = {};
   const _v2 = (pts) => pts.map(([r, y]) => new THREE.Vector2(Math.max(1e-4, r), y));
   const latheGeo = (pts, seg = 32, a0, len) => new THREE.LatheGeometry(_v2(pts), seg, a0, len);
+  // a lathe profile smoothed through its points (no flat bands between widely spaced points)
+  const smoothProfile = (pts, n = 56) => {
+    const sp = new THREE.CatmullRomCurve3(pts.map(([r, y]) => new THREE.Vector3(r, y, 0)), !1, "centripetal");
+    return sp.getPoints(n).map((v, k, a) => [k === 0 || k === a.length - 1 ? pts[k ? pts.length - 1 : 0][0] : Math.max(0, v.x), v.y]);
+  };
+  // the radius of a lathe profile at height y
+  const profileR = (pts, y) => {
+    for (let k = 1; k < pts.length; k++) {
+      const [r0, y0] = pts[k - 1], [r1, y1] = pts[k];
+      if ((y - y0) * (y - y1) <= 0 && y0 !== y1) return r0 + ((r1 - r0) * (y - y0)) / (y1 - y0);
+    }
+    return 0;
+  };
   // bake a colour gradient along one axis into a geometry (used with gradMat)
   function gradient(geo, stops, axis = "y") {
     const p = geo.attributes.position,
@@ -12411,7 +12417,9 @@ const JGP = (() => {
   // REVEREND SPARK's long snout and tall ears, the sleepy yellow eyes REVEREND SPARK and SPARKY share,
   // his black collar with the orange APR coin he and SPARKAKUS both wear, SPARKY's cream chest ruff
   // and gold sunflower shoulders, and a long tail ending in a star with the wifi arcs of REVEREND
-  // SPARK's and SPARKY's tails.
+  // SPARK's and SPARKY's tails. IMMUTO (Greeblis Park) joined later: his orange shows as a warm
+  // saddle and socks, his boxy muzzle replaces the long snout, and his ball-tipped antenna tail
+  // now carries the star.
   BORN.sparkstar = (g) => {
     const fur = KIT.surf("fur", "#2a9ccf", { rep: 3, bump: 0.035, shine: 18 }),
       cream = KIT.surf("fur", "#f3ead2", { rep: 3, bump: 0.03, shine: 15 }),
@@ -12423,7 +12431,14 @@ const JGP = (() => {
     R(T.sphere(1, 22, 16), fur, body, [0, 0.08, 0.6], null, [0.64, 0.64, 0.56]);
     R(T.sphere(1, 22, 16), fur, body, [0, 0.03, -0.6], null, [0.68, 0.62, 0.56]);
     R(T.sphere(1, 22, 16), cream, body, [0, -0.3, 0.12], null, [0.56, 0.4, 0.86]);
-    // SPARKY's cream ruff on the chest
+    // IMMUTO's orange as a warm saddle and patches
+    const orange = KIT.surf("fur", "#e8862a", { rep: 3, bump: 0.03, shine: 20 });
+    R(new THREE.SphereGeometry(1, 30, 8, 0, l, 0, 0.62), orange, body, [0, 0.004, -0.06], null, [0.795, 0.735, 1.07]);
+    [
+      [[0.7, 0.35, -0.45], [0.26, 0.22, 0.05]],
+      [[-0.72, 0.3, 0.1], [0.22, 0.2, 0.05]],
+      [[-0.6, 0.55, -0.62], [0.2, 0.18, 0.05]],
+    ].forEach(([dir, sc]) => onEllipsoid(body, T.sphere(1, 16, 10), orange, [0, 0, 0], [0.78, 0.72, 1.05], dir, sc, 0.985));
     for (let k = 0; k < 11; k++) {
       const a = -1.1 + (2.2 * k) / 10;
       R(T.sphere(1, 10, 8), cream, body, [0.5 * Math.sin(a), 0.32 - 0.22 * Math.abs(Math.sin(a)) - 0.1 * (k % 2), 0.95 + 0.06 * Math.cos(a)], [0.25, a * 0.8, -a * 0.5], [0.12, 0.26, 0.06]);
@@ -12444,15 +12459,15 @@ const JGP = (() => {
       [0.42, -0.32, 0.55, 1.2],
       [-0.44, -0.28, -0.6, 1.5],
       [0.44, -0.28, -0.6, 1.5],
-    ].map(([lx, ly, lz, th]) => KIT.leg(body, [lx, ly, lz], { len: 0.7, r: 0.16, mat: fur, thigh: th, foot: "paw", footMat: fur }));
+    ].map(([lx, ly, lz, th]) => KIT.leg(body, [lx, ly, lz], { len: 0.7, r: 0.16, mat: fur, thigh: th, foot: "paw", footMat: orange }));
     // head: REVEREND SPARK's long snout and tall ears, sleepy yellow eyes
     const head = new THREE.Group();
     head.position.set(0, 0.62, 0.98), body.add(head);
     R(T.sphere(1, 22, 16), fur, head, [0, 0, 0], null, [0.42, 0.4, 0.44]);
-    R(T.cyl(0.14, 0.23, 0.56, 14), fur, head, [0, -0.08, 0.46], [Math.PI / 2, 0, 0]);
-    R(T.sphere(1, 14, 10), cream, head, [0, -0.2, 0.42], null, [0.17, 0.1, 0.3]);
-    R(T.sphere(0.09, 12, 8), dark, head, [0, -0.04, 0.75]);
-    KIT.mouth(head, [0, -0.22, 0.62], 0.08);
+    // IMMUTO's boxy muzzle in his orange, with a cream chin
+    R(T.box(0.36, 0.26, 0.44), orange, head, [0, -0.1, 0.42]), R(T.box(0.37, 0.05, 0.45), cream, head, [0, -0.22, 0.42]);
+    R(T.sphere(0.09, 12, 8), dark, head, [0, -0.01, 0.66]);
+    KIT.mouth(head, [0, -0.17, 0.645], 0.08);
     const lids = [];
     [-1, 1].forEach((sx) => {
       const e = KIT.eye(head, [0.17 * sx, 0.1, 0.33], 0.085, { iris: "#f2c21a", lid: "#2a9ccf", open: -0.02, rot: [0, 0.25 * sx, 0] });
@@ -12486,12 +12501,13 @@ const JGP = (() => {
         }
         return R(T.sphere(0.09, 10, 8), x.clay("#c87a10", { shininess: 40 }), fl, [0, 0, 0.02], null, [1, 1, 0.5]), fl;
       });
-    // long tail ending in a star, with wifi arcs
+    // IMMUTO's antenna tail: a stiff orange rod with his ball, carrying the star and wifi arcs
     const tail = new THREE.Group();
     tail.position.set(0, 0.2, -1.0), body.add(tail);
-    R(ao([[0, 0, 0], [0, 0.18, -0.45], [0, 0.55, -0.8], [0, 1.0, -0.95]], 0.13, 0.045, 20, 8), fur, tail);
+    R(ao([[0, 0, 0], [0, 0.16, -0.32], [0, 0.42, -0.55], [0, 0.95, -0.72]], 0.13, 0.05, 16, 8), fur, tail);
+    R(T.cyl(0.045, 0.045, 0.3, 8), orange, tail, [0, 1.08, -0.75], [-0.3, 0, 0]), R(T.sphere(0.12, 14, 10), orange, tail, [0, 1.24, -0.8]);
     const tip = new THREE.Group();
-    tip.position.set(0, 1.08, -0.98), tail.add(tip);
+    tip.position.set(0, 1.45, -0.82), tail.add(tip);
     R(starGeo(), gold, tip, [0, 0, 0], [0, Math.PI / 2, 0], 0.2);
     [0.16, 0.25].forEach((r, k) => R(T.torus(r, 0.022, 6, 14, 1.4), x.clay(k ? "#ff6ab0" : "#3ae0d0", { shininess: 40 }), tip, [0, 0.05, 0], [0, Math.PI / 2, Math.PI / 2 - 0.7]));
     return born(g, {
@@ -13421,6 +13437,220 @@ const JGP = (() => {
       },
     });
   };
+  // ETCHER = SEALIO + ETCHELON (Greeblis Park).
+  // ETCHELON's stacked three-bump body, shading from SEALIO's mint at the bottom up to ETCHELON's gold
+  // head; ETCHELON's curly antenna and orange "R" shield; ETCHELON's silver ring worn as a belt;
+  // SEALIO's silver struts with cyan spikes as a tripod of legs. SEALIO's floating cards and
+  // ETCHELON's power icons became one card he holds up (the power icon in SEALIO's pink frame) and an
+  // etching stylus in his other flipper.
+  BORN.etcher = (g) => {
+    const root = new THREE.Group(),
+      body = new THREE.Group(),
+      etchP = smoothProfile([[0, 0.24], [0.48, 0.32], [0.7, 0.6], [0.73, 0.95], [0.62, 1.3], [0.44, 1.45], [0.5, 1.6], [0.54, 1.8], [0.46, 2.02], [0.32, 2.12], [0.4, 2.22], [0.44, 2.42], [0.37, 2.66], [0.18, 2.8], [0, 2.83]], 90);
+    g.add(root), root.add(body);
+    keepR(
+      gradient(
+        latheGeo(etchP, 44),
+        [[0.3, "#6ad8b0"], [1.2, "#9ee09a"], [1.9, "#d4cc5a"], [2.8, "#eebf34"]],
+      ),
+      gradMat("plastic", { rep: 2, bump: 0.006, shine: 80 }),
+      body,
+    );
+    const silver = x.clay("#c8ccd4", { shininess: 120, specular: 16777215 }),
+      cyan = x.clay("#3ae0e8", { shininess: 90 });
+    // ETCHELON's ring as a belt, SEALIO's struts as a tripod with spiked feet
+    R(T.torus(0.74, 0.07, 10, 36), silver, body, [0, 0.95, 0], [Math.PI / 2, 0, 0]);
+    [Math.PI / 2 + 0.5, Math.PI / 2 - 0.5 + Math.PI, -0.05].forEach((a) => {
+      const c = Math.cos(a),
+        sn = Math.sin(a);
+      R(ao([[0.32 * c, 0.5, 0.32 * sn], [0.7 * c, 0.3, 0.7 * sn], [1.0 * c, 0.08, 1.0 * sn]], 0.07, 0.06, 10, 8), silver, root);
+      R(T.cone(0.07, 0.22, 8), cyan, root, [1.08 * c, 0.06, 1.08 * sn], [0, 0, 0]).quaternion.setFromUnitVectors(new c0(0, 1, 0), new c0(c, -0.25, sn).normalize());
+    });
+    // face, curly antenna with a bulb
+    const head = new THREE.Group();
+    head.position.y = 2.45, body.add(head);
+    const onHead = (px, py, out = 0) => Math.sqrt(Math.max(0, profileR(etchP, 2.45 + py) ** 2 - px * px)) + out;
+    const lids = [-1, 1].map((sx) => KIT.eye(head, [0.16 * sx, 0.06, onHead(0.16, 0.06, -0.03)], 0.095, { iris: "#1a1a20", lid: "#eebf34", open: -0.3, rot: [0, 0.38 * sx, 0] }).lid);
+    KIT.mouth(head, [0, -0.12, onHead(0, -0.12, -0.01)], 0.08);
+    const ant = new THREE.Group();
+    ant.position.set(0.05, 0.36, 0), head.add(ant);
+    R(ao([[0, 0, 0], [0.05, 0.2, 0], [0.18, 0.34, 0.02], [0.28, 0.3, 0.04], [0.26, 0.2, 0.05]], 0.03, 0.022, 16, 6), x.clay("#d8a82a", { shininess: 60 }), ant);
+    R(T.sphere(0.07, 12, 10), x.clay("#ffe27a", { shininess: 80, emissive: "#6a4a00" }), ant, [0.25, 0.16, 0.05]);
+    // ETCHELON's orange "R" shield on the chest
+    const shield = new THREE.Shape();
+    shield.moveTo(-0.2, 0.18), shield.lineTo(0.2, 0.18), shield.lineTo(0.2, -0.02), shield.quadraticCurveTo(0.18, -0.16, 0, -0.24), shield.quadraticCurveTo(-0.18, -0.16, -0.2, -0.02), shield.lineTo(-0.2, 0.18);
+    const sg = new THREE.Group();
+    sg.position.set(0, 1.82, 0.52), (sg.rotation.x = -0.12), body.add(sg);
+    R(new THREE.ExtrudeGeometry(shield, { depth: 0.03, bevelEnabled: !1 }), x.clay("#f08a1e", { shininess: 60 }), sg);
+    const rTex = b(64, 64, (c) => {
+      (c.fillStyle = "#c83a1a"), (c.font = "bold 50px sans-serif"), (c.textAlign = "center"), (c.textBaseline = "middle"), c.fillText("R", 32, 34);
+    });
+    R(new THREE.PlaneGeometry(0.26, 0.26), new THREE.MeshBasicMaterial({ map: rTex, transparent: !0 }), sg, [0, -0.01, 0.035]);
+    // flippers: one holds the card, the other the etching stylus
+    const card = b(96, 128, (c) => {
+      (c.fillStyle = "#e050b8"), c.fillRect(0, 0, 96, 128), (c.fillStyle = "#f8f4ff"), c.fillRect(8, 8, 80, 112);
+      (c.fillStyle = "#8a3ae8"), c.fillRect(20, 36, 56, 56), (c.strokeStyle = "#ffd23a"), (c.lineWidth = 7), c.beginPath(), c.arc(48, 66, 17, -1.1, 4.25), c.stroke();
+      c.beginPath(), c.moveTo(48, 44), c.lineTo(48, 64), c.stroke();
+    });
+    const flips = [-1, 1].map((sx) => {
+      const f = new THREE.Group();
+      f.position.set(0.66 * sx, 1.15, 0.12), (f.rotation.z = -0.5 * sx), body.add(f);
+      R(T.sphere(1, 14, 10), x.clay("#7ee0b8", { shininess: 80 }), f, [0.12 * sx, -0.12, 0], null, [0.11, 0.26, 0.1]);
+      return f;
+    });
+    const held = new THREE.Group();
+    held.position.set(-0.2, -0.32, 0.3), held.rotation.set(0, 0.35, 0.5), flips[0].add(held);
+    R(T.box(0.52, 0.68, 0.02), x.world(16777215, { map: card }), held, [0, 0.3, 0]);
+    const pen = new THREE.Group();
+    pen.position.set(0.22, -0.36, 0.1), (pen.rotation.set(0.4, 0, -0.2)), flips[1].add(pen);
+    R(T.cyl(0.028, 0.028, 0.42, 10), silver, pen, [0, 0.12, 0]), R(T.cone(0.028, 0.12, 10), x.clay("#3a3a40"), pen, [0, -0.15, 0], [Math.PI, 0, 0]), R(T.cyl(0.032, 0.032, 0.06, 10), cyan, pen, [0, 0.35, 0]);
+    return born(g, {
+      height: 3.0,
+      lids,
+      step(t, dt, tk) {
+        (body.position.y = 0.025 * Math.sin(2 * t)), (head.rotation.z = 0.06 * Math.sin(1.2 * t)), (ant.rotation.z = 0.15 * Math.sin(2.6 * t));
+        (flips[0].rotation.x = -0.15 + 0.12 * Math.sin(1.4 * t)), (flips[1].rotation.x = 0.25 * Math.sin(3 * t)), (pen.rotation.z = -0.2 + 0.15 * Math.sin(6 * t));
+      },
+    });
+  };
+
+  // GEMTOE = ZORTO + GEMWING (Greeblis Park).
+  // ZORTO's egg body blushing from his lavender up into GEMWING's magenta, ZORTO's purple ring belt
+  // and white cloud collar; GEMWING's spikes on the crown and a fan of petals that spins like ZORTO's
+  // propeller; GEMWING's long purple loop legs ending in big green gem toes, each set in one of
+  // GEMWING's silver rings (ZORTO's lime ball became the lime one).
+  BORN.gemtoe = (g) => {
+    const root = new THREE.Group(),
+      body = new THREE.Group(),
+      gemP = smoothProfile([[0, 1.12], [0.4, 1.2], [0.57, 1.5], [0.62, 1.9], [0.56, 2.3], [0.4, 2.6], [0.2, 2.76], [0, 2.79]], 60),
+      onEgg = (px, y, out = 0) => Math.sqrt(Math.max(0, profileR(gemP, y) ** 2 - px * px)) + out;
+    g.add(root), root.add(body);
+    keepR(
+      gradient(latheGeo(gemP, 44), [[1.2, "#a8a0ec"], [1.85, "#c870d0"], [2.7, "#ec3aa8"]]),
+      gradMat("plastic", { rep: 2, bump: 0.006, shine: 80 }),
+      body,
+    );
+    const purple = x.clay("#5a2a9a", { shininess: 60 });
+    R(T.torus(0.58, 0.07, 10, 36), x.clay("#8a3ae8", { shininess: 60 }), body, [0, 1.42, 0], [Math.PI / 2, 0, 0]);
+    // white cloud collar under the face
+    [[0, 0.5], [-0.28, 0.42], [0.28, 0.42], [-0.45, 0.2], [0.45, 0.2]].forEach(([px, pz], k) => R(T.sphere(1, 14, 10), x.clay("#f8f6ff", { shininess: 50 }), body, [px, 1.55 + 0.03 * k, pz], null, [0.2, 0.15, 0.17]));
+    // face
+    const lids = [-1, 1].map((sx) => KIT.eye(body, [0.2 * sx, 2.16, onEgg(0.2, 2.16, -0.04)], 0.125, { iris: "#c8202a", lid: "#d060c0", open: -0.25, rot: [0, 0.36 * sx, 0] }).lid);
+    KIT.mouth(body, [0, 1.9, onEgg(0, 1.9, -0.01)], 0.1);
+    // gem-pink cheeks
+    [-1, 1].forEach((sx) => R(T.sphere(1, 12, 8), x.clay("#ff7ac8", { shininess: 30 }), body, [0.36 * sx, 1.97, onEgg(0.36, 1.97, -0.035)], [0, 0.6 * sx, 0], [0.09, 0.055, 0.04]));
+    // crown: GEMWING's spikes and the spinning petal fan
+    [-0.2, 0, 0.2].forEach((px, k) => R(T.cone(0.07, 0.3 - 0.06 * Math.abs(k - 1), 8), x.clay("#d82a98", { shininess: 60 }), body, [px, 2.82, -0.04 * k], [0, 0, -px]));
+    const fan = new THREE.Group();
+    fan.position.y = 2.88, body.add(fan);
+    for (let k = 0; k < 6; k++) {
+      const a = (k / 6) * l,
+        pg = new THREE.Group();
+      (pg.rotation.y = a), fan.add(pg);
+      R(T.sphere(1, 14, 8), x.clay(k % 2 ? "#a8a0ec" : "#f06ac8", { shininess: 50 }), pg, [0.55, 0.22, 0], [0, 0, 0.35], [0.55, 0.06, 0.16]);
+    }
+    R(T.sphere(0.09, 10, 8), purple, fan, [0, 0.12, 0]);
+    // loop legs ending in gem toes set in silver rings
+    const gemCols = ["#2ae070", "#2ad86a", "#c8f040", "#3aea80"],
+      toes = [];
+    for (let k = 0; k < 4; k++) {
+      const a = Math.PI / 4 + (k * Math.PI) / 2,
+        c = Math.cos(a),
+        sn = Math.sin(a),
+        P = (r, y) => [r * c, y, r * sn];
+      R(ao([P(0.3, 1.2), P(0.75, 0.95), P(1.15, 0.45), P(1.35, 0.15), P(1.6, 0.12), P(1.7, 0.3), P(1.5, 0.42), P(1.3, 0.3)], 0.08, 0.07, 30, 8), purple, root);
+      const toe = new THREE.Group();
+      toe.position.set(1.85 * c, 0.2, 1.85 * sn), root.add(toe), toes.push(toe);
+      R(T.torus(0.2, 0.04, 8, 20), x.clay("#d8dce0", { shininess: 120, specular: 16777215 }), toe, [0, -0.1, 0], [Math.PI / 2, 0, 0]);
+      R(new THREE.OctahedronGeometry(0.22, 0), x.clay(gemCols[k], { shininess: 140, specular: 16777215 }), toe, [0, 0.06, 0], [0, a, 0], [1, 1.3, 1]);
+      R(ao([P(1.62, 0.13), P(1.78, 0.14)], 0.06, 0.05, 4, 6), purple, root);
+    }
+    return born(g, {
+      height: 3.3,
+      lids,
+      step(t, dt, tk) {
+        (fan.rotation.y = 0.9 * t), (body.position.y = 0.04 * Math.sin(1.6 * t)), (body.rotation.z = 0.03 * Math.sin(1.1 * t));
+        toes.forEach((to, k) => (to.rotation.y = 0.5 * t + k));
+      },
+    });
+  };
+
+  // GLYPH = AURAMEL + GIGGLYPH (Greeblis Park).
+  // AURAMEL's capsule body and round head, cyan below like GIGGLYPH and warming to AURAMEL's salmon
+  // above; GIGGLYPH's toothy grin, back spines and tail; AURAMEL's orange crown spikes, cyan dot
+  // eyes, belly ribs and white feet; GIGGLYPH's floating tiles and AURAMEL's PK panels became
+  // carved glyph tiles set into his back and belly, and AURAMEL's bead trail is his necklace.
+  BORN.glyph = (g) => {
+    const root = new THREE.Group(),
+      body = new THREE.Group();
+    g.add(root), root.add(body);
+    const gm = gradMat("plastic", { rep: 2, bump: 0.006, shine: 70 });
+    const glyP = smoothProfile([[0, 0.3], [0.46, 0.38], [0.64, 0.8], [0.68, 1.3], [0.6, 1.78], [0.42, 2.02], [0, 2.08]], 56);
+    keepR(gradient(latheGeo(glyP, 44), [[0.3, "#3aa8d8"], [1.1, "#78a8c8"], [1.9, "#e88a8a"]]), gm, body);
+    const head = new THREE.Group();
+    head.position.y = 2.42, body.add(head);
+    keepR(gradient(new THREE.SphereGeometry(0.5, 28, 20), [[-0.5, "#e88a8a"], [0.5, "#f0a0a0"]]), gm, head);
+    // GIGGLYPH's toothy grin
+    R(T.box(0.42, 0.16, 0.12), x.clay("#141418", { shininess: 30 }), head, [0, -0.12, 0.42], [-0.15, 0, 0]);
+    for (let k = 0; k < 5; k++) R(T.box(0.06, 0.07, 0.04), x.clay("#fbf8f0", { shininess: 60 }), head, [-0.16 + 0.08 * k, -0.075, 0.48], [-0.15, 0, 0]);
+    [-0.08, 0.08].forEach((px) => R(T.box(0.06, 0.06, 0.04), x.clay("#fbf8f0", { shininess: 60 }), head, [px, -0.17, 0.47], [-0.15, 0, 0]));
+    const lids = [-1, 1].map((sx) => KIT.eye(head, [0.18 * sx, 0.12, 0.4], 0.08, { iris: "#2ac8e0", lid: "#f0a0a0", open: -0.3, rot: [0, 0.35 * sx, 0] }).lid);
+    // AURAMEL's orange crown, GIGGLYPH's cyan spines down the back of the head
+    [-0.13, 0, 0.13].forEach((px, k) => R(T.cone(0.07, 0.36 - 0.08 * Math.abs(k - 1), 8), x.clay("#f8a020", { shininess: 60 }), head, [px, 0.55, 0.02], [0, 0, -1.2 * px]));
+    for (let k = 0; k < 4; k++) R(T.cone(0.06, 0.2, 6), x.clay("#3ad8e8", { shininess: 60 }), head, [0, 0.36 - 0.17 * k, -0.4 - 0.05 * k], [-1.0 - 0.15 * k, 0, 0]);
+    // bead necklace
+    for (let k = 0; k < 18; k++) {
+      const a = (k / 18) * l;
+      R(T.sphere(0.055, 10, 8), x.clay(k % 2 ? "#ff7ab8" : "#3ae0e8", { shininess: 80 }), body, [0.44 * Math.sin(a), 1.98 - 0.05 * Math.cos(a), 0.4 * Math.cos(a)]);
+    }
+    // belly: AURAMEL's white ribs on GIGGLYPH's tan patch, with a carved glyph tile
+    R(T.sphere(1, 18, 14), x.clay("#e0c08a", { shininess: 30 }), body, [0, 0.82, 0.34], null, [0.4, 0.38, 0.34]);
+    for (let k = 0; k < 4; k++) R(T.torus(0.685 - 0.012 * k, 0.022, 5, 24, 1.3), x.clay("#ffffff", { shininess: 40 }), body, [0, 1.22 + 0.15 * k, 0], [Math.PI / 2, 0, Math.PI / 2 - 0.65]);
+    const glyphTex = (seed) =>
+      b(64, 64, (c) => {
+        (c.fillStyle = "#f2c84a"), c.fillRect(0, 0, 64, 64), (c.fillStyle = "#c88a1a"), c.fillRect(0, 56, 64, 8), c.fillRect(56, 0, 8, 64);
+        (c.strokeStyle = "#5a3a10"), (c.lineWidth = 5), (c.lineCap = "round"), c.beginPath();
+        const r2 = srand(seed);
+        let px = 14 + 36 * r2(),
+          py = 14 + 36 * r2();
+        c.moveTo(px, py);
+        for (let k = 0; k < 4; k++) (px = 12 + 40 * r2()), (py = 12 + 40 * r2()), c.lineTo(px, py);
+        c.stroke(), c.beginPath(), c.arc(14 + 36 * r2(), 14 + 36 * r2(), 6, 0, l), c.stroke();
+      });
+    const tile = (parent, pos, rot, seed, s = 0.26) => {
+      const tg = new THREE.Group();
+      tg.position.set(...pos), tg.rotation.set(...rot), parent.add(tg);
+      R(T.box(s, s, 0.05), x.clay("#c88a1a", { shininess: 40 }), tg), R(new THREE.PlaneGeometry(0.92 * s, 0.92 * s), x.world(16777215, { map: glyphTex(seed) }), tg, [0, 0, 0.026]);
+    };
+    tile(body, [0, 0.8, 0.68], [-0.15, 0, 0.1], 5, 0.26);
+    // glyph tiles set down the back like plates
+    for (let k = 0; k < 5; k++) {
+      const yy = 1.85 - 0.3 * k,
+        rr = profileR(glyP, yy) + 0.015,
+        slope = Math.atan2(profileR(glyP, yy + 0.05) - profileR(glyP, yy - 0.05), 0.1);
+      tile(body, [0, yy, -rr], [-slope, Math.PI, (k % 2 ? 1 : -1) * 0.12], 11 + k, 0.3);
+    }
+    // arms, white feet, GIGGLYPH's tail
+    const arms = [-1, 1].map((sx) => {
+      const a = new THREE.Group();
+      a.position.set(0.62 * sx, 1.45, 0.05), body.add(a);
+      R(T.sphere(1, 12, 10), x.clay(sx < 0 ? "#b898b8" : "#c09aa8", { shininess: 50 }), a, [0.12 * sx, -0.05, 0], [0, 0, -0.6 * sx], [0.22, 0.1, 0.12]);
+      return a;
+    });
+    [-1, 1].forEach((sx) => R(T.sphere(1, 14, 10), x.clay("#fbf8f0", { shininess: 40 }), root, [0.26 * sx, 0.1, 0.18], null, [0.22, 0.1, 0.3]));
+    const tail = new THREE.Group();
+    tail.position.set(0, 0.6, -0.5), body.add(tail);
+    R(ao([[0, 0, 0], [0, -0.2, -0.35], [0.08, -0.4, -0.75], [0.15, -0.48, -1.05]], 0.22, 0.05, 16, 10), x.clay("#3aa8d8", { shininess: 70 }), tail);
+    return born(g, {
+      height: 3.1,
+      lids,
+      step(t, dt, tk) {
+        (tail.rotation.y = 0.35 * Math.sin(2.2 * t)), (head.rotation.z = 0.07 * Math.sin(1.3 * t)), body.scale.set(1 + 0.015 * Math.sin(2.4 * t), 1 - 0.015 * Math.sin(2.4 * t), 1);
+        arms.forEach((a, k) => (a.rotation.z = (k ? -1 : 1) * 0.25 * Math.sin(2 * t + k)));
+      },
+    });
+  };
+
   for (const k in BORN)
     so["born_" + k] = (g, d, opts) => {
       try {
@@ -13475,7 +13705,10 @@ const JGP = (() => {
   // ---- apply the rows over the engine's defs (runs just before spawn) ----
   function applyCast() {
     // MISSGUMMERY (jumper) is part of SIRGUMMERY and KOLLOD (orson) is part of ZOLLOD now
-    delete o.jumper, delete n.orson, (t.creaturesRoaming = Object.keys(n).length);
+    delete o.jumper, delete n.orson;
+    // removed from the game: CHERUBI (wanderer), SUNNY (kingdino), SIRGUMMERY (mont)
+    ["wanderer", "kingdino", "mont"].forEach((id) => (delete e[id], delete o[id], delete n[id]));
+    t.creaturesRoaming = Object.keys(n).length;
     const all = Object.assign({}, e, o, n);
     for (const key in ROWS) {
       const row = ROWS[key];
@@ -13490,11 +13723,12 @@ const JGP = (() => {
           at: at.slice(),
           pattern: ["post", { face: "center" === row.face ? Math.atan2(-at[0], -at[1]) : row.face }],
           stationary: !0,
-          lines: L3(),
+          // every creature has the same options (the test models of LARRY and NEXTESSA keep theirs)
+          lines: /^t_/.test(id) ? L3() : ["Placeholder 1", "Placeholder 2", "Placeholder 3"],
           campfire: "Placeholder campfire line",
         });
-        // a Blossom is always offered; chip-quest creatures keep their #/3 counter
-        d.gift = /#\/3/.test(d.gift || "") ? "Placeholder blossom line|* Placeholder item received #/3 *" : "Placeholder blossom line";
+        // one Blossom option for everyone (no quest items for now)
+        d.gift = /^t_/.test(id) ? "Placeholder blossom line" : "Placeholder 1";
       });
     }
     for (const id in BATTLES) all[id] && (Object.assign(all[id], BATTLES[id]), (all[id].danceGeneric = !0));
@@ -15886,6 +16120,8 @@ const JGP = (() => {
   return {
     ROWS,
     BATTLES,
+    BATTLE_MENUS,
+    NO_QUESTS,
     FREEZE_NPCS,
     NO_SINGER,
     GARDEN_R,

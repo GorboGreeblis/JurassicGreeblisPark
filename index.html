@@ -16059,11 +16059,11 @@ const JGP = (() => {
     };
     // a pinnate frond one unit long along +Z: a midrib arching down by `droop`, with paired leaflets
     // that are widest mid-frond; leaflet bases are darker than their tips
-    const frondGeo = (droop, wid) =>
-      cached("frond" + droop + "|" + wid, () => {
+    const frondGeo = (droop, wid, far) =>
+      cached("frond" + droop + "|" + wid + "|" + far, () => {
         const tris = [],
           rib = (u) => [0, -droop * u * u, u],
-          n = VEG_HI ? 14 : 8;
+          n = far ? 6 : VEG_HI ? 12 : 8;
         for (let i = 0; i < n; i++) {
           const u0 = 0.06 + 0.9 * (i / n),
             u1 = u0 + 0.85 / n,
@@ -16084,17 +16084,18 @@ const JGP = (() => {
     const frond = (X, Y, Z, a, len, w, droop, col) => {
       const lift = 0.5 - droop,
         dv = lift > 0.7 ? 0.55 : lift > 0.3 ? 0.35 : 0.2;
-      add(frondGeo(dv, w / len > 0.13 ? 1 : 0.7), col, S(X, Y, Z, 0, Math.PI / 2 - a, 0).multiply(S(0, 0, 0, -lift, 0, 0, len, len, len)));
+      add(frondGeo(dv, w / len > 0.13 ? 1 : 0.7, Math.hypot(X, Z) > 75 ? 1 : 0), col, S(X, Y, Z, 0, Math.PI / 2 - a, 0).multiply(S(0, 0, 0, -lift, 0, 0, len, len, len)));
     };
     // a palm trunk segment: one unit tall from its base, with ring ridges and darker grooves
+    const trunkFar = cached("trunkFar", () => shadeGeo(new THREE.CylinderGeometry(1, 1, 1, 5, 1, !0).translate(0, 0.5, 0), (px, py) => 0.8 + 0.1 * py));
     const trunkGeo = cached("trunk", () => {
       const pts = [];
-      const rows = VEG_HI ? 6 : 3;
+      const rows = VEG_HI ? 4 : 3;
       for (let k = 0; k <= rows; k++) {
         const y = k / rows;
         pts.push(new THREE.Vector2(1 - 0.09 * (k % 2), y));
       }
-      return shadeGeo(new THREE.LatheGeometry(pts, VEG_HI ? 7 : 5), (px, py, pz) => 0.7 + 0.35 * (Math.hypot(px, pz) - 0.91) / 0.09 + 0.06 * Math.sin(9 * Math.atan2(pz, px)));
+      return shadeGeo(new THREE.LatheGeometry(pts, VEG_HI ? 6 : 5), (px, py, pz) => 0.7 + 0.35 * (Math.hypot(px, pz) - 0.91) / 0.09 + 0.06 * Math.sin(9 * Math.atan2(pz, px)));
     });
     // rocks: noise-displaced icosahedra, flat-bottomed, faceted; moss on the upward faces, darker below
     const rockGeo = (v) =>
@@ -16206,7 +16207,7 @@ const JGP = (() => {
             dx = Math.sin(tilt) * Math.cos(la) * sl,
             dz = Math.sin(tilt) * Math.sin(la) * sl,
             rad = 0.23 * s * (1 - 0.07 * k);
-          add(trunkGeo, k % 2 ? "#9a7a52" : "#8a6a46", S(px, py, pz, Math.sin(la) * tilt, 0, -Math.cos(la) * tilt, rad, sl * 1.04, rad));
+          add(Math.hypot(X, Z) > 75 ? trunkFar : trunkGeo, k % 2 ? "#9a7a52" : "#8a6a46", S(px, py, pz, Math.sin(la) * tilt, 0, -Math.cos(la) * tilt, rad, sl * 1.04, rad));
           (px += dx), (pz += dz), (py += sl * Math.cos(tilt));
         }
         // fibrous crown boot, coconuts, then two tiers of arching fronds

@@ -13787,7 +13787,7 @@ const JGP = (() => {
       { smooth: !0 },
     );
     [-1.6, 1.6].forEach((px) => R(T.box(0.12, 0.7, 0.12), white, o, [px, 4.95, -0.12]));
-    R(T.box(4.3, 1.05, 0.1), white, o, [0, 5.55, -0.12]), R(T.plane(4.1, 1.02), x.world(16777215, { map: signTex }), o, [0, 5.55, -0.06]);
+    R(T.box(4.3, 1.05, 0.1), white, o, [0, 5.55, -0.12]), R(T.plane(4.1, 1.02), x.world(16777215, { map: signTex }), o, [0, 5.55, -0.04]);
     // the counter, crates on either side
     R(T.box(3.8, 0.9, 0.1), wall, o, [0, 0.65, 1.07]), R(T.box(3.84, 0.08, 0.12), white, o, [0, 0.24, 1.08]);
     // the top overhangs the front panel and the end supports sit inside it, so no faces are flush
@@ -14098,18 +14098,179 @@ const JGP = (() => {
         G.add(leafy, gc, G.m(px, top + 0.62 * s, pz, rs(), rs(), 0, 0.24 * s, 0.22 * s, 0.24 * s)), G.add(leafy, GREENS[(rs() * 5) | 0], G.m(px + 0.1 * s, top + 0.52 * s, pz, rs(), rs(), 0, 0.14 * s, 0.13 * s, 0.14 * s));
       }
     };
+
+    // ---- curiosities after the plates of the Voynich manuscript: bare bulbous roots as big as the
+    // plant, striped cup blooms, an eye of a flower, trumpet clusters, a scaled bud on a hand of
+    // roots and a striped lantern bloom, all in the manuscript's faded inks (pale blue, olive, red
+    // brown, ochre, parchment). voy() builds one at (px, py, pz) with its base (where the roots meet
+    // the stem) at py, scaled by s and turned by rot.
+    const VC = { blue: "#7fa8c8", blue2: "#5f88b0", olive: "#7f9448", green: "#6a8a4a", rust: "#a8503a", rust2: "#8a3a2a", ochre: "#c8a058", parch: "#eadcb4", ink: "#4a3424", red: "#c8402e" };
+    const cupGeo = cachedGeo("vcup", () => latheGeo(smoothProfile([[0, 0], [0.05, 0.012], [0.12, 0.06], [0.165, 0.15], [0.158, 0.162], [0.112, 0.074], [0.042, 0.03], [0, 0.026]], 30), 18)),
+      trumpetGeo = cachedGeo("vtrump", () => latheGeo(smoothProfile([[0, 0], [0.022, 0.02], [0.03, 0.12], [0.085, 0.21], [0.078, 0.216], [0.022, 0.125], [0.012, 0.03], [0, 0.03]], 30), 14)),
+      sph = T.sphere(1, 12, 8),
+      sphLo = T.sphere(1, 8, 6);
+    const voy = (px, py, pz, s, kind, rot, seed) => {
+      const r = srand(seed),
+        cs = Math.cos(rot),
+        sn = Math.sin(rot),
+        P = (x0, y0, z0) => [px + s * (x0 * cs + z0 * sn), py + s * y0, pz + s * (-x0 * sn + z0 * cs)],
+        M = (x0, y0, z0, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1) => {
+          const q = P(x0, y0, z0);
+          return G.m(q[0], q[1], q[2], rx, ry + rot, rz, s * sx, s * sy, s * sz);
+        },
+        tube = (pts, r0, r1, col, segs = 14) => G.add(ao(pts.map((q) => P(q[0], q[1], q[2])), r0 * s, r1 * s, segs, 6), col, G.m(0, 0, 0)),
+        // a wandering root from (x0, y0, z0) outward along angle a, dropping by drop
+        root = (x0, y0, z0, a, len, drop, r0, col) => {
+          const pts = [[x0, y0, z0]];
+          for (let k = 1; k <= 4; k++) {
+            const f = k / 4,
+              wob = 0.06 * (r() - 0.5);
+            pts.push([x0 + Math.cos(a + wob * 4) * len * f + wob, y0 - drop * f * (0.6 + 0.4 * f), z0 + Math.sin(a + wob * 4) * len * f - wob]);
+          }
+          tube(pts, r0, 0.004, col, 12);
+          // a few hairs off the tip
+          const e = pts[4];
+          for (let h = 0; h < 2; h++) tube([e, [e[0] + 0.05 * Math.cos(a + h - 0.5), e[1] - 0.03, e[2] + 0.05 * Math.sin(a + h - 0.5)]], 0.006, 0.002, VC.ink, 3);
+        },
+        // a long leaf: a flattened ellipsoid with a darker midrib
+        leaf = (x0, y0, z0, a, tilt, len, col) => {
+          const cx = x0 + Math.cos(a) * len * 0.5,
+            cz = z0 + Math.sin(a) * len * 0.5,
+            cy = y0 + Math.sin(tilt) * len * 0.5;
+          G.add(sphLo, col, M(cx, cy, cz, 0, -a, tilt, len * 0.5, 0.012, len * 0.16));
+          G.add(G.UBX, VC.ink, M(cx, cy + 0.008, cz, 0, -a, tilt, len * 0.9, 0.006, 0.008));
+        };
+      if (0 === kind) {
+        // striped cup bloom on a bulb with a skirt of roots
+        G.add(sph, VC.ochre, M(0, 0.12, 0, 0, 0, 0, 0.17, 0.14, 0.17));
+        [0.07, 0.12, 0.17].forEach((y, k) => G.add(T.torus(1, 0.06, 6, 20), VC.rust, M(0, y, 0, Math.PI / 2, 0, 0, 0.16 - 0.03 * Math.abs(k - 1), 0.16 - 0.03 * Math.abs(k - 1), 0.3)));
+        for (let k = 0; k < 8; k++) root(0, 0.04, 0, (k / 8) * l + r(), 0.22 + 0.12 * r(), 0.14 + 0.06 * r(), 0.024, k % 2 ? VC.ink : VC.ochre);
+        tube([[0, 0.24, 0], [0.04, 0.5, 0.02], [-0.03, 0.78, 0], [0, 0.94, 0]], 0.02, 0.014, VC.olive);
+        leaf(0.02, 0.45, 0.01, 0.4, 0.4, 0.34, VC.green), leaf(-0.01, 0.62, 0, Math.PI + 0.3, 0.5, 0.3, VC.olive);
+        G.add(cupGeo, VC.blue, M(0, 0.92, 0, 0, 0, 0, 1.1, 1.1, 1.1));
+        for (let k = 0; k < 10; k++) {
+          const a = (k / 10) * l;
+          G.add(G.UBX, VC.rust2, M(0.15 * Math.cos(a), 1.02, 0.15 * Math.sin(a), 0, -a, 0.95, 0.012, 0.16, 0.012));
+        }
+        G.add(sph, VC.ochre, M(0, 1.0, 0, 0, 0, 0, 0.05, 0.05, 0.05));
+        for (let k = 0; k < 6; k++) G.add(sphLo, VC.ink, M(0.035 * Math.cos(k), 1.05, 0.035 * Math.sin(k), 0, 0, 0, 0.01, 0.01, 0.01));
+      } else if (1 === kind) {
+        // the eye: legs of forked roots, leaf fans up the stem and a ringed blue eye of a flower
+        [-1, 1].forEach((sd) => {
+          tube([[0, 0.06, 0], [0.08 * sd, 0.02, 0.02], [0.14 * sd, -0.06, 0.03]], 0.035, 0.022, VC.rust, 10);
+          for (let k = 0; k < 3; k++) root(0.14 * sd, -0.06, 0.03, (sd > 0 ? 0 : Math.PI) + (k - 1) * 0.6, 0.12, 0.06, 0.016, VC.rust2);
+        });
+        G.add(sph, VC.rust, M(0, 0.08, 0, 0, 0, 0, 0.07, 0.07, 0.06));
+        tube([[0, 0.1, 0], [0.02, 0.5, 0], [-0.02, 0.9, 0.02], [0, 1.15, 0.04]], 0.018, 0.012, VC.green);
+        [0.3, 0.55, 0.8].forEach((y, k) => [-1, 1].forEach((sd) => leaf(0, y, 0, (sd > 0 ? 0 : Math.PI) + 0.5 * k, 0.35, 0.26 - 0.04 * k, k % 2 ? VC.olive : VC.green)));
+        const ex = 0,
+          ey = 1.2,
+          ez = 0.06;
+        G.add(T.cyl(0.17, 0.17, 0.02, 20), VC.blue, M(ex, ey, ez, Math.PI / 2 - 0.25, 0, 0));
+        G.add(T.torus(0.12, 0.022, 6, 22), VC.ochre, M(ex, ey + 0.005, ez + 0.012, -0.25, 0, 0));
+        G.add(T.cyl(0.085, 0.085, 0.02, 18), VC.parch, M(ex, ey + 0.004, ez + 0.016, Math.PI / 2 - 0.25, 0, 0));
+        G.add(sph, VC.ink, M(ex, ey + 0.006, ez + 0.03, 0, 0, 0, 0.045, 0.045, 0.025));
+        for (let k = 0; k < 14; k++) {
+          const a = (k / 14) * l;
+          G.add(T.cone(0.03, 0.09, 4), k % 2 ? VC.red : VC.rust, M(ex + 0.2 * Math.cos(a), ey + 0.2 * Math.sin(a) * Math.cos(0.25), ez - 0.2 * Math.sin(a) * Math.sin(0.25), -0.25, 0, a - Math.PI / 2));
+        }
+      } else if (2 === kind) {
+        // a cluster of trumpets on a knot of roots
+        for (let k = 0; k < 5; k++) G.add(sph, k % 2 ? VC.ochre : VC.parch, M(0.07 * Math.cos(2.4 * k), 0.06 + 0.03 * (k % 2), 0.07 * Math.sin(2.4 * k), 0, 0, 0, 0.08, 0.07, 0.08));
+        for (let k = 0; k < 9; k++) root(0, 0.03, 0, (k / 9) * l, 0.26 + 0.1 * r(), 0.16, 0.022, k % 3 ? VC.ink : VC.rust);
+        tube([[0, 0.1, 0], [0, 0.35, 0]], 0.026, 0.02, VC.olive);
+        for (let k = 0; k < 5; k++) {
+          const a = (k / 5) * l + 0.3,
+            tip = [0.28 * Math.cos(a), 0.78 + 0.12 * (k % 2), 0.28 * Math.sin(a)];
+          tube([[0, 0.35, 0], [0.1 * Math.cos(a), 0.5, 0.1 * Math.sin(a)], [0.22 * Math.cos(a), 0.62, 0.22 * Math.sin(a)], tip], 0.014, 0.01, VC.green, 12);
+          leaf(0.12 * Math.cos(a), 0.52, 0.12 * Math.sin(a), a + 0.8, 0.3, 0.16, VC.olive);
+          // the trumpet leans out from the stem tip
+          const tg = P(tip[0], tip[1], tip[2]);
+          const tm = G.m(tg[0], tg[1], tg[2], 0.45 * Math.sin(a + rot), 0, -0.45 * Math.cos(a + rot), 1.2 * s, 1.2 * s, 1.2 * s);
+          G.add(trumpetGeo, k % 2 ? VC.blue : VC.rust, tm), G.add(T.torus(0.07, 0.012, 5, 16), VC.ochre, tm.clone().multiply(S(0, 0.17, 0, Math.PI / 2, 0, 0)));
+        }
+      } else if (3 === kind) {
+        // a scaled bud on a hand of fat roots
+        for (let k = 0; k < 5; k++) {
+          const a = (k / 5) * l + 0.2;
+          tube([[0, 0.1, 0], [0.12 * Math.cos(a), 0.06, 0.12 * Math.sin(a)], [0.24 * Math.cos(a), -0.02, 0.24 * Math.sin(a)], [0.3 * Math.cos(a + 0.2), -0.08, 0.3 * Math.sin(a + 0.2)]], 0.05, 0.02, k % 2 ? VC.parch : VC.ochre, 12);
+          G.add(sphLo, VC.ochre, M(0.3 * Math.cos(a + 0.2), -0.08, 0.3 * Math.sin(a + 0.2), 0, 0, 0, 0.025, 0.025, 0.025));
+        }
+        G.add(sph, VC.ochre, M(0, 0.12, 0, 0, 0, 0, 0.11, 0.09, 0.11));
+        tube([[0, 0.18, 0], [-0.03, 0.5, 0.02], [0.02, 0.84, 0]], 0.022, 0.016, VC.olive);
+        for (let k = 0; k < 6; k++) {
+          const a = k * 2.1;
+          G.add(T.cone(0.04, 0.26, 4), k % 2 ? VC.green : VC.olive, M(0.07 * Math.cos(a), 0.36 + 0.08 * k, 0.07 * Math.sin(a), 0.9 * Math.sin(a), 0, -0.9 * Math.cos(a), 1, 1, 0.35));
+        }
+        for (let k = 0; k < 6; k++) G.add(sph, k % 2 ? VC.blue : VC.green, M(0, 0.86 + 0.07 * k, 0, 0, k, 0, 0.13 - 0.016 * k, 0.05, 0.13 - 0.016 * k));
+        for (let k = 0; k < 5; k++) G.add(T.cone(0.02, 0.12, 4), VC.red, M(0.025 * Math.cos(1.3 * k), 1.3, 0.025 * Math.sin(1.3 * k), 0.4 * Math.sin(1.3 * k), 0, -0.4 * Math.cos(1.3 * k)));
+      } else {
+        // a striped lantern bloom on an onion with a beard of hair roots, topped with a curl
+        G.add(sph, VC.parch, M(0, 0.1, 0, 0, 0, 0, 0.12, 0.1, 0.12));
+        for (let k = 0; k < 6; k++) G.add(T.box(0.012, 0.2, 0.012), VC.rust, M(0.11 * Math.cos(k), 0.1, 0.11 * Math.sin(k), 0.9 * Math.sin(k), 0, -0.9 * Math.cos(k)));
+        for (let k = 0; k < 12; k++) root(0, 0.02, 0, (k / 12) * l, 0.14 + 0.08 * r(), 0.12, 0.012, VC.ink);
+        tube([[0, 0.2, 0], [0.03, 0.55, 0], [0, 0.9, 0]], 0.02, 0.015, VC.green);
+        leaf(0, 0.36, 0, 0.6, 0.6, 0.3, VC.olive), leaf(0, 0.5, 0, 2.8, 0.5, 0.28, VC.green), leaf(0, 0.66, 0, 4.4, 0.6, 0.22, VC.olive);
+        for (let k = 0; k < 8; k++) {
+          const a = (k / 8) * l;
+          G.add(sph, k % 2 ? VC.blue : VC.parch, M(0.085 * Math.cos(a), 1.06, 0.085 * Math.sin(a), 0, -a, 0, 0.05, 0.17, 0.035));
+          G.add(G.UBX, VC.rust2, M(0.123 * Math.cos(a), 1.06, 0.123 * Math.sin(a), 0, -a, 0, 0.008, 0.26, 0.012));
+        }
+        G.add(sph, VC.ochre, M(0, 1.24, 0, 0, 0, 0, 0.05, 0.04, 0.05));
+        const curl = [];
+        for (let k = 0; k <= 16; k++) {
+          const a = k * 0.55,
+            rr0 = 0.1 * (1 - k / 20);
+          curl.push([rr0 * Math.cos(a) - 0.1, 1.28 + 0.012 * k, rr0 * Math.sin(a)]);
+        }
+        tube(curl, 0.012, 0.005, VC.green, 32);
+      }
+    };
     // counter: seedling trays, pots, a sunflower tray
     [-1.3, -0.45].forEach((px) => {
       G.box("#2a2a2e", px, 1.15, 0.6, 0.7, 0.06, 0.5);
       for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) G.add(T.cone(0.03, 0.09, 4), GREENS[(i + j) % 5], G.m(px - 0.27 + 0.108 * i, 1.22, 0.42 + 0.12 * j, 0.2 * (rs() - 0.5), rs() * l, 0.2 * (rs() - 0.5)));
     });
-    [0.3, 0.75, 1.2, 1.6].forEach((px, k) => pot(px, 1.12, 0.6 + 0.08 * (k % 2), 0.9 + 0.2 * (k % 2), [1, 0, 2, 3][k]));
+    [0.3, 1.2].forEach((px, k) => pot(px, 1.12, 0.6 + 0.08 * k, 0.9, [1, 2][k]));
+    const jarGlass = x.clay("#d8f0f4", { transparent: !0, opacity: 0.28, shininess: 120, specular: 16777215, depthWrite: !1 }),
+      jarWater = x.clay("#8ac0c8", { transparent: !0, opacity: 0.35, shininess: 90, depthWrite: !1 });
+    [
+      [0.75, 0.66, 0, 0.62, 0.3],
+      [1.62, 0.62, 1, 0.55, -0.4],
+    ].forEach(([px, pz, kind, sc, rot], k) => {
+      const jar = R(cachedGeo("vjar", () => new THREE.CylinderGeometry(0.19, 0.17, 0.44, 20, 1, !0)), Object.assign(jarGlass, { side: THREE.DoubleSide }), o, [px, 1.34, pz]);
+      (jar.renderOrder = 3), (R(T.cyl(0.18, 0.165, 0.3, 20), jarWater, o, [px, 1.27, pz]).renderOrder = 2);
+      G.add(T.torus(0.19, 0.012, 6, 24), "#c8ccd0", G.m(px, 1.56, pz, Math.PI / 2, 0, 0));
+      voy(px, 1.32, pz, sc, kind, rot, 40 + k);
+    });
+    // a parchment card in the manuscript's unread script
+    {
+      const card = b(256, 128, (c) => {
+        (c.fillStyle = "#eadcb4"), c.fillRect(0, 0, 256, 128), (c.strokeStyle = "#8a6a40"), (c.lineWidth = 4), c.strokeRect(6, 6, 244, 116);
+        const r2 = srand(77);
+        (c.strokeStyle = "#4a3424"), (c.lineWidth = 2.4), (c.lineCap = "round");
+        for (let row = 0; row < 4; row++)
+          for (let x0 = 18; x0 < 236; ) {
+            const w = 10 + 16 * r2(),
+              y0 = 28 + 24 * row;
+            c.beginPath(), c.moveTo(x0, y0);
+            for (let k = 0; k < 3; k++) c.quadraticCurveTo(x0 + (w * (k + 0.5)) / 3, y0 - 10 * r2() - 2, x0 + (w * (k + 1)) / 3, y0 + 3 * (r2() - 0.5));
+            c.stroke(), r2() < 0.35 && (c.beginPath(), c.arc(x0 + w / 2, y0 - 8, 3, 0, l), c.stroke()), (x0 += w + 6 + 6 * r2());
+          }
+        (c.fillStyle = "#7fa8c8"), c.beginPath(), c.arc(214, 96, 12, 0, l), c.fill(), (c.fillStyle = "#a8503a"), c.beginPath(), c.arc(214, 96, 5, 0, l), c.fill();
+      });
+      G.box("#8a6a40", -1.05, 0.72, 1.135, 1.0, 0.52, 0.02);
+      R(T.plane(0.94, 0.47), x.world(16777215, { map: card, polygonOffset: !0, polygonOffsetFactor: 0, polygonOffsetUnits: -4 }), o, [-1.05, 0.72, 1.15]);
+    }
     // crates: shelves of pots
     [-1, 1].forEach((sx) => [-0.95, -0.38, 0.2].forEach((pz, k) => pot(1.42 * sx, 1.0, pz, 0.85, (k + (sx > 0 ? 1 : 3)) % 5)));
     // a plank shelf on the back wall with small pots
     G.box("#8a6a48", 0, 2.6, -2.2, 4.4, 0.06, 0.32);
     [-1, 1].forEach((sx) => G.box("#6a4a2a", 1.8 * sx, 2.45, -2.25, 0.05, 0.3, 0.28, 0.6 * sx));
-    for (let k = 0; k < 7; k++) pot(-1.95 + 0.65 * k, 2.63, -2.2, 0.6, k % 5);
+    for (let k = 0; k < 7; k++)
+      k % 2
+        ? (G.add(T.cyl(0.13, 0.1, 0.1, 12), "#a85a3a", G.m(-1.95 + 0.65 * k, 2.68, -2.2)), voy(-1.95 + 0.65 * k, 2.74, -2.2, 0.32, [3, 4, 0][(k - 1) / 2], 0.6 * k, 60 + k))
+        : pot(-1.95 + 0.65 * k, 2.63, -2.2, 0.6, k % 5);
     // hanging baskets from the front beam
     [-2.2, -0.8, 0.8, 2.2].forEach((px, k) => {
       G.add(T.cyl(0.006, 0.006, 0.5, 4), "#3a3a3e", G.m(px, 3.05, 2.15));
@@ -14124,7 +14285,22 @@ const JGP = (() => {
     // rows of pots on the deck and on the lawn beside the kiosk
     for (let k = 0; k < 10; k++) pot(-2.6 + 0.42 * (k % 3), 0.2, 1.0 + 0.45 * Math.floor(k / 3), 1.1 + 0.3 * rs(), k % 5);
     for (let k = 0; k < 6; k++) pot(2.2 + 0.42 * (k % 2), 0.2, 0.9 + 0.5 * Math.floor(k / 2), 1.2, (k + 2) % 5);
-    [-1, 1].forEach((sx) => [0, 1, 2].forEach((k) => pot(4.0 * sx, 0, -1.8 + 1.4 * k, 1.6 + 0.4 * (k % 2), k === 1 ? 4 : 1)));
+    [0, 1, 2].forEach((k) => pot(4.0, 0, -1.8 + 1.4 * k, 1.6 + 0.4 * (k % 2), k === 1 ? 4 : 1));
+    [0, 1, 2].forEach((k) => {
+      const pz = -1.8 + 1.4 * k;
+      G.add(T.cyl(0.42, 0.3, 0.2, 16), "#b86a48", G.m(-4.0, 0.1, pz)), G.add(T.torus(0.42, 0.04, 6, 24), "#a85a3a", G.m(-4.0, 0.2, pz, Math.PI / 2, 0, 0));
+      G.add(T.cyl(0.4, 0.4, 0.02, 16), "#4a3424", G.m(-4.0, 0.19, pz));
+      voy(-4.0, 0.36, pz, 1.65 + 0.2 * (k % 2), [2, 3, 4][k], 1.2 * k + 0.4, 90 + k);
+    });
+    // two more by the front walk: the eye of a flower and a striped cup bloom
+    [
+      [-3.3, 3.1, 1, 1.9, 0.3],
+      [-2.2, 3.8, 0, 1.6, 2.0],
+    ].forEach(([px, pz, kind, sc, rot], k) => {
+      G.add(T.cyl(0.42, 0.3, 0.2, 16), "#b86a48", G.m(px, 0.1, pz)), G.add(T.torus(0.42, 0.04, 6, 24), "#a85a3a", G.m(px, 0.2, pz, Math.PI / 2, 0, 0));
+      G.add(T.cyl(0.4, 0.4, 0.02, 16), "#4a3424", G.m(px, 0.19, pz));
+      voy(px, 0.36, pz, sc, kind, rot, 95 + k);
+    });
     // bags of soil and compost
     [
       [-2.4, -1.4, "#6a4a2a"],
@@ -14152,17 +14328,16 @@ const JGP = (() => {
   // A duck pond with a grassy bank, limestone rocks, cattails, lily pads and a little dock
   // (it replaces the city fountain); o sits at the pool station.
   function buildPond(o) {
-    R(T.circle(4.9, 36), KIT.surf("grass", "#4c7a2c", { rep: 4, shine: 6 }), o, [0, 0.015, 0], [-Math.PI / 2, 0, 0]);
-    R(T.circle(4.1, 36), KIT.surf("soil", "#6a5a3a", { rep: 3, shine: 20 }), o, [0, 0.025, 0], [-Math.PI / 2, 0, 0]);
+    // the flat layers sit 4 cm apart (bank, mud, water, pads) so none of them can win the depth test
+    // over the one above it at a distance or a grazing angle
+    R(T.circle(4.9, 36), KIT.surf("grass", "#4c7a2c", { rep: 4, shine: 6 }), o, [0, 0.03, 0], [-Math.PI / 2, 0, 0]);
+    R(T.circle(4.1, 36), KIT.surf("soil", "#6a5a3a", { rep: 3, shine: 20 }), o, [0, 0.07, 0], [-Math.PI / 2, 0, 0]);
     const water = R(
       T.circle(3.7, 36),
       x.clay("#3a8aa0", {
         unique: !0,
         shininess: 70,
         specular: 5596791,
-        polygonOffset: !0,
-        polygonOffsetFactor: -2,
-        polygonOffsetUnits: -2,
         map: b(128, 128, (c) => {
           const gr = c.createRadialGradient(64, 64, 4, 64, 64, 64);
           gr.addColorStop(0, "#7a8a96"), gr.addColorStop(0.6, "#b4c4cc"), gr.addColorStop(0.92, "#e8f4f0"), gr.addColorStop(1, "#f4fff4");
@@ -14171,7 +14346,7 @@ const JGP = (() => {
         }, { smooth: !0 }),
       }),
       o,
-      [0, 0.04, 0],
+      [0, 0.11, 0],
       [-Math.PI / 2, 0, 0],
     );
     for (let k = 0; k < 20; k++) {
@@ -14179,7 +14354,7 @@ const JGP = (() => {
         r = rr(3.7, 4.3),
         s = rr(0.22, 0.48);
       const q = rnd();
-      R(T.dodeca(s, 1), KIT.surf("stone", q < 0.5 ? "#b8ad98" : q < 0.8 ? "#a49c8c" : "#8a8478", { rep: 1, bump: 0.05, shine: 20 }), o, [r * Math.cos(a), 0.08, r * Math.sin(a)], [rnd(), rnd() * l, 0], [1.2, 0.6, 1]);
+      R(T.dodeca(s, 1), KIT.surf("stone", q < 0.5 ? "#b8ad98" : q < 0.8 ? "#a49c8c" : "#8a8478", { rep: 1, bump: 0.05, shine: 20 }), o, [r * Math.cos(a), 0.12, r * Math.sin(a)], [rnd(), rnd() * l, 0], [1.2, 0.6, 1]);
     }
     for (let k = 0; k < 8; k++) {
       const a = rnd() * l,
@@ -14187,13 +14362,13 @@ const JGP = (() => {
         px = r * Math.cos(a),
         pz = r * Math.sin(a);
       // lily pad with its notch, and every third one in flower
-      R(new THREE.CircleGeometry(0.3, 18, 0.25, l - 0.5), KIT.surf("leaf", k % 2 ? "#4f9a2a" : "#5aa83a", { rep: 1, shine: 40 }), o, [px, 0.055, pz], [-Math.PI / 2, 0, a]);
+      R(new THREE.CircleGeometry(0.3, 18, 0.25, l - 0.5), KIT.surf("leaf", k % 2 ? "#4f9a2a" : "#5aa83a", { rep: 1, shine: 40 }), o, [px, 0.15, pz], [-Math.PI / 2, 0, a]);
       if (!(k % 3)) {
         for (let j = 0; j < 7; j++) {
           const pa = (j / 7) * l;
-          R(T.sphere(1, 8, 6), x.clay(j % 2 ? "#ffa8d0" : "#ff8ac0", { shininess: 40 }), o, [px + 0.06 * Math.cos(pa), 0.12, pz + 0.06 * Math.sin(pa)], [0, -pa, 0.7], [0.07, 0.03, 0.035]);
+          R(T.sphere(1, 8, 6), x.clay(j % 2 ? "#ffa8d0" : "#ff8ac0", { shininess: 40 }), o, [px + 0.06 * Math.cos(pa), 0.21, pz + 0.06 * Math.sin(pa)], [0, -pa, 0.7], [0.07, 0.03, 0.035]);
         }
-        R(T.sphere(0.035, 8, 6), x.clay("#ffd23a"), o, [px, 0.13, pz]);
+        R(T.sphere(0.035, 8, 6), x.clay("#ffd23a"), o, [px, 0.22, pz]);
       }
     }
     for (let k = 0; k < 16; k++) {
@@ -14211,7 +14386,7 @@ const JGP = (() => {
     for (let k = 0; k < 6; k++) R(T.box(2.9, 0.08, 0.2), plank, o, [-4.1, 0.34, 0.4 + 0.22 * k], [0, 0, 0.01 * (k % 2)]);
     [-5.4, -2.85].forEach((px) => [0.32, 1.58].forEach((pz) => R(T.cyl(0.07, 0.07, 0.6, 7), plank, o, [px, 0.2, pz])));
     const rip = [0, 0.5].map(() =>
-      R(T.torus(1, 0.02, 4, 32), x.basic("#e8f6ff", { unique: !0, transparent: !0, opacity: 0.5, depthWrite: !1 }), o, [0.8, 0.06, -0.5], [Math.PI / 2, 0, 0]),
+      R(T.torus(1, 0.02, 4, 32), x.basic("#e8f6ff", { unique: !0, transparent: !0, opacity: 0.5, depthWrite: !1 }), o, [0.8, 0.13, -0.5], [Math.PI / 2, 0, 0]),
     );
     L.push((tt) => {
       rip.forEach((m, k) => {
@@ -14268,7 +14443,7 @@ const JGP = (() => {
     garden = { slots: [], plants: [], cans: [], startAt: 0 };
   function buildGarden(o) {
     o.userData.jgpKeep = !0;
-    const soil = Object.assign(KIT.surf("soil", "#5a3e26", { rep: 10, shine: 6, bump: 0.03 }).clone(), { polygonOffset: !0, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
+    const soil = KIT.surf("soil", "#5a3e26", { rep: 10, shine: 6, bump: 0.03 }),
       ridge = KIT.surf("soil", "#6e4c2e", { rep: 6, shine: 6, bump: 0.03 }),
       stone = KIT.surf("stone", "#8f8374", { rep: 1, bump: 0.05, shine: 12 }),
       moss = KIT.surf("fur", "#5a8a3a", { rep: 1, bump: 0.03 }),
@@ -14938,7 +15113,9 @@ const JGP = (() => {
       glass: { m: glassM() },
       lit: { m: glassM() }, // windows that glow at night
       lamp: { m: lam({}) },
-      sign: { m: lam({ map: atlasTx, alphaTest: 0.5, side: THREE.DoubleSide }), uv: !0 },
+      // signs hang 1-2 cm off their boards: a constant depth bias (units only, no slope factor, so it
+      // stays tiny at grazing angles) keeps them in front where depth precision is low
+      sign: { m: lam({ map: atlasTx, alphaTest: 0.5, side: THREE.DoubleSide, polygonOffset: !0, polygonOffsetFactor: 0, polygonOffsetUnits: -4 }), uv: !0 },
       corn: { m: lam({ map: cornTx, alphaTest: 0.45, side: THREE.DoubleSide }), uv: !0 },
     };
     const bins = {},
@@ -15389,12 +15566,12 @@ const JGP = (() => {
         fz = bz + d / 2;
       // the lot: asphalt, parking stalls with curb stops, drive-thru arrows down the right
       B.box("asphalt", "#2c2c30", 0, -0.04, 0, 20, 0.08, 24);
-      for (let k = 0; k <= 4; k++) B.box("plain", "#f2f0ea", -9 + 3 * k, 0.005, 9, 0.12, 0.02, 5);
+      for (let k = 0; k <= 4; k++) B.box("plain", "#f2f0ea", -9 + 3 * k, 0.02, 9, 0.12, 0.02, 5);
       for (let k = 0; k < 4; k++) B.box("plain", gold, -7.5 + 3 * k, 0.08, 6.9, 1.6, 0.16, 0.25);
       [-6, -1, 4].forEach((pz) =>
-        B.box("plain", "#f2f0ea", 7.5, 0.005, pz, 0.22, 0.02, 1.8)
-          .box("plain", "#f2f0ea", 7.2, 0.005, pz - 0.75, 0.22, 0.02, 0.8, 0, -0.6, 0)
-          .box("plain", "#f2f0ea", 7.8, 0.005, pz - 0.75, 0.22, 0.02, 0.8, 0, 0.6, 0),
+        B.box("plain", "#f2f0ea", 7.5, 0.02, pz, 0.22, 0.02, 1.8)
+          .box("plain", "#f2f0ea", 7.2, 0.02, pz - 0.75, 0.22, 0.02, 0.8, 0, -0.6, 0)
+          .box("plain", "#f2f0ea", 7.8, 0.02, pz - 0.75, 0.22, 0.02, 0.8, 0, 0.6, 0),
       );
       // the restaurant: red tile skirt, cream tile walls, chrome-framed wraparound windows
       B.box("concrete", "#c8c2b6", bx, 0.15, bz, w + 0.6, 0.3, d + 0.6);
@@ -15725,10 +15902,10 @@ const JGP = (() => {
       [-45, -45],
       [SZ, 45],
     ].forEach(([cz, cx]) => {
-      put("asphalt", UHs(64, 1), ROAD, S(0, -0.1, cz, 0, 0, 0, 640, 1, 8)), put("asphalt", UHs(1, 64), ROAD, S(cx, -0.101, 0, 0, 0, 0, 8, 1, 640));
+      put("asphalt", UHs(64, 1), ROAD, S(0, -0.1, cz, 0, 0, 0, 640, 1, 8)), put("asphalt", UHs(1, 64), ROAD, S(cx, -0.12, 0, 0, 0, 0, 8, 1, 640));
       for (let u = -318; u < 318; u += 9) {
-        Math.abs(u + 1.5 - 45) > 6 && Math.abs(u + 1.5 + 45) > 6 && put("plain", UH, "#e8c030", S(u + 1.5, -0.09, cz, 0, 0, 0, 3, 1, 0.18));
-        Math.abs(u + 1.5 - SZ) > 6 && Math.abs(u + 1.5 + 45) > 6 && put("plain", UH, "#e8c030", S(cx, -0.09, u + 1.5, 0, 0, 0, 0.18, 1, 3));
+        Math.abs(u + 1.5 - 45) > 6 && Math.abs(u + 1.5 + 45) > 6 && put("plain", UH, "#e8c030", S(u + 1.5, -0.07, cz, 0, 0, 0, 3, 1, 0.18));
+        Math.abs(u + 1.5 - SZ) > 6 && Math.abs(u + 1.5 + 45) > 6 && put("plain", UH, "#e8c030", S(cx, -0.07, u + 1.5, 0, 0, 0, 0.18, 1, 3));
       }
       [-1, 1].forEach((sd) => {
         SEGS.forEach(([a0, a1]) => put("concrete", UBs(segs(a1 - a0), 1), WALK, S((a0 + a1) / 2, -0.1, cz + 5.5 * sd, 0, 0, 0, a1 - a0, 0.2, 3)));
@@ -15744,8 +15921,8 @@ const JGP = (() => {
     [-1, 1].forEach((sx) =>
       [-1, 1].forEach((sz) => {
         for (let k = 0; k < 7; k++) {
-          put("plain", UH, "#f2f0ea", S(39.5 * sx, -0.09, (sz > 0 ? SZ : 45 * sz) + sz * (k - 3.5), 0, 0, 0, 3, 1, 0.5));
-          put("plain", UH, "#f2f0ea", S(sx * (41.5 + k), -0.09, sz > 0 ? SZ - 5.5 : -39.5, 0, 0, 0, 0.5, 1, 3));
+          put("plain", UH, "#f2f0ea", S(39.5 * sx, -0.07, (sz > 0 ? SZ : 45 * sz) + sz * (k - 3.5), 0, 0, 0, 3, 1, 0.5));
+          put("plain", UH, "#f2f0ea", S(sx * (41.5 + k), -0.07, sz > 0 ? SZ - 5.5 : -39.5, 0, 0, 0, 0.5, 1, 3));
         }
       }),
     );
@@ -15769,7 +15946,7 @@ const JGP = (() => {
           wl = dx < 0 ? (LINEUP_X + 2.6 - x0) / ux : len + 0.53;
         return { x0, z0, cx, cz, len, ux, uz, wl };
       };
-    put("concrete", cached("ringwalk", () => new THREE.RingGeometry(GARDEN_R + 1.6, GARDEN_R + 3.4, 72).rotateX(-Math.PI / 2)), WALK, S(0, 0.004, 0));
+    put("concrete", cached("ringwalk", () => new THREE.RingGeometry(GARDEN_R + 1.6, GARDEN_R + 3.4, 72).rotateX(-Math.PI / 2)), WALK, S(0, 0.02, 0));
     [
       [1, -1],
       [1, 1],

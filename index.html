@@ -11589,34 +11589,27 @@ const JGP = (() => {
   // [id, name, builder, def fields, [x, z]]. Ids that already exist in the engine's defs keep their
   // engine role (companions, battles, quests); the rest are added as stationary NPCs.
   const ROWS = {
-    // everyone in one line-up along the west side of the square, facing in (the square was
-    // lengthened to the south to fit them). The first three groups come from the earlier rows:
-    // same-named and requested merges, FORTIZMO (Greeblis City), the Greeblis Park NPCs and THE
-    // PROFESSOR (Greeblis Woods), then the test models of the shopkeeper and the pizza courier.
+    // everyone in one line-up along the west side of the square, facing in: the merged creatures,
+    // FORTIZMO (Greeblis City), the Greeblis Park NPCs, then the test models of the shopkeeper and
+    // the pizza courier
     lineup: {
       face: Math.PI / 2,
       list: [
-        ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [-34, -34.11]],
-        ["orbiter", "MALTOE", "born_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "talkR": 4.2}, [-34, -29.22]],
-        ["drifter", "MUSHROOM", "born_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [-34, -24.65]],
-        ["hopper", "PATCHOOLEE", "born_patchoolee", {"color": "#8cc63a", "bodyR": 0.85}, [-34, -20.75]],
-        ["blinker", "ANOMALEE", "anomaleePeg", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2}, [-34, -17.11]],
-        ["slugwerth", "SLUGWERTH", "born_slugwerth", {"color": "#2c5fe0", "bodyR": 0.85}, [-34, -13.82]],
-        ["appterix", "APPTERIX", "born_appterix", {"color": "#d8322a", "bodyR": 0.95}, [-34, -10.37]],
-        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [-34, -6.78]],
-        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [-34, -1.94]],
-        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#2a9ccf", "bodyR": 1.1}, [-34, 2.47]],
-        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [-34, 5.58]],
-        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [-34, 9.01]],
-        ["frog", "FORTIZMO", "fortizmoPick", {"color": "#e8742a", "bodyR": 0.95, "modelScale": 0.78, "talkR": 4.2}, [-34, 13.11]],
-        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [-34, 17.29]],
-        ["p_rando", "SEEDRIC", "park_rando", {"color": "#5cc86a", "bodyR": 1, "talkR": 3.6}, [-34, 21.87]],
-        ["p_poppup", "INTERSTITIA", "park_poppup", {"color": "#7ac84a", "bodyR": 0.8, "talkR": 3.6}, [-34, 26.86]],
-        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [-34, 31.58]],
-        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [-34, 36.03]],
-        ["w_professor", "THE PROFESSOR", "woods_professor", {"color": "#1c2b44", "bodyR": 0.85, "modelScale": 0.77}, [-34, 39.75]],
-        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [-34, 43.31]],
-        ["t_nextessa", "NEXTESSA", "born_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [-34, 46.74]],
+        ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [-34, -27.78]],
+        ["orbiter", "MALTOE", "born_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "talkR": 4.2}, [-34, -22.14]],
+        ["drifter", "MUSHROOM", "born_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [-34, -16.85]],
+        ["blinker", "ANOMALEE", "anomaleePeg", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2}, [-34, -11.91]],
+        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [-34, -7.67]],
+        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [-34, -2.04]],
+        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#2a9ccf", "bodyR": 1.1}, [-34, 3.12]],
+        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [-34, 7.08]],
+        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [-34, 11.27]],
+        ["frog", "FORTIZMO", "fortizmoPick", {"color": "#e8742a", "bodyR": 0.95, "modelScale": 0.78, "talkR": 4.2}, [-34, 16.17]],
+        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [-34, 21.11]],
+        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [-34, 26.73]],
+        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [-34, 31.99]],
+        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [-34, 36.24]],
+        ["t_nextessa", "NEXTESSA", "born_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [-34, 40.43]],
       ],
     },
   };
@@ -13692,8 +13685,9 @@ const JGP = (() => {
   function applyCast() {
     // MISSGUMMERY (jumper) is part of SIRGUMMERY and KOLLOD (orson) is part of ZOLLOD now
     delete o.jumper, delete n.orson;
-    // removed from the game: CHERUBI (wanderer), SUNNY (kingdino), SIRGUMMERY (mont)
-    ["wanderer", "kingdino", "mont"].forEach((id) => (delete e[id], delete o[id], delete n[id]));
+    // removed from the game: CHERUBI (wanderer), SUNNY (kingdino), SIRGUMMERY (mont), PATCHOOLEE (hopper),
+    // SLUGWERTH and APPTERIX
+    ["wanderer", "kingdino", "mont", "hopper", "slugwerth", "appterix"].forEach((id) => (delete e[id], delete o[id], delete n[id]));
     t.creaturesRoaming = Object.keys(n).length;
     const all = Object.assign({}, e, o, n);
     for (const key in ROWS) {

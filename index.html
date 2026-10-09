@@ -11493,8 +11493,6 @@ const JGP = (() => {
     ["v15_gorbo", "GORBO", "w_gorboMerge", "#3ad8e8", 1.1], // merge: GORBO (v15) + GORBO (Woods)
     ["v15_mama", "MAMA GORBO", "g15_mamagorbo", "#f2b06a", 1.1],
     ["v15_spark", "SPARKAKUS", "g15_sparkakus", "#2f6fd8", 0.9],
-    ["v15_bobert", "BOBERT", "g15_bobert", "#c08050", 0.6],
-    ["v15_somnux", "SOMNUX", "g15_somnux", "#c9b96a", 0.6],
     ["v15_kingdino", "KING DINO", "w_kingdinoMerge", "#d8c41a", 0.8], // merge: KING DINO (v15) + King Dino (Woods)
     ["v15_immuto", "IMMUTO", "g15_immuto", "#f0a02a", 1.2],
     ["v15_sealio", "SEALIO", "g15_sealio", "#5ac898", 1],
@@ -14182,6 +14180,414 @@ const JGP = (() => {
       (head.position.x = 0.05 * Math.sin(2.2 * t - 3)), (head.rotation.z = 0.1 * s.tk * Math.sin(10 * t));
     });
   };
+  // ---- high-detail merges ------------------------------------------------------
+  // radius of a lathe profile [[r, y], ...] at height y (linear between points)
+  const latheR = (pts, y) => {
+    for (let k = 1; k < pts.length; k++) {
+      const [r0, y0] = pts[k - 1],
+        [r1, y1] = pts[k];
+      if (y >= y0 && y <= y1) return r0 + ((r1 - r0) * (y - y0)) / Math.max(1e-6, y1 - y0);
+    }
+    return 0;
+  };
+  const lathe = (pts, seg, a0, len) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg || 28, a0 || 0, len || l);
+  // a point on a lathe surface at angle a (0 = front, +z) and height y, pushed out by k
+  const onLathe = (pts, a, y, k = 1) => {
+    const r = latheR(pts, y) * k;
+    return [Math.sin(a) * r, y, Math.cos(a) * r];
+  };
+  // a small object placed on a lathe surface, turned to face outward
+  const faceOut = (m, a) => ((m.rotation.y = a), m);
+
+  // JOHN OWL = OWL (brown) + OWL (blue) + SHOPKEEPER OWL, elements taken equally from all three:
+  //   brown owl: brown egg body, ear tufts, cream feathered bib with chevrons, brown brows
+  //   blue owl:  blue layered wings, blue tail fan, pale-blue facial discs
+  //   shopkeeper owl: black top hat with the pink band, plus a pink bow tie to match
+  WD.johnOwl = (g) => {
+    const brown = KIT.surf("feather", "#b8864a", { rep: 4, shine: 18 }),
+      brownDk = cm("#8a5e2e"),
+      blue = KIT.surf("feather", "#7ccbe8", { rep: 2, shine: 22 }),
+      blueDk = cm("#4a9ec0"),
+      cream = KIT.surf("feather", "#efe0b8", { rep: 5, shine: 14 }),
+      chev = cm("#c8a878"),
+      orange = cm("#f2a02a", { shininess: 60 }),
+      talon = cm("#3a2a1a", { shininess: 60 }),
+      hatM = cm("#1a1a22", { shininess: 40 }),
+      pinkM = cm("#ff5fb0"),
+      body = new THREE.Group();
+    g.add(body);
+    // egg-shaped body and head in one smooth piece
+    const P = [[0, 0.16], [0.3, 0.19], [0.5, 0.3], [0.6, 0.52], [0.63, 0.78], [0.6, 1.02], [0.53, 1.22], [0.4, 1.38], [0.22, 1.47], [0, 1.5]];
+    R(lathe(P, 32), brown, body);
+    // cream bib over the front, with rows of chevron feathers
+    const PB = P.filter(([, y]) => y >= 0.24 && y <= 1.03).map(([r, y]) => [r * 1.015, y]);
+    R(lathe(PB, 20, -1.15, 2.3), cream, body);
+    for (let row = 0; row < 5; row++)
+      for (let k = -2; k <= 2; k++) {
+        if ((row + k) % 2) continue;
+        const y = 0.38 + 0.11 * row,
+          a = 0.2 * k + (row % 2 ? 0.1 : 0),
+          m = R(T.cone(0.035, 0.07, 3), chev, body, onLathe(P, a, y, 1.03), [Math.PI, 0, 0], [1, 1, 0.35]);
+        faceOut(m, a);
+      }
+    // pink bow tie (shopkeeper owl)
+    const bow = new THREE.Group();
+    bow.position.set(...onLathe(P, 0, 0.8, 1.05)), body.add(bow);
+    [-1, 1].forEach((sx) => R(T.cone(0.07, 0.13, 8), pinkM, bow, [sx * 0.065, 0, 0], [0, 0, (sx * Math.PI) / 2]));
+    R(T.sphere(0.035, 8, 6), pinkM, bow);
+
+    // head: facial discs, big amber eyes, brows, hooked beak, ear tufts and the top hat. Owls turn their heads.
+    const head = new THREE.Group();
+    body.add(head);
+    [-1, 1].forEach((sx) => {
+      const a = sx * 0.33,
+        p = onLathe(P, a, 1.12, 0.9);
+      R(T.sphere(1, 18, 12), cm("#d4f0fa", { shininess: 20 }), head, p, [0, a, 0], [0.24, 0.27, 0.09]);
+      R(T.torus(0.24, 0.022, 6, 24), blueDk, head, p, [0, a, 0], [1, 1.1, 1]);
+      const ey = KIT.eye(head, onLathe(P, a, 1.13, 1.0), 0.14, { iris: "#f2a01a", pupil: "round", pupilScale: 1.55, lidMat: brown, open: -1.55, rot: [0, a, 0] });
+      pendLids.push(ey.lid);
+      R(T.sphere(1, 10, 6), brownDk, head, onLathe(P, sx * 0.2, 1.33, 1.0), [0, sx * 0.2, sx * 0.55], [0.17, 0.035, 0.05]);
+    });
+    R(T.sphere(0.065, 10, 8), orange, head, onLathe(P, 0, 1.05, 1.02));
+    R(T.cone(0.06, 0.17, 10), orange, head, [0, 0.96, onLathe(P, 0, 0.98, 1.0)[2] + 0.03], [Math.PI - 0.35, 0, 0]);
+    [-1, 1].forEach((sx) => R(T.sphere(0.012, 5, 4), cb("#5a3010"), head, [sx * 0.025, 1.08, onLathe(P, 0, 1.08, 1.0)[2] + 0.05]));
+    const tufts = [-1, 1].map((sx) => {
+      const tg = new THREE.Group();
+      tg.position.set(sx * 0.24, 1.38, 0.0), head.add(tg);
+      [-1, 0, 1].forEach((j) => R(T.cone(0.05, 0.26 - 0.04 * Math.abs(j), 5), j ? brownDk : brown, tg, [sx * 0.03 * j, 0.1, -0.03 * j], [0, 0, -sx * (0.35 + 0.18 * j)], [1, 1, 0.55]));
+      return tg;
+    });
+    const hat = new THREE.Group();
+    hat.position.set(0.02, 1.47, -0.02), (hat.rotation.x = -0.12), (hat.rotation.z = -0.1), head.add(hat);
+    R(T.cyl(0.3, 0.3, 0.03, 24), hatM, hat);
+    R(T.torus(0.3, 0.012, 4, 24), hatM, hat, [0, 0.012, 0], [Math.PI / 2, 0, 0]);
+    R(T.cyl(0.19, 0.205, 0.36, 20), hatM, hat, [0, 0.19, 0]);
+    R(T.cyl(0.212, 0.212, 0.07, 20), pinkM, hat, [0, 0.06, 0]);
+    R(T.cyl(0.19, 0.19, 0.01, 20), cm("#2a2a34", { shininess: 60 }), hat, [0, 0.375, 0]);
+    // a blue feather tucked in the band (blue owl)
+    const qf = new THREE.Group();
+    qf.position.set(0.19, 0.12, -0.06), (qf.rotation.z = -0.5), hat.add(qf);
+    R(T.sphere(1, 10, 6), blue, qf, [0, 0.14, 0], null, [0.04, 0.16, 0.012]);
+    R(T.cyl(0.004, 0.004, 0.3, 3), cm("#f4f4ec"), qf, [0, 0.12, 0.012]);
+
+    // blue layered wings: coverts on top, five long flight feathers fanned below
+    const wings = [-1, 1].map((sx) => {
+      const w = new THREE.Group();
+      w.position.set(sx * 0.58, 1.0, -0.04), body.add(w);
+      R(T.sphere(1, 12, 8), brown, w, [sx * 0.03, -0.1, 0], [0, 0, sx * 0.12], [0.1, 0.24, 0.26]);
+      for (let k = 0; k < 5; k++)
+        R(T.sphere(1, 10, 6), k % 2 ? blue : cm("#6ab8d8"), w, [sx * (0.04 + 0.01 * k), -0.3 - 0.03 * k, 0.12 - 0.07 * k], [0.15 * k - 0.2, 0, sx * (0.08 + 0.04 * k)], [0.05, 0.3, 0.09]);
+      return w;
+    });
+    // blue tail fan
+    const tail = new THREE.Group();
+    tail.position.set(0, 0.36, -0.5), (tail.rotation.x = -0.9), body.add(tail);
+    for (let k = -2; k <= 2; k++) R(T.sphere(1, 10, 6), k % 2 ? blue : cm("#6ab8d8"), tail, [0.06 * k, -0.15, 0], [0, 0, 0.22 * k], [0.06, 0.2, 0.02]);
+    // feet: three toes forward and one back, each with a dark talon
+    [-1, 1].forEach((sx) => {
+      const f = new THREE.Group();
+      f.position.set(sx * 0.2, 0.05, 0.28), body.add(f);
+      [-1, 0, 1].forEach((j) => {
+        const toe = new THREE.Group();
+        (toe.rotation.y = 0.35 * j), f.add(toe);
+        R(T.cyl(0.035, 0.03, 0.16, 6), orange, toe, [0, 0, 0.08], [Math.PI / 2, 0, 0]);
+        R(T.cone(0.022, 0.07, 5), talon, toe, [0, -0.01, 0.18], [Math.PI / 2 + 0.4, 0, 0]);
+      });
+      R(T.cyl(0.03, 0.025, 0.1, 6), orange, f, [0, 0, -0.06], [-Math.PI / 2, 0, 0]);
+      R(T.sphere(0.05, 8, 6), orange, f, [0, 0.02, 0]);
+    });
+    let look = 0,
+      lookTo = 0,
+      nextLook = 2 + 3 * Math.random();
+    return life(g, (t, dt, s) => {
+      // owl head turns: hold, then swivel to a new look direction
+      t > nextLook && ((lookTo = (Math.random() - 0.5) * 1.1 * (1 - s.tk)), (nextLook = t + 2 + 4 * Math.random()));
+      (look += (lookTo - look) * Math.min(1, 5 * dt)), (head.rotation.y = look + 0.04 * Math.sin(1.3 * t));
+      head.rotation.z = 0.1 * s.tk * Math.sin(6 * t);
+      wings.forEach((w, k) => (w.rotation.z = (k ? -1 : 1) * (0.05 * Math.sin(1.6 * t) + 0.5 * s.tk * Math.abs(Math.sin(9 * t)))));
+      tufts.forEach((tg, k) => (tg.rotation.z = (k ? -1 : 1) * 0.08 * Math.sin(2.3 * t + k)));
+      const br = 1 + 0.02 * Math.sin(2 * t);
+      body.scale.set(br, 1 / br, br), (body.position.y = 0.07 * Math.abs(Math.sin(6 * t)) * s.wk + 0.05 * s.tk * Math.abs(Math.sin(8 * t)));
+      (tail.rotation.y = 0.15 * Math.sin(2.5 * t)), (hat.rotation.z = -0.1 + 0.05 * Math.sin(1.7 * t));
+    });
+  };
+
+  // TOEBERT = MISS BUN + MR BUN + BOBERT, elements taken equally from all three:
+  //   Bobert:   stuffed-toy fabric and stitching, one upright ear, ranger hat, ranger badge, clipboard,
+  //             pale belly patch, cotton tail
+  //   Mr Bun:   green vest, red bow tie, gold pocket watch, the hat's red band with a green sprig, lop ear
+  //   Miss Bun: big red ribbon bow on the lop ear, purple eyes, rosy cheeks, white lace collar and cuffs
+  WD.toebert = (g) => {
+    const fur = KIT.surf("fabric", "#b87c48", { rep: 4, bump: 0.025, shine: 8 }),
+      pale = KIT.surf("fabric", "#f2dcbc", { rep: 4, bump: 0.02, shine: 8 }),
+      pink = cm("#f2a8b0"),
+      thread = cm("#5a3a1a"),
+      vestM = KIT.surf("fabric", "#2a6a3a", { rep: 3, shine: 14 }),
+      red = KIT.surf("fabric", "#c42026", { rep: 3, shine: 14 }),
+      gold = cm("#f2c22e", { shininess: 110, specular: 16777215 }),
+      lace = cm("#fbf8f0"),
+      body = new THREE.Group();
+    g.add(body);
+    // big feet with toe beans and pink pads, haunches
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 14, 10), fur, body, [sx * 0.2, 0.09, 0.14], null, [0.15, 0.09, 0.3]);
+      [-1, 0, 1].forEach((j) => R(T.sphere(0.045, 8, 6), fur, body, [sx * 0.2 + 0.06 * j, 0.08, 0.42]));
+      R(T.circle(0.05, 12), pink, body, [sx * 0.2, 0.06, 0.445]);
+      R(T.sphere(0.21, 14, 10), fur, body, [sx * 0.23, 0.3, -0.02]);
+    });
+    // pear-shaped stuffed torso with side seams
+    const P = [[0, 0.2], [0.3, 0.24], [0.42, 0.4], [0.46, 0.62], [0.43, 0.86], [0.35, 1.08], [0.24, 1.26], [0, 1.33]];
+    R(lathe(P, 28), fur, body);
+    // pale belly patch, stitched round the edge (Bobert)
+    const PB = P.filter(([, y]) => y >= 0.3 && y <= 1.0).map(([r, y]) => [r * 1.012, y]);
+    R(lathe(PB, 18, -0.85, 1.7), pale, body);
+    [-0.85, 0.85].forEach((a) => {
+      for (let y = 0.34; y < 0.98; y += 0.06) R(T.box(0.045, 0.01, 0.01), thread, body, onLathe(P, a, y, 1.03), [0, a, 0.6]);
+    });
+    [Math.PI / 2, -Math.PI / 2].forEach((a) => {
+      for (let y = 0.3; y < 1.15; y += 0.07) R(T.box(0.04, 0.01, 0.01), thread, body, onLathe(P, a, y, 1.01), [0, a, 0.6]);
+    });
+    // green vest, open at the front, with gold buttons, a ranger badge and a pocket watch on a chain
+    const PV = P.filter(([, y]) => y >= 0.5 && y <= 1.16).map(([r, y]) => [r * 1.05, y]);
+    R(lathe(PV, 24, 0.75, l - 1.5), Object.assign(vestM.clone(), { side: THREE.DoubleSide }), body);
+    [0.7, 0.85, 1.0].forEach((y) => R(T.sphere(0.022, 6, 4), gold, body, onLathe(P, 0.82, y, 1.08)));
+    const badge = R(T.cyl(0.055, 0.055, 0.015, 5), gold, body, onLathe(P, 1.15, 0.95, 1.08), [Math.PI / 2, 0, 0]);
+    badge.rotation.set(Math.PI / 2, 0, 0), (badge.rotation.order = "YXZ"), (badge.rotation.y = 1.15);
+    const watch = R(T.cyl(0.05, 0.05, 0.02, 14), gold, body, onLathe(P, -1.05, 0.78, 1.08), [Math.PI / 2, 0, 0]);
+    (watch.rotation.order = "YXZ"), (watch.rotation.y = -1.05);
+    R(T.circle(0.04, 14), cm("#fffaf0"), body, onLathe(P, -1.05, 0.78, 1.13), [0, -1.05, 0]);
+    const wa = new THREE.Vector3(...onLathe(P, -1.0, 0.8, 1.1)),
+      wb = new THREE.Vector3(...onLathe(P, -0.55, 0.86, 1.06)),
+      wc = new THREE.Vector3(...onLathe(P, -0.82, 0.92, 1.09));
+    R(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([wa, wc.clone().setY(0.79), wb]), 16, 0.007, 4), gold, body);
+    // white lace collar (Miss Bun) and red bow tie (Mr Bun)
+    for (let k = 0; k < 16; k++) {
+      const a = (k / 16) * l;
+      R(T.sphere(0.04, 6, 4), lace, body, onLathe(P, a, 1.2, 1.12), null, [1, 0.6, 1]);
+    }
+    const bow = new THREE.Group();
+    bow.position.set(...onLathe(P, 0, 1.17, 1.2)), body.add(bow);
+    [-1, 1].forEach((sx) => R(T.cone(0.065, 0.12, 8), red, bow, [sx * 0.06, 0, 0], [0, 0, (sx * Math.PI) / 2]));
+    R(T.sphere(0.033, 8, 6), red, bow);
+    // cotton tail (Bobert)
+    for (let k = 0; k < 7; k++) R(T.sphere(0.06, 8, 6), lace, body, [0.05 * Math.cos(k * 1.3), 0.45 + 0.05 * Math.sin(k * 1.7), -0.45 - 0.03 * (k % 2)]);
+
+    // arms with lace cuffs; the right paw holds Bobert's clipboard and pencil
+    const arms = [-1, 1].map((sx) =>
+      KIT.arm(body, [sx * 0.38, 1.04, 0.04], { len: 0.48, r: 0.07, mat: fur, hand: "mitt", handMat: pale, rot: [-0.35, 0, sx * 0.3] }),
+    );
+    arms.forEach((a) => R(T.torus(0.07, 0.022, 6, 14), lace, a.hand, [0, 0.02, 0], [Math.PI / 2, 0, 0]));
+    const clip = new THREE.Group();
+    clip.position.set(-0.05, -0.12, 0.12), (clip.rotation.x = -1.0), arms[1].hand.add(clip);
+    R(T.box(0.24, 0.32, 0.015), cm("#a8743a"), clip);
+    R(T.box(0.2, 0.26, 0.004), cm("#fbf8ee"), clip, [0, -0.015, 0.009]);
+    for (let k = 0; k < 4; k++) R(T.box(0.15 - 0.02 * (k % 2), 0.008, 0.002), cm("#5a6ab8"), clip, [-0.015, 0.06 - 0.05 * k, 0.012]);
+    R(T.box(0.1, 0.04, 0.03), cm("#c8ccd4", { shininess: 120 }), clip, [0, 0.15, 0.01]);
+    R(T.cyl(0.008, 0.008, 0.2, 6), cm("#f2c22e"), clip, [0.1, -0.02, 0.02], [0, 0, 0.4]);
+    R(T.cone(0.008, 0.025, 6), cm("#3a2a1a"), clip, [0.14, -0.11, 0.02], [0, 0, Math.PI + 0.4]);
+
+    // head
+    const head = new THREE.Group();
+    head.position.set(0, 1.58, 0.02), body.add(head);
+    R(T.sphere(0.34, 22, 16), fur, head, null, null, [1, 0.94, 0.96]);
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(0.12, 12, 10), pale, head, [sx * 0.08, -0.1, 0.27]);
+      R(T.circle(0.06, 12), cm("#ff9aa8"), head, [sx * 0.22, -0.05, 0.26], [0, sx * 0.6, 0]);
+      for (let k = 0; k < 3; k++) R(T.cyl(0.004, 0.004, 0.26, 3), cm("#3a2a1a"), head, [sx * 0.24, -0.09 + 0.035 * (k - 1), 0.3], [0, 0, Math.PI / 2 + sx * 0.12 * (k - 1)]);
+      R(T.box(0.04, 0.065, 0.016), cm("#fffaf0"), head, [sx * 0.022, -0.23, 0.33]);
+      const ey = KIT.eye(head, [sx * 0.13, 0.06, 0.27], 0.075, { iris: "#7a4ab8", pupil: "round", pupilScale: 1.3, lidMat: fur, open: -1.2, rot: [0, sx * 0.35, 0] });
+      pendLids.push(ey.lid);
+      R(T.box(0.08, 0.015, 0.015), thread, head, [sx * 0.13, 0.17, 0.29], [0, 0, sx * 0.1]);
+    });
+    const nose = R(T.sphere(0.045, 10, 8), cm("#e86a8a", { shininess: 80 }), head, [0, -0.05, 0.37], null, [1.2, 0.8, 0.8]);
+    R(T.sphere(0.012, 5, 4), cb("#ffffff"), head, [-0.015, -0.035, 0.405]);
+    KIT.seam(head, [0, -0.09, 0.37], [0, -0.15, 0.36], 0.012, thread);
+    [-1, 1].forEach((sx) => KIT.seam(head, [0, -0.15, 0.36], [sx * 0.06, -0.18, 0.33], 0.012, thread));
+    // ears: Bobert's upright ear and the Buns' lop ear wearing Miss Bun's red bow
+    const earShape = (p) => {
+      R(T.sphere(1, 14, 10), fur, p, [0, 0.3, 0], null, [0.09, 0.32, 0.055]);
+      R(T.sphere(1, 12, 8), pink, p, [0, 0.3, 0.03], null, [0.055, 0.25, 0.03]);
+      for (let k = 0; k < 6; k++) {
+        const y = 0.1 + 0.08 * k;
+        R(T.box(0.03, 0.008, 0.008), thread, p, [0.09 * Math.sqrt(Math.max(0, 1 - ((y - 0.3) / 0.32) ** 2)), y, 0], [0, Math.PI / 2, 0.6]);
+      }
+    };
+    const earUp = new THREE.Group();
+    earUp.position.set(-0.13, 0.26, -0.03), (earUp.rotation.z = 0.12), head.add(earUp), earShape(earUp);
+    const earLop = new THREE.Group();
+    earLop.position.set(0.2, 0.2, -0.02), (earLop.rotation.z = -2.2), head.add(earLop), earShape(earLop);
+    const rib = new THREE.Group();
+    rib.position.set(0, 0.06, 0.04), earLop.add(rib);
+    [-1, 1].forEach((sx) => R(T.torus(0.07, 0.025, 6, 14), red, rib, [sx * 0.07, 0, 0], [0, sx * 0.4, 0], [1, 0.7, 1]));
+    R(T.sphere(0.035, 8, 6), red, rib);
+    [-1, 1].forEach((sx) => R(T.box(0.03, 0.12, 0.012), red, rib, [sx * 0.03, -0.07, 0], [0, 0, sx * 0.3]));
+    // ranger hat (Bobert) with Mr Bun's red band and green sprig, the upright ear poking through the brim
+    const hat = new THREE.Group();
+    hat.position.set(0.05, 0.27, -0.01), (hat.rotation.z = -0.12), (hat.rotation.x = -0.08), head.add(hat);
+    const tan = cm("#8a5a2a");
+    R(T.cyl(0.44, 0.44, 0.025, 28), tan, hat);
+    R(T.torus(0.44, 0.014, 4, 28), tan, hat, [0, 0.01, 0], [Math.PI / 2, 0, 0]);
+    R(T.cyl(0.13, 0.22, 0.24, 4), tan, hat, [0, 0.13, 0], [0, Math.PI / 4, 0]);
+    R(T.cyl(0.225, 0.23, 0.06, 20), red, hat, [0, 0.04, 0]);
+    [-1, 1].forEach((sx) => R(T.sphere(1, 8, 6), cm("#3a8a2a"), hat, [0.2 + 0.03 * sx, 0.09, 0.08], [0, 0, -0.6 + 0.4 * sx], [0.025, 0.07, 0.012]));
+    return life(g, (t, dt, s) => {
+      // nose twitch, ear twitches and lop-ear swing, a happy hop when talking, clipboard taps
+      nose.scale.set(1.2 + 0.08 * Math.max(0, Math.sin(9 * t)), 0.8, 0.8);
+      earUp.rotation.z = 0.12 + 0.06 * Math.sin(1.7 * t) + (Math.sin(0.7 * t) > 0.92 ? 0.25 * Math.sin(30 * t) : 0);
+      earLop.rotation.z = -2.2 + 0.1 * Math.sin(2.1 * t) + 0.25 * s.tk * Math.sin(10 * t);
+      (head.rotation.z = 0.05 * Math.sin(1.1 * t) + 0.08 * s.tk * Math.sin(7 * t)), (head.rotation.x = 0.06 * s.tk * Math.sin(9 * t));
+      body.position.y = 0.1 * Math.abs(Math.sin(6 * t)) * s.wk + 0.06 * s.tk * Math.abs(Math.sin(8 * t));
+      arms[0].sh.rotation.x = -0.35 + 0.08 * Math.sin(1.4 * t) - 0.5 * s.tk * Math.abs(Math.sin(5 * t));
+      (arms[1].sh.rotation.x = -0.35 + 0.05 * Math.sin(1.2 * t)), (arms[1].el.rotation.x = -0.6 + 0.12 * Math.sin(3 * t) * (0.3 + s.tk));
+    });
+  };
+
+  // SOMLET = GRATELET + SOMNUX, elements taken equally from both:
+  //   Gratelet: round moon head with craters and swirl marks, rosy cheeks, little three-fingered arms
+  //   Somnux:   striped nightcap with a pompom, segmented pale body, floating z's and a little dream moon
+  //   both:     sleepy closed eyes and dangling red roots
+  WD.somlet = (g) => {
+    const moonTex = tex(256, 256, (c) => {
+        (c.fillStyle = "#f0e2b0"), c.fillRect(0, 0, 256, 256);
+        for (let k = 0; k < 40; k++) {
+          const x0 = 256 * Math.random(),
+            y0 = 256 * Math.random(),
+            r = 3 + 9 * Math.random(),
+            gr = c.createRadialGradient(x0, y0, 0, x0, y0, r);
+          gr.addColorStop(0, "rgba(180,140,70,.35)"), gr.addColorStop(0.8, "rgba(200,160,90,.25)"), gr.addColorStop(1, "rgba(255,250,220,.4)");
+          (c.fillStyle = gr), c.beginPath(), c.arc(x0, y0, r, 0, l), c.fill();
+        }
+        (c.strokeStyle = "rgba(170,125,60,.55)"), (c.lineWidth = 3);
+        [[60, 170], [200, 80], [150, 210]].forEach(([x0, y0]) => {
+          c.beginPath();
+          for (let k = 0; k < 60; k++) {
+            const a = 0.32 * k,
+              r = 1 + 0.33 * k;
+            k ? c.lineTo(x0 + r * Math.cos(a), y0 + r * Math.sin(a)) : c.moveTo(x0, y0);
+          }
+          c.stroke();
+        });
+      }),
+      moonM = cm("#ffffff", { map: moonTex, shininess: 12 }),
+      pale = KIT.surf("skin", "#ece6b0", { rep: 2, shine: 18 }),
+      crease = cm("#cfc890"),
+      rootM = cm("#c8302a", { shininess: 30 }),
+      ink = cb("#5a4020"),
+      fl = new THREE.Group();
+    g.add(fl);
+    // segmented body (Somnux) with soft creases
+    const segs = [
+      [0.95, 0.27],
+      [1.27, 0.24],
+      [1.55, 0.21],
+    ].map(([y, r]) => R(T.sphere(r, 18, 14), pale, fl, [0, y, 0], null, [1, 0.9, 0.95]));
+    [1.11, 1.41].forEach((y, k) => R(T.torus(0.21 - 0.03 * k, 0.025, 6, 20), crease, fl, [0, y, 0], [Math.PI / 2, 0, 0]));
+    // moon head (Gratelet) with raised crater rims on the back and top
+    const head = new THREE.Group();
+    head.position.set(0, 2.18, 0), fl.add(head);
+    R(T.sphere(0.6, 32, 24), moonM, head, null, [0, -Math.PI / 2, 0]);
+    [[0.35, 0.3, -0.75], [-0.5, 0.1, -0.6], [0.1, 0.8, -0.4], [-0.3, -0.5, -0.7], [0.7, -0.2, -0.3], [-0.65, 0.5, 0.1]].forEach((d, k) => {
+      const p = onE([0, 0, 0], [0.6, 0.6, 0.6], d, 1.0),
+        m = R(T.torus(0.07 + 0.025 * (k % 3), 0.016, 6, 16), cm("#e0cc90"), head, p);
+      m.lookAt(head.localToWorld(new THREE.Vector3(p[0] * 2, p[1] * 2, p[2] * 2)));
+    });
+    // sleepy face: closed eyes with lashes, rosy cheeks, a little snoring "o" mouth, and a hidden open eye for peeking
+    const closed = [],
+      openEye = [];
+    [-1, 1].forEach((sx) => {
+      const eg = new THREE.Group();
+      eg.position.set(sx * 0.2, 0.08, 0.565), (eg.rotation.y = sx * 0.35), head.add(eg);
+      const arc = R(T.torus(0.08, 0.016, 6, 16, Math.PI), ink, eg, null, [0, 0, Math.PI]);
+      arc.userData.keep = !0;
+      for (let k = -1; k <= 1; k++) {
+        const lash = R(T.cone(0.01, 0.05, 4), ink, eg, [0.07 * Math.sin(0.6 * k), -0.08 * Math.cos(0.6 * k) - 0.01, 0], [0, 0, Math.PI + 0.6 * k]);
+        lash.userData.keep = !0, closed.push(lash);
+      }
+      closed.push(arc);
+      const oe = new THREE.Group();
+      (oe.userData.keep = !0), (oe.visible = !1), eg.add(oe);
+      R(T.sphere(0.07, 12, 10), cm("#ffffff", { shininess: 60 }), oe);
+      R(T.sphere(0.04, 10, 8), cb("#2a1a10"), oe, [0, 0, 0.04]);
+      R(T.sphere(0.012, 5, 4), cb("#ffffff"), oe, [-0.015, 0.015, 0.075]);
+      openEye.push(oe);
+      R(T.sphere(1, 12, 8), cm("#ff9aa8", { shininess: 10 }), head, [sx * 0.33, -0.08, 0.49], [0, sx * 0.6, 0], [0.09, 0.06, 0.02]);
+    });
+    const mouth = R(T.torus(0.04, 0.014, 6, 14), ink, head, [0, -0.17, 0.575]);
+    mouth.userData.keep = !0;
+    R(T.sphere(0.03, 8, 6), cm("#ead8a0"), head, [0, -0.04, 0.6]);
+    // striped nightcap (Somnux): a drooping chain of shrinking rings that sways, with a fluffy pompom
+    const cap = new THREE.Group();
+    cap.position.set(0.04, 0.42, -0.04), (cap.rotation.z = -0.2), head.add(cap);
+    R(T.torus(0.44, 0.08, 8, 28), cm("#fbf8f4"), cap, [0, 0.0, 0], [Math.PI / 2, 0, 0]);
+    const capSegs = [];
+    let parent = cap;
+    for (let k = 0; k < 7; k++) {
+      const sg = new THREE.Group(),
+        r0 = 0.43 * (1 - k / 7.5),
+        r1 = 0.43 * (1 - (k + 1) / 7.5);
+      sg.position.set(0, k ? 0.13 : 0.02, 0), (sg.rotation.z = -0.14 - 0.05 * k), parent.add(sg);
+      R(T.cyl(r1, r0, 0.14, 18), cm(k % 2 ? "#9aa8e8" : "#d8e0f8"), sg, [0, 0.07, 0]);
+      k % 2 || R(T.sphere(0.022, 6, 4), cb("#ffd23a"), sg, [r0 * 0.7 * Math.sin(k), 0.07, r0 * 0.8 * Math.cos(k)]);
+      capSegs.push(sg), (parent = sg);
+    }
+    const pom = new THREE.Group();
+    pom.position.set(0, 0.16, 0), parent.add(pom);
+    for (let k = 0; k < 10; k++) R(T.sphere(0.055, 8, 6), cm("#fbf8f4"), pom, [0.06 * Math.cos(k * 2.4), 0.06 * Math.sin(k * 1.7), 0.06 * Math.sin(k * 2.4)]);
+    // little arms (Gratelet) with three fingers, from the top body segment
+    const arms = [-1, 1].map((sx) => {
+      const a = new THREE.Group();
+      a.position.set(sx * 0.2, 1.62, 0.02), (a.rotation.z = sx * 0.9), fl.add(a);
+      R(T.sphere(1, 10, 8), pale, a, [sx * 0.0, -0.12, 0], null, [0.07, 0.15, 0.07]);
+      [-1, 0, 1].forEach((j) => R(T.sphere(0.03, 6, 4), pale, a, [0.035 * j, -0.27, 0.02 + 0.015 * Math.abs(j)]));
+      return a;
+    });
+    // dangling red roots (both): jointed chains that sway, with knots and bulb tips
+    const roots = [];
+    for (let k = 0; k < 9; k++) {
+      const a = (k / 9) * l,
+        rg = new THREE.Group();
+      rg.position.set(0.15 * Math.cos(a), 0.72, 0.15 * Math.sin(a)), (rg.rotation.x = 0.25 * Math.sin(a)), (rg.rotation.z = -0.25 * Math.cos(a)), fl.add(rg);
+      let p = rg;
+      const len = 0.18 + 0.05 * (k % 3);
+      for (let j = 0; j < 3; j++) {
+        const sg = new THREE.Group();
+        j && sg.position.set(0, -len, 0), p.add(sg);
+        R(T.cyl(0.026 - 0.007 * j, 0.032 - 0.007 * j, len, 6), rootM, sg, [0, -len / 2, 0]);
+        R(T.sphere(0.03 - 0.006 * j, 6, 4), rootM, sg);
+        roots.push([sg, k, j]), (p = sg);
+      }
+      R(T.sphere(0.025, 6, 4), cm("#a8201a"), p, [0, -len, 0]);
+    }
+    // floating z's and a small dream moon (Somnux)
+    const zs = [0, 1, 2].map(() => R(T.plane(0.2, 0.2), cb("#ffffff", { map: textTex(64, 64, "rgba(0,0,0,0)", "#ffffff", "z", "bold 52px Arial"), transparent: !0, depthWrite: !1 }), fl, [0.4, 2.6, 0]));
+    const moon = new THREE.Group();
+    fl.add(moon);
+    R(T.torus(0.11, 0.04, 6, 14, Math.PI * 1.25), cm("#fff2a8", { emissive: "#6a5a10" }), moon, null, [0, 0, 1.1]);
+    let peekT = 0,
+      peekNext = 4 + 4 * Math.random();
+    return life(g, (t, dt, s) => {
+      (fl.position.y = 0.12 * Math.sin(0.9 * t)), (fl.rotation.z = 0.04 * Math.sin(0.7 * t));
+      // slow sleepy breathing; the snore mouth opens on the in-breath
+      const br = 0.5 + 0.5 * Math.sin(1.4 * t);
+      head.scale.setScalar(1 + 0.02 * br), mouth.scale.set(1, 0.6 + 0.8 * br + 0.6 * s.tk * Math.abs(Math.sin(10 * t)), 1);
+      segs.forEach((sg, k) => (sg.position.x = 0.03 * Math.sin(1.2 * t - k)));
+      head.rotation.z = 0.08 * Math.sin(0.6 * t) + 0.12 * s.tk * Math.sin(5 * t);
+      capSegs.forEach((sg, k) => (sg.rotation.z = -0.14 - 0.05 * k + 0.05 * Math.sin(1.5 * t - 0.5 * k)));
+      arms.forEach((a, k) => (a.rotation.z = (k ? 1 : -1) * (0.9 + 0.12 * Math.sin(1.3 * t + k) + 0.4 * s.tk * Math.abs(Math.sin(6 * t)))));
+      roots.forEach(([sg, k, j]) => (sg.rotation.x = 0.12 * Math.sin(1.6 * t + k + 0.6 * j)));
+      // every so often one eye peeks open for a moment (or both when spoken to)
+      t > peekNext && ((peekT = 0.9), (peekNext = t + 5 + 5 * Math.random()));
+      peekT = Math.max(0, peekT - dt);
+      const peek = [peekT > 0 || s.tk > 0, s.tk > 0];
+      openEye.forEach((oe, k) => (oe.visible = peek[k]));
+      closed.forEach((m, i) => (m.visible = !peek[i < 4 ? 0 : 1]));
+      zs.forEach((z, k) => {
+        const u = (0.25 * t + k / 3) % 1;
+        z.position.set(0.45 + 0.3 * u, 2.7 + 0.9 * u, 0.1), z.scale.setScalar(0.6 + 0.9 * u), (z.material.opacity = 1 - u);
+      });
+      moon.position.set(0.85 * Math.cos(0.4 * t), 2.3 + 0.15 * Math.sin(0.8 * t), 0.85 * Math.sin(0.4 * t));
+    });
+  };
   // a broken model must never stop the game from booting: fall back to a placeholder dino
   for (const k in WD)
     so["w_" + k] = (g, d, opts) => {
@@ -14194,6 +14600,17 @@ const JGP = (() => {
       }
     };
   so.jgpKeeper = (g, d) => buildDino(g, d || {}, KEEPER);
+  // FORTIZMO sculpts her geometry after its bounds are computed (and bends her horn at runtime), so
+  // taps on her outer body missed her and could select a creature behind her. Refresh the bounds
+  // with some headroom so picking always finds her.
+  so.fortizmoPick = (g, d, opts) => {
+    const r = so.fortizmo(g, d, opts);
+    g.traverse((m) => {
+      if (!m.isMesh || !m.geometry || !m.geometry.attributes.position) return;
+      m.geometry.computeBoundingSphere(), m.geometry.boundingSphere && (m.geometry.boundingSphere.radius *= 1.3);
+    });
+    return r;
+  };
 
   // ---- apply cast / text over the engine's defs (runs just before spawn) ----
   // Row 3: the non-merged creatures from Greeblis City with their original models.
@@ -14242,6 +14659,9 @@ const JGP = (() => {
       d.builderOpts && (nd.builderOpts = Object.assign({}, d.builderOpts));
       // same-named creatures from Greeblis Woods are merged into these
       GC_MERGE[src] && ((nd.builder = GC_MERGE[src]), delete nd.builderOpts, delete nd.modelScale, (nd.name = GC_MERGE_NAME[src] || nd.name));
+      // FORTIZMO's big model sits well forward of her centre: reach her from a little further away,
+      // and make sure taps on any part of her body pick her (see so.fortizmoPick)
+      "frog" === src && ((nd.talkR = 4.2), (nd.builder = "fortizmoPick"));
       o[id] = nd;
       Zt[id] = Zt[src] ? JSON.parse(JSON.stringify(Zt[src])) : { g: [-0.9, 1.3, 0.4], c: [0.9, 1.0, 0.4] };
       a[src] && (a[id] = a[src]);
@@ -14251,19 +14671,16 @@ const JGP = (() => {
   const WOODS = [
     ["w4_sparky", "SPARKY", "w_sparky", "#2a4ab8", 0.9],
     ["w4_mont", "MONT", "w_mont", "#3cc8b8", 0.8],
-    ["w4_gratelet", "GRATELET", "w_gratelet", "#c8a858", 0.9],
-    ["w4_owl", "OWL", "w_owl", "#b88a4a", 0.7],
-    ["w4_owlblue", "OWL", "w_owlblue", "#5ab8d8", 0.7],
+    ["w4_somlet", "SOMLET", "w_somlet", "#ece6b0", 0.8], // merge: GRATELET (Woods) + SOMNUX (v15)
+    ["w4_johnowl", "JOHN OWL", "w_johnOwl", "#b8864a", 0.75], // merge: OWL + OWL + SHOPKEEPER OWL (Woods)
     ["w4_frog", "FROG", "w_frog", "#4f9a32", 0.9],
     ["w4_professor", "THE PROFESSOR", "w_professor", "#1c2b44", 0.8],
-    ["w4_mrbun", "MR BUN", "w_mrbun", "#a8733a", 0.6],
-    ["w4_missbun", "MISS BUN", "w_missbun", "#c42026", 0.7],
+    ["w4_toebert", "TOEBERT", "w_toebert", "#b87c48", 0.7], // merge: MISS BUN + MR BUN (Woods) + BOBERT (v15)
     ["w4_cutebex", "CUTEBEX", "w_cutebex", "#3a8a2a", 0.9],
     ["w4_orson", "ORSON", "w_orson", "#c8962a", 0.7],
-    ["w4_shopowl", "SHOPKEEPER OWL", "w_shopowl", "#b88a4a", 0.7],
   ];
   const ROW4_Z = 31,
-    ROW4_X0 = -17,
+    ROW4_X0 = -12,
     ROW4_STEP = 3;
   function addWoods() {
     WOODS.forEach(([id, name, builder, color, bodyR], k) => {
@@ -14331,8 +14748,8 @@ const JGP = (() => {
     }
     for (const id in BATTLES) all[id] && (Object.assign(all[id], BATTLES[id]), (all[id].danceGeneric = !0));
     t.noBlossoms.length = 0;
-    // pizza courier: NEXTESSA keeps her Greeblis City lines; model = merge with NEXTESSA (Woods)
-    (s.builder = "w_nextessaMerge"), (s.modelScale = 0.9);
+    // pizza courier: NEXTESSA keeps her Greeblis City lines and her original Greeblis City model
+    (s.builder = "nextessa"), (s.modelScale = 0.92);
     i.name = KEEPER.name;
     i.shopLog = "Placeholder shop line";
     i.campfire = "Placeholder campfire line";
@@ -14684,8 +15101,6 @@ const JGP = (() => {
     v15_gorbo: ["wiggle", 2.6, 1.3],
     v15_mama: ["wiggle", 1.4, 0.9],
     v15_spark: ["scatter", 3.2, 0.8],
-    v15_bobert: ["hop", 2.4, 0.8],
-    v15_somnux: ["sniff", 0.8, 1.2],
     v15_kingdino: ["stomp", 1.9, 1.1, 0.2],
     v15_immuto: ["dig", 3.4, 0.6],
     v15_sealio: ["twirl", 1.3, 1],
@@ -14712,16 +15127,13 @@ const JGP = (() => {
     gc_larry: ["sniff", 1.9, 0.7],
     w4_sparky: ["scatter", 2.4, 1.2],
     w4_mont: ["dig", 2.8, 0.7, 0.1],
-    w4_gratelet: ["wiggle", 0.9, 1.1],
-    w4_owl: ["hop", 3.3, 0.7],
-    w4_owlblue: ["twirl", 2.1, 0.9],
+    w4_somlet: ["wiggle", 0.9, 1.1],
+    w4_johnowl: ["hop", 3.3, 0.7],
     w4_frog: ["hop", 1.2, 1.5],
     w4_professor: ["sniff", 1.3, 1.3],
-    w4_mrbun: ["stomp", 3.0, 0.6],
-    w4_missbun: ["twirl", 1.5, 0.8],
+    w4_toebert: ["stomp", 3.0, 0.6],
     w4_cutebex: ["wiggle", 3.6, 0.6],
     w4_orson: ["pat", 3.1, 0.7],
-    w4_shopowl: ["dig", 1.0, 1.2, 0.25],
   };
   function plantMove(key, t) {
     const [type, w, a, extra = 0] = MOVES[key] || MOVES.mont,

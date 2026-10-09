@@ -11594,84 +11594,65 @@ const JGP = (() => {
     city: {
       face: 0,
       list: [
-        ["gorbo", "HOWARD", "city_howard", {"color": "#30b4e4", "bodyR": 1}, [-12.3, -21]],
-        ["sparky", "REVEREND SPARK", "city_sparky", {"color": "#2ec8b0", "bodyR": 1.02, "modelScale": 0.72}, [-9.4, -21]],
-        ["mont", "MISTERGUMMERY", "city_mistergummery", {"color": "#55b8c6", "bodyR": 0.86, "modelScale": 0.9}, [-6.5, -21]],
-        ["frog", "FORTIZMO", "fortizmoPick", {"color": "#e8742a", "bodyR": 0.95, "modelScale": 0.78, "talkR": 4.2}, [-3.6, -21]],
-        ["wanderer", "CHERUBI", "city_cherubi", {"color": "#6a54b4", "bodyR": 0.95}, [-0.02, -21]],
-        ["jumper", "MISSGUMMERY", "city_missgummery", {"color": "#e66eb4", "bodyR": 0.86, "modelScale": 0.9}, [3.27, -21]],
-        ["kingdino", "SUNNY", "city_sunny", {"bodyR": 1.1, "modelScale": 0.82}, [6.17, -21]],
-        ["cutebex", "ZOLLOX", "city_zollox", {"bodyR": 0.95}, [9.07, -21]],
-        ["orson", "KOLLOD", "city_kollod", {"bodyR": 1.3}, [12.3, -21]],
+        ["frog", "FORTIZMO", "fortizmoPick", {"color": "#e8742a", "bodyR": 0.95, "modelScale": 0.78, "talkR": 4.2}, [-3.9, -21]],
+        ["wanderer", "CHERUBI", "city_cherubi", {"color": "#6a54b4", "bodyR": 0.95}, [0.3, -21]],
+        ["kingdino", "SUNNY", "city_sunny", {"bodyR": 1.1, "modelScale": 0.82}, [3.9, -21]],
       ],
     },
-    // same-named creatures merged across games (west)
+    // same-named and requested merges across games (west)
     merged: {
       face: Math.PI / 2,
       list: [
-        ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [-34, -11.78]],
-        ["orbiter", "MALTOE", "merge_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "modelScale": 0.8, "talkR": 4.2}, [-34, -8.08]],
-        ["drifter", "MUSHROOM", "merge_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [-34, -4.96]],
-        ["hopper", "PATCHOOLEE", "merge_patchoolee", {"color": "#8cc63a", "bodyR": 0.85, "modelScale": 0.85}, [-34, -2.06]],
-        ["blinker", "ANOMALEE", "city_anomalee", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2}, [-34, 0.84]],
-        ["slugwerth", "SLUGWERTH", "merge_slugwerth", {"color": "#2c5fe0", "bodyR": 0.85}, [-34, 3.74]],
-        ["appterix", "APPTERIX", "merge_appterix", {"color": "#d8322a", "bodyR": 0.95, "modelScale": 0.9}, [-34, 6.64]],
-        ["m_gorbo", "GORBO", "merge_gorbo", {"color": "#37b3e8", "bodyR": 1.1}, [-34, 9.57]],
-        ["m_kingdino", "KING DINO", "merge_kingdino", {"color": "#e8c020", "bodyR": 1.1, "modelScale": 0.82}, [-34, 12.88]],
-        ["m_owl", "OWL", "merge_owl", {"color": "#b88a4a", "bodyR": 0.9}, [-34, 15.78]],
+        ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [-34, -20.02]],
+        ["orbiter", "MALTOE", "merge_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "modelScale": 0.8, "talkR": 4.2}, [-34, -16.47]],
+        ["drifter", "MUSHROOM", "merge_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [-34, -13.52]],
+        ["hopper", "PATCHOOLEE", "merge_patchoolee", {"color": "#8cc63a", "bodyR": 0.85, "modelScale": 0.85}, [-34, -10.62]],
+        ["blinker", "ANOMALEE", "city_anomalee", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2}, [-34, -7.72]],
+        ["slugwerth", "SLUGWERTH", "merge_slugwerth", {"color": "#2c5fe0", "bodyR": 0.85}, [-34, -4.82]],
+        ["appterix", "APPTERIX", "merge_appterix", {"color": "#d8322a", "bodyR": 0.95, "modelScale": 0.9}, [-34, -1.92]],
+        ["m_kingdino", "KING DINO", "merge_kingdino", {"color": "#e8c020", "bodyR": 1.1, "modelScale": 0.82}, [-34, 0.98]],
+        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [-34, 4.58]],
+        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#2a9ccf", "bodyR": 1.1}, [-34, 7.88]],
+        ["mont", "SIRGUMMERY", "born_sirgummery", {"color": "#3edce6", "bodyR": 0.9}, [-34, 11.03]],
+        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [-34, 14.83]],
+        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [-34, 18.23]],
+        ["m_toebert", "TOEBERT", "born_toebert", {"color": "#b88a4a", "bodyR": 0.8}, [-34, 21.12]],
+        ["m_johnowl", "JOHN OWL", "born_johnowl", {"color": "#9a7250", "bodyR": 0.9}, [-34, 24.02]],
       ],
     },
     // Greeblis Park NPCs (east)
     park: {
       face: -Math.PI / 2,
       list: [
-        ["p_sparky", "SPARKAKUS", "park_sparky", {"color": "#3a6fd8", "bodyR": 1.1, "talkR": 3.8}, [34, -29.28]],
-        ["p_mont", "MONTGUMMERY", "park_mont", {"color": "#2f8f86", "bodyR": 1, "talkR": 3.8}, [34, -25.39]],
-        ["p_bobert", "BOBERT", "park_bobert", {"color": "#b88a4a", "bodyR": 0.75, "talkR": 3.6}, [34, -21.89]],
-        ["p_stanbi", "SOMNUX", "park_stanbi", {"color": "#c9b96a", "bodyR": 0.9, "talkR": 3.6}, [34, -18.99]],
-        ["p_chainy", "IMMUTO", "park_chainy", {"color": "#e8862a", "bodyR": 1.1, "talkR": 3.6}, [34, -15.22]],
-        ["p_minty", "SEALIO", "park_minty", {"color": "#7ee0b8", "bodyR": 1, "talkR": 3.6}, [34, -11.68]],
-        ["p_barsy", "DECIBELLE", "park_barsy", {"color": "#8e5ae8", "bodyR": 1, "talkR": 3.6}, [34, -8.78]],
-        ["p_rando", "SEEDRIC", "park_rando", {"color": "#5cc86a", "bodyR": 1, "talkR": 3.6}, [34, -5.88]],
-        ["p_montbak", "MONT.BAK", "park_montbak", {"color": "#2f6b5e", "bodyR": 0.95, "talkR": 3.6}, [34, -1.69]],
-        ["p_poppup", "INTERSTITIA", "park_poppup", {"color": "#7ac84a", "bodyR": 0.8, "talkR": 3.6}, [34, 2.81]],
-        ["p_runie", "ETCHELON", "park_runie", {"color": "#d0a23a", "bodyR": 0.9, "talkR": 3.6}, [34, 6.87]],
-        ["p_zorto", "ZORTO", "park_zorto", {"color": "#9a9ae8", "bodyR": 0.9, "talkR": 3.6}, [34, 10.96]],
-        ["p_leech", "MAMA GORBO", "park_leech", {"color": "#f2a06a", "bodyR": 1, "talkR": 3.6}, [34, 14.91]],
-        ["p_gemwing", "GEMWING", "park_gemwing", {"color": "#c83aa0", "bodyR": 1, "talkR": 3.6}, [34, 19.11]],
-        ["p_peekay", "AURAMEL", "park_peekay", {"color": "#e87a8a", "bodyR": 1, "talkR": 3.6}, [34, 23.98]],
-        ["p_ripplz", "GIGGLYPH", "park_ripplz", {"color": "#3aa8d8", "bodyR": 0.9, "talkR": 3.6}, [34, 29.28]],
+        ["p_chainy", "IMMUTO", "park_chainy", {"color": "#e8862a", "bodyR": 1.1, "talkR": 3.6}, [34, -18.95]],
+        ["p_minty", "SEALIO", "park_minty", {"color": "#7ee0b8", "bodyR": 1, "talkR": 3.6}, [34, -14.35]],
+        ["p_barsy", "DECIBELLE", "park_barsy", {"color": "#8e5ae8", "bodyR": 1, "talkR": 3.6}, [34, -10.75]],
+        ["p_rando", "SEEDRIC", "park_rando", {"color": "#5cc86a", "bodyR": 1, "talkR": 3.6}, [34, -7.7]],
+        ["p_poppup", "INTERSTITIA", "park_poppup", {"color": "#7ac84a", "bodyR": 0.8, "talkR": 3.6}, [34, -4.05]],
+        ["p_runie", "ETCHELON", "park_runie", {"color": "#d0a23a", "bodyR": 0.9, "talkR": 3.6}, [34, 0.15]],
+        ["p_zorto", "ZORTO", "park_zorto", {"color": "#9a9ae8", "bodyR": 0.9, "talkR": 3.6}, [34, 4.35]],
+        ["p_gemwing", "GEMWING", "park_gemwing", {"color": "#c83aa0", "bodyR": 1, "talkR": 3.6}, [34, 8.6]],
+        ["p_peekay", "AURAMEL", "park_peekay", {"color": "#e87a8a", "bodyR": 1, "talkR": 3.6}, [34, 13.55]],
+        ["p_ripplz", "GIGGLYPH", "park_ripplz", {"color": "#3aa8d8", "bodyR": 0.9, "talkR": 3.6}, [34, 18.95]],
       ],
     },
     // Greeblis Park creatures (south-west arc, facing the garden)
     parkCreatures: {
       face: "center",
       list: [
-        ["pc_evillamp", "EVIL LAMP", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 0, "__type": "evillamp"}, [-33.57, 21.75]],
-        ["pc_pixelcreature", "PIXEL CREATURE", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 1, "__type": "pixelcreature"}, [-31.91, 24.13]],
-        ["pc_wildcow", "WILD COW", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 2, "__type": "wildcow"}, [-30.07, 26.37]],
-        ["pc_honestatm", "HONEST ATM", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 3, "__type": "honestatm"}, [-28.09, 28.48]],
-        ["pc_grumpytree", "GRUMPY TREE", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 4, "__type": "grumpytree"}, [-25.95, 30.44]],
-        ["pc_icecreamcart", "ICE CREAM CART", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 5, "__type": "icecreamcart"}, [-23.17, 32.6]],
-        ["pc_caterpillar", "CATERPILLAR", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 6, "__type": "caterpillar"}, [-20.75, 34.2]],
-        ["pc_sassykite", "SASSY KITE", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 7, "__type": "sassykite"}, [-18.22, 35.61]],
-        ["pc_parkmonkey", "PARK MONKEY", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 8, "__type": "parkmonkey"}, [-15.59, 36.84]],
+        ["pc_pixelcreature", "PIXEL CREATURE", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 1, "__type": "pixelcreature"}, [-22.94, 32.77]],
+        ["pc_wildcow", "WILD COW", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 2, "__type": "wildcow"}, [-20.42, 34.39]],
+        ["pc_grumpytree", "GRUMPY TREE", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 4, "__type": "grumpytree"}, [-17.61, 35.92]],
+        ["pc_caterpillar", "CATERPILLAR", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 6, "__type": "caterpillar"}, [-14.87, 37.13]],
+        ["pc_sassykite", "SASSY KITE", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 7, "__type": "sassykite"}, [-12.04, 38.14]],
+        ["pc_parkmonkey", "PARK MONKEY", "park_fixture", {"color": "#ff7a2f", "bodyR": 0.9, "talkR": 3.6, "idx": 8, "__type": "parkmonkey"}, [-9.15, 38.94]],
       ],
     },
     // Greeblis Woods (south)
     woods: {
       face: Math.PI,
       list: [
-        ["w_sparky", "SPARKY", "woods_sparky", {"color": "#3a9a8a", "bodyR": 1.02, "modelScale": 0.97}, [-14.15, 31]],
-        ["w_mont", "MONT", "woods_mont", {"color": "#55b8c6", "bodyR": 0.86, "modelScale": 0.9}, [-11.25, 31]],
-        ["w_gratelet", "GRATELET", "woods_gratelet", {"color": "#ecd8b6", "bodyR": 1.1}, [-8.35, 31]],
-        ["w_frog", "FROG", "woods_frog", {"color": "#4f9a32", "bodyR": 0.8, "modelScale": 1.15}, [-5.27, 31]],
-        ["w_professor", "THE PROFESSOR", "woods_professor", {"color": "#1c2b44", "bodyR": 0.85, "modelScale": 0.77}, [-2.35, 31]],
-        ["w_mrbun", "MR BUN", "woods_mrbun", {"color": "#a8733a", "bodyR": 0.8}, [0.55, 31]],
-        ["w_missbun", "MISS BUN", "woods_missbun", {"color": "#c42026", "bodyR": 0.8}, [3.45, 31]],
-        ["w_cutebex", "CUTEBEX", "woods_cutebex", {"bodyR": 0.95, "modelScale": 0.5}, [6.35, 31]],
-        ["w_orson", "ORSON", "woods_orson", {}, [9.25, 31]],
-        ["w_shopowl", "SHOPKEEPER OWL", "woods_shopkeeperOwl", {"color": "#9a7250", "bodyR": 0.9}, [12.15, 31]],
+        ["w_professor", "THE PROFESSOR", "woods_professor", {"color": "#1c2b44", "bodyR": 0.85, "modelScale": 0.77}, [10.0, 31]],
       ],
     },
   };
@@ -12365,25 +12346,11 @@ const JGP = (() => {
         { b: "park_appdragon", def: { color: "#d6353a" }, path: [0, 0, 0], keep: [...range(1, 4), ...range(9, 25)] },
       ],
     },
-    // GORBO (Woods) body, fish, sparkle and wifi + GORBO (Park) rings, AP/IP signs and bubbles
-    gorbo: {
-      from: [
-        { b: "woods_gorbo", def: { color: "#33b6ea" }, path: [0], keep: [0, 1, 4, 7] },
-        { b: "park_gorbo", def: { color: "#37b3e8" }, at: [0, 0, 0, 0.7], path: [0, 0, 0], keep: [5, 6, 7, 8, 9] },
-      ],
-    },
-    // KING DINO (Woods) body, crown, snout, eyes, whiskers and feet + KING DINO (Park) side scales, ring tail and coloured sticks
+    // KING DINO (Woods) body, crown, snout, eyes and feet + KING DINO (Park) side scales, ring tail and coloured sticks
     kingdino: {
       from: [
-        { b: "woods_kingdino", def: { modelScale: 0.82 }, path: [0], keep: [1, 2, "0/0", "0/1", "0/2", "0/3", "0/8", "0/9", "0/10"] },
+        { b: "woods_kingdino", def: { modelScale: 0.82 }, path: [0], keep: [1, 2, "0/0", "0/1", "0/2", "0/3", "0/8"] },
         { b: "park_dribblz", def: { color: "#e8c020" }, path: [0, 0, 0], keep: [8, 9, 10, 11, 14, 15, 16, 17] },
-      ],
-    },
-    // OWL (brown) body, belly, eyes, beak and feet + OWL (blue) ears, eye rings, brows and wings
-    owl: {
-      from: [
-        { b: "woods_owl", def: { color: "#b88a4a" }, path: [], keep: [0, 1, 2, 5, 8, 9, 10, 15, ...range(16, 23)] },
-        { b: "woods_owl", def: { color: "#7ac8e8" }, opts: { color: "#7ac8e8" }, path: [], keep: [3, 4, 6, 7, 11, 12, 13, 14] },
       ],
     },
     // LARRY (City shopkeeper) body, arms, legs and back spikes + LARRY (Woods) head, tail and saddle with block
@@ -12416,6 +12383,696 @@ const JGP = (() => {
     },
   };
   for (const k in MERGES) so["merge_" + k] = mergeOf(MERGES[k]);
+
+  // ---- new creatures born from merges -------------------------------------------------------
+  // Each one is a new design that blends its parents (silhouette, palette, signature features)
+  // into a single creature, rather than parts of the parents stuck together.
+  const BORN = {};
+  const _v2 = (pts) => pts.map(([r, y]) => new THREE.Vector2(Math.max(1e-4, r), y));
+  const latheGeo = (pts, seg = 32, a0, len) => new THREE.LatheGeometry(_v2(pts), seg, a0, len);
+  // bake a colour gradient along one axis into a geometry (used with gradMat)
+  function gradient(geo, stops, axis = "y") {
+    const p = geo.attributes.position,
+      col = new Float32Array(3 * p.count),
+      A = new THREE.Color(),
+      Bc = new THREE.Color(),
+      cs = stops.map(([v, h]) => [v, new THREE.Color(h)]);
+    for (let k = 0; k < p.count; k++) {
+      const v = "y" === axis ? p.getY(k) : "z" === axis ? p.getZ(k) : p.getX(k);
+      let j = 0;
+      while (j < cs.length - 2 && v > cs[j + 1][0]) j++;
+      const [v0, c0] = cs[j],
+        [v1, c1] = cs[Math.min(j + 1, cs.length - 1)],
+        u = v1 === v0 ? 0 : Math.min(1, Math.max(0, (v - v0) / (v1 - v0)));
+      A.copy(c0).lerp(Bc.copy(c1), u), (col[3 * k] = A.r), (col[3 * k + 1] = A.g), (col[3 * k + 2] = A.b);
+    }
+    return geo.setAttribute("color", new THREE.BufferAttribute(col, 3)), geo;
+  }
+  const _gm = new Map();
+  function gradMat(kind, o) {
+    const k = kind + JSON.stringify(o);
+    if (!_gm.has(k)) {
+      const m = KIT.surf(kind, "#ffffff", o).clone();
+      (m.vertexColors = !0), _gm.set(k, m);
+    }
+    return _gm.get(k);
+  }
+  // gradient meshes keep their own geometry (the toolkit's mesh baking drops vertex colours)
+  const keepR = (geo, mat, p, pos, rot, sc) => {
+    const m = R(geo, mat, p, pos, rot, sc);
+    return (m.userData.keep = !0), m;
+  };
+  let _starGeo = null;
+  const starGeo = () => {
+    if (_starGeo) return _starGeo;
+    const s = new THREE.Shape();
+    for (let k = 0; k < 10; k++) {
+      const a = Math.PI / 2 + (k * Math.PI) / 5,
+        r = k % 2 ? 0.42 : 1;
+      k ? s.lineTo(Math.cos(a) * r, Math.sin(a) * r) : s.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    return (_starGeo = new THREE.ShapeGeometry(s));
+  };
+  // a flat decal lying on an ellipsoid surface (centre c, radii rad) in direction dir
+  function onEllipsoid(p, geo, mat, c, rad, dir, size, lift = 1.01) {
+    const d = new c0(dir[0], dir[1], dir[2]).normalize(),
+      pos = new c0(c[0] + d.x * rad[0] * lift, c[1] + d.y * rad[1] * lift, c[2] + d.z * rad[2] * lift),
+      n = new c0(d.x / rad[0], d.y / rad[1], d.z / rad[2]).normalize(),
+      m = R(geo, mat, p, [pos.x, pos.y, pos.z], null, size);
+    return m.quaternion.setFromUnitVectors(new c0(0, 0, 1), n), m;
+  }
+  const c0 = THREE.Vector3;
+  const srand = (seed) => () => ((seed = (16807 * seed) % 2147483647) / 2147483647);
+  function born(g, o) {
+    const bl = KIT.blinker(Math.floor(1e4 * Math.random()));
+    (o.lids || []).forEach((ld) => bl.add(ld));
+    const moving = KIT.animated(g, (t, tk, wk) => o.step(t, 0.016, tk, wk));
+    KIT.compact(g, moving);
+    return {
+      height: o.height,
+      crownY: o.crownY,
+      head: o.head,
+      anim(t, dt, e) {
+        bl.update(t, dt), o.step(t, dt || 0.016, 0, e && e.moving ? 1 : 0);
+      },
+    };
+  }
+
+  // GOWARD = HOWARD + GORBO + MAMA GORBO (the goo family).
+  // GORBO / MAMA's egg built from HOWARD's fused bubbles; cyan above, MAMA's peach below. HOWARD's
+  // "+" eyes, cheek spots, wavy brow lines, gold leaf crests and ribbon tongue; the purple octagon
+  // ports and float ring that GORBO and MAMA share (with a little AP tag); MAMA's crystal wings;
+  // HOWARD's pastel root tendrils spilling out underneath.
+  BORN.goward = (g) => {
+    const root = new THREE.Group(),
+      body = new THREE.Group();
+    g.add(root), (body.position.y = 0.55), root.add(body);
+    const goo = gradMat("goo", { rep: 2, bump: 0.012, shine: 90, spec: 10083839 }),
+      stops = [[-0.3, "#f2a274"], [0.45, "#f6b48c"], [0.95, "#62c8ea"], [1.6, "#34b6ea"], [2.4, "#2a9ee0"]];
+    keepR(gradient(latheGeo([[0, 0], [0.55, 0.04], [0.95, 0.3], [1.12, 0.75], [1.1, 1.25], [0.95, 1.7], [0.65, 2.05], [0.3, 2.22], [0, 2.25]], 40), stops), goo, body);
+    [[-0.95, 0.78, 0.18, 0.55], [0.95, 0.82, 0.12, 0.52], [-0.72, 1.55, -0.12, 0.5], [0.76, 1.6, -0.16, 0.47], [0, 0.5, 0.55, 0.58], [-0.48, 0.5, -0.55, 0.5], [0.52, 0.52, -0.5, 0.5], [0, 1.95, -0.35, 0.45]].forEach(
+      ([px, py, pz, r]) => keepR(gradient(new THREE.SphereGeometry(r, 22, 16).translate(px, py, pz), stops), goo, body),
+    );
+    // face: HOWARD's white "+" eyes (they squint instead of blinking), cheek spots, smile and tongue
+    const eyes = new THREE.Group();
+    (eyes.position.y = 1.36), body.add(eyes);
+    const white = x.clay("#ffffff", { shininess: 60 });
+    [-0.33, 0.33].forEach((ex) => {
+      const ink = x.clay("#123a5a", { shininess: 30 });
+      R(T.box(0.34, 0.11, 0.05), ink, eyes, [ex, 0, 1.13], [0, ex > 0 ? 0.3 : -0.3, 0]);
+      R(T.box(0.11, 0.34, 0.05), ink, eyes, [ex, 0, 1.13], [0, ex > 0 ? 0.3 : -0.3, 0]);
+      R(T.box(0.28, 0.07, 0.05), white, eyes, [ex, 0, 1.16], [0, ex > 0 ? 0.3 : -0.3, 0]);
+      R(T.box(0.07, 0.28, 0.05), white, eyes, [ex, 0, 1.16], [0, ex > 0 ? 0.3 : -0.3, 0]);
+    });
+    R(T.sphere(1, 12, 8), x.clay("#e84fd0", { shininess: 40 }), body, [-0.6, 1.08, 0.94], [0, -0.55, 0], [0.17, 0.13, 0.05]);
+    R(T.sphere(1, 12, 8), x.clay("#b8e858", { shininess: 40 }), body, [0.6, 1.06, 0.95], [0, 0.55, 0], [0.16, 0.12, 0.05]);
+    R(T.sphere(1, 12, 8), x.clay("#7a3ad8", { shininess: 40 }), body, [-0.2, 1.0, 1.08], [0, -0.2, 0], [0.1, 0.08, 0.04]);
+    KIT.mouth(body, [0, 1.1, 1.1], 0.17);
+    const tongue = new THREE.Group();
+    tongue.position.set(0.1, 1.0, 1.1), body.add(tongue);
+    R(ao([[0, 0, 0], [0.05, -0.18, 0.06], [0.0, -0.36, 0.05], [0.06, -0.5, 0.02]], 0.075, 0.05, 12, 8), x.clay("#ff7ac0", { shininess: 60 }), tongue);
+    // HOWARD's wavy teal brow lines across the forehead
+    [[1.74, 0.97], [1.9, 0.86]].forEach(([yy, rr]) => {
+      const pts = [];
+      for (let k = 0; k <= 10; k++) {
+        const xx = -0.62 + 0.124 * k;
+        pts.push([xx, yy + 0.045 * Math.sin(k * 1.6), Math.sqrt(Math.max(0.05, rr * rr - xx * xx)) + 0.03]);
+      }
+      R(ao(pts, 0.024, 0.024, 30, 5), x.clay("#16b0a2", { shininess: 40 }), body);
+    });
+    // HOWARD's gold leaf crests
+    const gold = x.clay("#e8b42c", { shininess: 70, specular: 8947848 }),
+      crests = [];
+    [-1, 1].forEach((sx) => {
+      const cr = new THREE.Group();
+      cr.position.set(0.5 * sx, 2.02, -0.02), (cr.rotation.z = -0.35 * sx), body.add(cr), crests.push(cr);
+      [-0.5, 0, 0.5].forEach((a) => R(T.sphere(1, 12, 8), gold, cr, [0.12 * a, 0.26, 0], [0, 0, -a * 0.9], [0.12, 0.32, 0.05]));
+    });
+    // the purple octagon ports GORBO and MAMA share, one on each side
+    const purple = x.clay("#7a3ad8", { shininess: 80 }),
+      rim = x.clay("#e040c8", { shininess: 60 });
+    [-1, 1].forEach((sx) => {
+      const pg = new THREE.Group();
+      pg.position.set(0.86 * sx, 1.62, 0.58), (pg.rotation.y = sx * 0.95), (pg.rotation.x = -0.25), body.add(pg);
+      R(T.cyl(0.26, 0.26, 0.08, 8), purple, pg, [0, 0, 0], [Math.PI / 2, 0, Math.PI / 8]);
+      R(T.torus(0.27, 0.055, 6, 8), rim, pg, [0, 0, 0.03], [0, 0, Math.PI / 8]);
+    });
+    // MAMA's crystal wings
+    const crystal = x.clay("#e8f6ff", { shininess: 120, specular: 16777215 }),
+      wings = [];
+    [-1, 1].forEach((sx) => {
+      const w = new THREE.Group();
+      w.position.set(0.5 * sx, 1.55, -0.85), root.add(w), wings.push(w);
+      [[0.55, 1.0], [0.85, 0.82], [1.15, 0.62]].forEach(([a, len], k) => R(T.cone(0.12 - 0.02 * k, len, 5), crystal, w, [sx * len * 0.42 * Math.sin(a), len * 0.42 * Math.cos(a), -0.1], [0, 0, -sx * a]));
+    });
+    // the float ring GORBO and MAMA both sit in, with GORBO's AP tag
+    const ring = new THREE.Group();
+    (ring.position.y = 0.42), root.add(ring);
+    R(T.torus(1.28, 0.26, 12, 40), x.clay("#c8f03a", { shininess: 70 }), ring, [0, 0, 0], [Math.PI / 2, 0, 0]);
+    R(T.torus(1.28, 0.2, 10, 40), x.clay("#e040c8", { shininess: 50 }), ring, [0, -0.1, 0], [Math.PI / 2, 0, 0]);
+    const tag = b(128, 128, (c) => {
+      (c.fillStyle = "#e83a2a"), c.beginPath();
+      for (let k = 0; k < 8; k++) c.lineTo(64 + 60 * Math.cos(Math.PI / 8 + (k * Math.PI) / 4), 64 + 60 * Math.sin(Math.PI / 8 + (k * Math.PI) / 4));
+      c.fill(), (c.fillStyle = "#ffffff"), (c.font = "bold 54px sans-serif"), (c.textAlign = "center"), (c.textBaseline = "middle"), c.fillText("AP", 64, 68);
+    });
+    R(new THREE.CircleGeometry(0.17, 8), new THREE.MeshPhongMaterial({ map: tag, shininess: 30 }), ring, [0.95, -0.12, 1.02], [0, 0.75, 0]);
+    // HOWARD's pastel roots spilling out under the ring
+    const rnd2 = srand(7),
+      cols = ["#c7a0f0", "#b8e858", "#f4f4f4", "#e8a0d8"];
+    for (let k = 0; k < 9; k++) {
+      const a = (k / 9) * l + 0.3,
+        r1 = 1.2 + 0.5 * rnd2();
+      R(ao([[0.3 * Math.cos(a), 0.55, 0.3 * Math.sin(a)], [0.75 * Math.cos(a), 0.18, 0.75 * Math.sin(a)], [r1 * Math.cos(a + 0.2), 0.03, r1 * Math.sin(a + 0.2)], [(r1 + 0.35) * Math.cos(a + 0.4), 0.01, (r1 + 0.35) * Math.sin(a + 0.4)]], 0.045, 0.012, 14, 5), x.clay(cols[k % 4], { shininess: 30 }), root);
+    }
+    return born(g, {
+      height: 3.2,
+      step(t, dt, tk) {
+        const s = Math.sin(2.1 * t);
+        body.scale.set(1 + 0.025 * s, 1 - 0.03 * s, 1 + 0.025 * s), (body.position.y = 0.55 + 0.03 * Math.sin(2.1 * t + 1));
+        wings.forEach((w, k) => (w.rotation.y = (k ? -1 : 1) * (0.25 + 0.2 * Math.sin(4 * t))));
+        (ring.position.y = 0.42 + 0.04 * Math.sin(1.6 * t)), (ring.rotation.z = 0.04 * Math.sin(1.1 * t));
+        (tongue.rotation.z = 0.25 * Math.sin(3 * t) + 0.3 * tk), crests.forEach((c, k) => (c.rotation.z = (k ? -0.35 : 0.35) + 0.06 * Math.sin(1.3 * t + k)));
+        eyes.scale.y = (((t % 4.3) + 4.3) % 4.3) < 0.16 && t > 1 ? 0.25 : 1;
+      },
+    });
+  };
+
+  // SPARKSTAR = REVEREND SPARK + SPARKAKUS + SPARKY (the dog family).
+  // Four-legged like SPARKAKUS and SPARKY, with SPARKAKUS's chubby barrel body and white belly,
+  // REVEREND SPARK's shaggy fur in a teal-to-blue blend, SPARKY's confetti stars all over;
+  // REVEREND SPARK's long snout and tall ears, the sleepy yellow eyes REVEREND SPARK and SPARKY share,
+  // his black collar with the orange APR coin he and SPARKAKUS both wear, SPARKY's cream chest ruff
+  // and gold sunflower shoulders, and a long tail ending in a star with the wifi arcs of REVEREND
+  // SPARK's and SPARKY's tails.
+  BORN.sparkstar = (g) => {
+    const fur = KIT.surf("fur", "#2a9ccf", { rep: 3, bump: 0.035, shine: 18 }),
+      cream = KIT.surf("fur", "#f3ead2", { rep: 3, bump: 0.03, shine: 15 }),
+      dark = x.clay("#141418", { shininess: 60 }),
+      root = new THREE.Group(),
+      body = new THREE.Group();
+    g.add(root), (body.position.y = 1.05), root.add(body);
+    R(T.sphere(1, 26, 18), fur, body, [0, 0, 0], null, [0.78, 0.72, 1.05]);
+    R(T.sphere(1, 22, 16), fur, body, [0, 0.08, 0.6], null, [0.64, 0.64, 0.56]);
+    R(T.sphere(1, 22, 16), fur, body, [0, 0.03, -0.6], null, [0.68, 0.62, 0.56]);
+    R(T.sphere(1, 22, 16), cream, body, [0, -0.3, 0.12], null, [0.56, 0.4, 0.86]);
+    // SPARKY's cream ruff on the chest
+    for (let k = 0; k < 11; k++) {
+      const a = -1.1 + (2.2 * k) / 10;
+      R(T.sphere(1, 10, 8), cream, body, [0.5 * Math.sin(a), 0.32 - 0.22 * Math.abs(Math.sin(a)) - 0.1 * (k % 2), 0.95 + 0.06 * Math.cos(a)], [0.25, a * 0.8, -a * 0.5], [0.12, 0.26, 0.06]);
+    }
+    // SPARKY's confetti stars (SPARKAKUS's spots turned into stars)
+    const r3 = srand(21),
+      starCols = ["#ffd23a", "#ff6ab0", "#b8f04a", "#ffffff"].map((h) => x.clay(h, { shininess: 50 }));
+    for (let k = 0; k < 26; k++) {
+      const th = l * r3(),
+        ph = 0.25 + 1.2 * r3(),
+        d = [Math.sin(ph) * Math.cos(th), Math.cos(ph) * 0.9, Math.sin(ph) * Math.sin(th) * 1.2];
+      if (d[1] < -0.2) continue;
+      onEllipsoid(body, starGeo(), starCols[k % 4], [0, 0, 0], [0.78, 0.72, 1.05], d, 0.05 + 0.03 * r3());
+    }
+    // legs with paws
+    const legs = [
+      [-0.42, -0.32, 0.55, 1.2],
+      [0.42, -0.32, 0.55, 1.2],
+      [-0.44, -0.28, -0.6, 1.5],
+      [0.44, -0.28, -0.6, 1.5],
+    ].map(([lx, ly, lz, th]) => KIT.leg(body, [lx, ly, lz], { len: 0.7, r: 0.16, mat: fur, thigh: th, foot: "paw", footMat: fur }));
+    // head: REVEREND SPARK's long snout and tall ears, sleepy yellow eyes
+    const head = new THREE.Group();
+    head.position.set(0, 0.62, 0.98), body.add(head);
+    R(T.sphere(1, 22, 16), fur, head, [0, 0, 0], null, [0.42, 0.4, 0.44]);
+    R(T.cyl(0.14, 0.23, 0.56, 14), fur, head, [0, -0.08, 0.46], [Math.PI / 2, 0, 0]);
+    R(T.sphere(1, 14, 10), cream, head, [0, -0.2, 0.42], null, [0.17, 0.1, 0.3]);
+    R(T.sphere(0.09, 12, 8), dark, head, [0, -0.04, 0.75]);
+    KIT.mouth(head, [0, -0.22, 0.62], 0.08);
+    const lids = [];
+    [-1, 1].forEach((sx) => {
+      const e = KIT.eye(head, [0.17 * sx, 0.1, 0.33], 0.085, { iris: "#f2c21a", lid: "#2a9ccf", open: -0.02, rot: [0, 0.25 * sx, 0] });
+      lids.push(e.lid);
+    });
+    const ears = [-1, 1].map((sx) => {
+      const ea = new THREE.Group();
+      ea.position.set(0.22 * sx, 0.3, -0.04), (ea.rotation.z = -0.22 * sx), head.add(ea);
+      R(T.cone(0.13, 0.5, 8), fur, ea, [0, 0.25, 0]), R(T.cone(0.08, 0.34, 6), x.clay("#b080e0", { shininess: 30 }), ea, [0, 0.22, 0.05]);
+      return ea;
+    });
+    // REVEREND SPARK's collar with the APR coin
+    R(T.torus(0.34, 0.06, 8, 24), dark, body, [0, 0.46, 0.86], [1.15, 0, 0]);
+    const coinTex = b(128, 128, (c) => {
+      (c.fillStyle = "#f08a1e"), c.beginPath(), c.arc(64, 64, 62, 0, l), c.fill();
+      (c.strokeStyle = "#ffd23a"), (c.lineWidth = 8), c.beginPath(), c.arc(64, 64, 52, 0, l), c.stroke();
+      (c.fillStyle = "#7a2a00"), (c.font = "bold 38px sans-serif"), (c.textAlign = "center"), (c.textBaseline = "middle"), c.fillText("APR", 64, 66);
+    });
+    const coin = new THREE.Group();
+    coin.position.set(0, 0.28, 1.12), body.add(coin);
+    R(T.cyl(0.13, 0.13, 0.03, 16), x.clay("#f08a1e", { shininess: 90 }), coin, [0, 0, 0], [Math.PI / 2, 0, 0]);
+    R(new THREE.CircleGeometry(0.125, 16), new THREE.MeshPhongMaterial({ map: coinTex, shininess: 90 }), coin, [0, 0, 0.017]);
+    // SPARKY's gold sunflower shoulders
+    const gold = x.clay("#f6c21a", { shininess: 60 }),
+      flowers = [-1, 1].map((sx) => {
+        const fl = new THREE.Group();
+        fl.position.set(0.6 * sx, 0.3, 0.42), (fl.rotation.y = (sx * Math.PI) / 2.4), body.add(fl);
+        for (let k = 0; k < 9; k++) {
+          const a = (k / 9) * l;
+          R(T.sphere(1, 10, 6), gold, fl, [0.17 * Math.cos(a), 0.17 * Math.sin(a), 0], [0, 0, a], [0.13, 0.06, 0.03]);
+        }
+        return R(T.sphere(0.09, 10, 8), x.clay("#c87a10", { shininess: 40 }), fl, [0, 0, 0.02], null, [1, 1, 0.5]), fl;
+      });
+    // long tail ending in a star, with wifi arcs
+    const tail = new THREE.Group();
+    tail.position.set(0, 0.2, -1.0), body.add(tail);
+    R(ao([[0, 0, 0], [0, 0.18, -0.45], [0, 0.55, -0.8], [0, 1.0, -0.95]], 0.13, 0.045, 20, 8), fur, tail);
+    const tip = new THREE.Group();
+    tip.position.set(0, 1.08, -0.98), tail.add(tip);
+    R(starGeo(), gold, tip, [0, 0, 0], [0, Math.PI / 2, 0], 0.2);
+    [0.16, 0.25].forEach((r, k) => R(T.torus(r, 0.022, 6, 14, 1.4), x.clay(k ? "#ff6ab0" : "#3ae0d0", { shininess: 40 }), tip, [0, 0.05, 0], [0, Math.PI / 2, Math.PI / 2 - 0.7]));
+    return born(g, {
+      height: 2.6,
+      lids,
+      step(t, dt, tk, wk) {
+        (tail.rotation.y = 0.4 * Math.sin(5 * t)), (tail.rotation.x = 0.06 * Math.sin(2.5 * t)), (tip.rotation.y = 0.8 * t);
+        (head.rotation.z = 0.08 * Math.sin(0.9 * t)), (head.rotation.x = -0.05 + 0.04 * Math.sin(1.7 * t) - 0.1 * tk);
+        ears.forEach((ea, k) => (ea.rotation.x = Math.sin(7 * t + k) > 0.97 ? -0.3 : 0));
+        body.scale.set(1, 1 + 0.02 * Math.sin(2 * t), 1), flowers.forEach((f, k) => (f.rotation.z = 0.3 * t * (k ? -1 : 1)));
+        legs.forEach((lg, k) => KIT.stride(lg, 9 * t + (k % 2 ^ (k >> 1) ? Math.PI : 0), 0.45 * wk, 0.7 * wk));
+      },
+    });
+  };
+
+  // SIRGUMMERY = MISTERGUMMERY + MISSGUMMERY + MONTGUMMERY + MONT.BAK + MONT.
+  // A CRT-monitor head (all five have screens) showing the MONT family's "gfxinfo" pixel smiley and the
+  // Gummerys' wifi icon; a gummy Gummery body in MISTERGUMMERY cyan wearing the MONT family's dark
+  // circuit-board vest over a pale belly; MISSGUMMERY pink at the waistband, shoulders and bezel trim;
+  // Gummery arms with MONTGUMMERY's cyan ring cuffs; MONT.BAK / MONT boots (cyan, red soles, yellow
+  // stripes); MONT's cable tail with a plug; MONTGUMMERY's shopping bag in hand.
+  BORN.sirgummery = (g) => {
+    const gum = KIT.surf("plastic", "#3edce6", { rep: 2, bump: 0.008, shine: 85 }),
+      pink = KIT.surf("plastic", "#ff86c6", { rep: 2, bump: 0.008, shine: 85 }),
+      circuit = KIT.surf("circuit", "#1f3d3a", { rep: 2, bump: 0.02, shine: 35 }),
+      pale = KIT.surf("plastic", "#bff4f2", { rep: 2, bump: 0.006, shine: 70 }),
+      teal = KIT.surf("plastic", "#3ab8b8", { rep: 1, bump: 0.006, shine: 60 }),
+      root = new THREE.Group(),
+      body = new THREE.Group();
+    g.add(root), (body.position.y = 1.0), root.add(body);
+    const torso = [[0, -0.36], [0.5, -0.32], [0.62, -0.02], [0.6, 0.34], [0.5, 0.6], [0.3, 0.76], [0, 0.8]];
+    R(latheGeo(torso, 32), gum, body);
+    // circuit-board vest, open at the front over a pale belly
+    R(latheGeo(torso.map(([r, y]) => [r * 1.04 + 0.01, y]).slice(1, 6), 32, 0.75, l - 1.5), circuit, body);
+    R(T.sphere(1, 18, 14), pale, body, [0, 0.12, 0.42], null, [0.36, 0.4, 0.16]);
+    R(T.torus(0.56, 0.07, 8, 28), pink, body, [0, -0.22, 0], [Math.PI / 2, 0, 0]);
+    R(T.cyl(0.6, 0.58, 0.2, 24), circuit, body, [0, -0.36, 0]);
+    // legs and boots
+    const boot = KIT.surf("plastic", "#38cce4", { rep: 1, bump: 0.006, shine: 70 }),
+      legs = [-1, 1].map((sx) => {
+        const lg = KIT.leg(body, [0.25 * sx, -0.4, 0], { len: 0.62, r: 0.13, mat: gum, foot: "boot", footMat: boot, soleMat: x.clay("#e8402a", { shininess: 30 }) });
+        [0.35, 0.65].forEach((yy) => R(T.box(0.26, 0.035, 0.02), x.clay("#ffd23a"), lg.foot, [0, 0.13 * yy * 2, 0.36]));
+        return lg;
+      });
+    // pink shoulders and Gummery arms with ring cuffs
+    const ringM = x.clay("#3ad8d0", { shininess: 80 }),
+      arms = [-1, 1].map((sx) => {
+        R(T.sphere(0.17, 14, 10), pink, body, [0.6 * sx, 0.5, 0]);
+        const a = KIT.arm(body, [0.62 * sx, 0.48, 0], { len: 0.74, r: 0.11, mat: gum, hand: "mitt", rot: [0, 0, 0.22 * sx] });
+        return R(T.torus(0.14, 0.035, 8, 18), ringM, a.hand, [0, 0, 0], [Math.PI / 2, 0, 0]), a;
+      });
+    // MONTGUMMERY's shopping bag in the right hand
+    const bag = new THREE.Group();
+    bag.position.set(0, -0.28, 0.05), arms[1].hand.add(bag);
+    R(T.box(0.3, 0.34, 0.16), x.clay("#f2eedc", { shininess: 20 }), bag, [0, -0.2, 0]);
+    R(T.box(0.31, 0.08, 0.17), x.clay("#7a3ad8", { shininess: 20 }), bag, [0, -0.3, 0]);
+    R(T.torus(0.08, 0.015, 6, 12, Math.PI), x.clay("#f2eedc"), bag, [0, -0.03, 0]);
+    // CRT head: teal housing, pink bezel trim, gfxinfo screen
+    const head = new THREE.Group();
+    head.position.set(0, 0.98, 0.02), body.add(head);
+    R(T.cyl(0.1, 0.13, 0.16, 12), gum, head, [0, -0.12, 0]);
+    R(T.box(1.06, 0.84, 0.24), teal, head, [0, 0.38, 0.1]);
+    R(T.box(0.78, 0.62, 0.5), teal, head, [0, 0.38, -0.25]);
+    R(T.box(1.1, 0.12, 0.28), pink, head, [0, -0.02, 0.1]);
+    for (let k = 0; k < 7; k++) R(T.box(0.06, 0.03, 0.02), x.clay("#1a1a20"), head, [-0.27 + 0.09 * k, -0.02, 0.25]);
+    const scr = (closed) =>
+      b(256, 192, (c) => {
+        (c.fillStyle = "#7a3ae8"), c.fillRect(0, 0, 256, 192), (c.fillStyle = "rgba(255,255,255,.18)"), (c.font = "9px monospace");
+        for (let yy = 40; yy < 190; yy += 11) c.fillText("0x" + ((yy * 2654435761) >>> 0).toString(16).slice(0, 4) + " ;; > [ ]", 8, yy);
+        (c.fillStyle = "#ff9a3a"), (c.font = "bold 26px monospace"), c.fillText("gfxinfo", 10, 30);
+        c.fillStyle = "#ffffff";
+        const px = (x0, y0, w, h) => c.fillRect(x0, y0, w, h);
+        closed ? (px(92, 92, 22, 6), px(146, 92, 22, 6)) : (px(96, 82, 14, 18), px(150, 82, 14, 18));
+        [[86, 128], [96, 138], [106, 144], [118, 146], [130, 146], [142, 144], [152, 138], [162, 128]].forEach(([x1, y1]) => px(x1, y1, 12, 8));
+        (c.strokeStyle = "#ffffff"), (c.lineWidth = 4);
+        [10, 18].forEach((r) => (c.beginPath(), c.arc(226, 44, r, -2.4, -0.75), c.stroke())), c.fillRect(223, 41, 6, 6);
+      }),
+      tOpen = scr(!1),
+      tShut = scr(!0),
+      screenM = new THREE.MeshBasicMaterial({ map: tOpen });
+    R(new THREE.PlaneGeometry(0.86, 0.64), screenM, head, [0, 0.4, 0.225]);
+    // Gummery wifi antenna
+    [0.12, 0.2].forEach((r) => R(T.torus(r, 0.02, 6, 14, 1.6), x.clay("#ffffff", { shininess: 40 }), head, [0.38, 0.86, -0.1], [0, 0, Math.PI / 2 - 0.8]));
+    // MONT's cable tail with a plug
+    const tail = new THREE.Group();
+    tail.position.set(0, -0.15, -0.52), body.add(tail);
+    R(ao([[0, 0, 0], [0, -0.35, -0.35], [0.15, -0.78, -0.7], [0.45, -0.82, -1.0]], 0.06, 0.045, 18, 8), x.clay("#1f2a2a", { shininess: 40 }), tail);
+    const plug = new THREE.Group();
+    plug.position.set(0.45, -0.82, -1.0), (plug.rotation.y = -0.7), tail.add(plug);
+    R(T.box(0.14, 0.1, 0.18), x.clay("#e8e8ec", { shininess: 60 }), plug, [0, 0, -0.08]);
+    [-0.04, 0.04].forEach((px2) => R(T.box(0.02, 0.02, 0.1), x.clay("#e8c040", { shininess: 120 }), plug, [px2, 0, -0.21]));
+    return born(g, {
+      height: 2.6,
+      step(t, dt, tk, wk) {
+        (head.rotation.z = 0.07 * Math.sin(1.1 * t)), (head.rotation.y = 0.12 * Math.sin(0.7 * t)), (body.position.y = 1.0 + 0.02 * Math.sin(2.2 * t));
+        arms.forEach((a, k) => ((a.sh.rotation.x = 0.15 * Math.sin(1.6 * t + k * 3) + 0.6 * wk * Math.sin(8 * t + k * Math.PI)), (a.el.rotation.x = -0.2 - 0.1 * k)));
+        (bag.rotation.x = 0.15 * Math.sin(1.6 * t + 1)), (tail.rotation.y = 0.15 * Math.sin(1.3 * t));
+        legs.forEach((lg, k) => KIT.stride(lg, 8 * t + k * Math.PI, 0.5 * wk, 0.8 * wk));
+        screenM.map = (((t % 5.2) + 5.2) % 5.2) < 0.18 && t > 1 ? tShut : tOpen;
+      },
+    });
+  };
+
+  // ZOLLOD = ZOLLOX + KOLLOD.
+  // ZOLLOX's segmented creature fading from ZOLLOX cyan at the head to KOLLOD green at the tail; its
+  // back is KOLLOD's mossy garden bed growing KOLLOD's black mushrooms among ZOLLOX's pink ones, with
+  // KOLLOD's little worm peeking out; fern fronds (KOLLOD) and yellow plumes (ZOLLOX) along its sides;
+  // ZOLLOX's curling trunk and magenta tail tip.
+  BORN.zollod = (g) => {
+    const root = new THREE.Group(),
+      body = new THREE.Group();
+    g.add(root), (body.position.y = 0.55), root.add(body);
+    const segs = [],
+      cols = ["#35d0c8", "#38c8b0", "#3cbe94", "#42b676", "#48ae58", "#4ca83c"],
+      zs = [0.75, 0.38, 0.0, -0.38, -0.74, -1.06],
+      rs = [0.4, 0.46, 0.48, 0.46, 0.4, 0.3];
+    zs.forEach((zz, k) => {
+      const sg = new THREE.Group();
+      sg.position.set(0, 0, zz), body.add(sg), segs.push(sg);
+      R(T.sphere(1, 18, 14), KIT.surf("scale", cols[k], { rep: 2, bump: 0.02, shine: 40 }), sg, [0, 0, 0], null, [rs[k], rs[k] * 0.9, rs[k] * 0.95]);
+    });
+    // KOLLOD's mossy bed with mushrooms and a worm
+    const moss = KIT.surf("grass", "#4caf34", { rep: 2, bump: 0.03, shine: 8 }),
+      bed = new THREE.Group();
+    (bed.position.y = 0.36), body.add(bed);
+    R(T.box(0.72, 0.16, 1.5), moss, bed, [0, 0, -0.15]);
+    R(T.cyl(0.36, 0.36, 0.16, 16, 1), moss, bed, [0, 0, 0.6], null, [1, 1, 0.5]);
+    const blade = x.clay("#5cc83a", { shininess: 20 }),
+      r4 = srand(5);
+    for (let k = 0; k < 30; k++) R(T.cone(0.025, 0.16 + 0.12 * r4(), 4), blade, bed, [-0.32 + 0.64 * r4(), 0.12, -0.85 + 1.4 * r4()], [0.3 * (r4() - 0.5), 0, 0.3 * (r4() - 0.5)]);
+    const stem = x.clay("#f4ecd8", { shininess: 30 }),
+      dot = x.clay("#ffffff");
+    [[-0.18, -0.55, "#141418"], [0.15, -0.3, "#ff5fb0"], [-0.12, 0.05, "#141418"], [0.2, 0.25, "#ff5fb0"], [0.0, -0.75, "#ff5fb0"], [0.18, -0.6, "#141418"]].forEach(([mx, mz, cc], k) => {
+      const h = 0.14 + 0.06 * (k % 3);
+      R(T.cyl(0.03, 0.04, h, 8), stem, bed, [mx, 0.08 + h / 2, mz]);
+      R(new THREE.SphereGeometry(0.1, 12, 6, 0, l, 0, Math.PI / 2), x.clay(cc, { shininess: 60 }), bed, [mx, 0.08 + h, mz], null, [1, 0.8, 1]);
+      [0, 2.1, 4.2].forEach((a) => R(T.sphere(0.018, 6, 4), dot, bed, [mx + 0.06 * Math.cos(a), 0.08 + h + 0.055, mz + 0.06 * Math.sin(a)]));
+    });
+    const worm = new THREE.Group();
+    worm.position.set(-0.22, 0.08, 0.3), bed.add(worm);
+    R(ao([[0, 0, 0], [0, 0.14, 0.02], [0.04, 0.22, 0.08]], 0.045, 0.04, 8, 6), x.clay("#f0a07a", { shininess: 40 }), worm);
+    R(T.sphere(0.05, 10, 8), x.clay("#f0a07a", { shininess: 40 }), worm, [0.04, 0.24, 0.1]);
+    [-0.02, 0.02].forEach((ex) => R(T.sphere(0.01, 6, 4), x.clay("#141418"), worm, [0.04 + ex, 0.26, 0.15]));
+    // fern fronds and yellow plumes along the sides
+    const fern = KIT.surf("leaf", "#3fa82a", { rep: 1, bump: 0.02, shine: 20 }),
+      plume = KIT.surf("feather", "#ffd83a", { rep: 1, bump: 0.02, shine: 20 }),
+      fronds = [];
+    [-1, 1].forEach((sx) =>
+      [0.45, 0.05, -0.35, -0.75].forEach((zz, k) => {
+        const f = new THREE.Group();
+        f.position.set(0.36 * sx, 0.3, zz), (f.rotation.z = sx * (1.0 + 0.15 * k)), (f.rotation.y = -0.4 * sx), body.add(f), fronds.push(f);
+        R(T.sphere(1, 10, 8), k % 2 ? plume : fern, f, [0, 0.42, 0], null, [0.05, 0.42, 0.13]);
+      }),
+    );
+    // ZOLLOX head with its curling trunk and pink caps
+    const head = new THREE.Group();
+    head.position.set(0, 0.28, 1.12), body.add(head);
+    R(T.sphere(1, 18, 14), KIT.surf("scale", "#35d0c8", { rep: 2, bump: 0.02, shine: 40 }), head, [0, 0, 0], null, [0.32, 0.3, 0.34]);
+    const trunk = new THREE.Group();
+    trunk.position.set(0, -0.05, 0.28), head.add(trunk);
+    R(ao([[0, 0, 0], [0, -0.12, 0.2], [0, -0.38, 0.24], [0, -0.48, 0.08], [0, -0.38, -0.02]], 0.09, 0.035, 18, 8), KIT.surf("scale", "#35d0c8", { rep: 1, bump: 0.015, shine: 40 }), trunk);
+    R(T.sphere(0.04, 8, 6), x.clay("#e040c8"), trunk, [0, -0.38, -0.02]);
+    const lids = [];
+    [-1, 1].forEach((sx) => lids.push(KIT.eye(head, [0.16 * sx, 0.1, 0.25], 0.085, { iris: "#3a2a6a", lid: "#35d0c8", open: -0.3, rot: [0, 0.3 * sx, 0] }).lid));
+    [[-0.1, 0.12], [0.12, 0.0]].forEach(([mx, mz]) => {
+      R(T.cyl(0.025, 0.03, 0.08, 6), stem, head, [mx, 0.32, mz]);
+      R(new THREE.SphereGeometry(0.075, 10, 6, 0, l, 0, Math.PI / 2), x.clay("#ff5fb0", { shininess: 60 }), head, [mx, 0.36, mz]);
+    });
+    // stubby legs and the tail with ZOLLOX's magenta tip
+    const legs = [[0.32, 0.55], [0.36, -0.35]].flatMap(([lx, lz]) => [-1, 1].map((sx) => KIT.leg(body, [lx * sx, -0.22, lz], { len: 0.36, r: 0.1, mat: KIT.surf("scale", "#3cbe94", { rep: 1, bump: 0.015, shine: 40 }), foot: "pad" })));
+    const tail = new THREE.Group();
+    tail.position.set(0, 0, -1.3), body.add(tail);
+    R(ao([[0, 0, 0], [0, -0.05, -0.4], [0.08, 0.1, -0.75], [0.04, 0.35, -0.85]], 0.22, 0.05, 18, 8), KIT.surf("scale", "#4ca83c", { rep: 1, bump: 0.015, shine: 40 }), tail);
+    R(T.sphere(0.07, 10, 8), x.clay("#e040c8", { shininess: 60 }), tail, [0.04, 0.37, -0.85]);
+    return born(g, {
+      height: 1.7,
+      lids,
+      step(t, dt, tk, wk) {
+        segs.forEach((s, k) => (s.position.y = 0.03 * Math.sin(2.4 * t - 0.8 * k)));
+        fronds.forEach((f, k) => (f.rotation.x = 0.12 * Math.sin(1.8 * t + k)));
+        (worm.position.y = 0.08 + 0.05 * Math.max(0, Math.sin(1.3 * t))), (worm.rotation.y = 0.5 * Math.sin(2 * t));
+        (trunk.rotation.x = 0.15 * Math.sin(1.7 * t)), (head.rotation.y = 0.15 * Math.sin(0.8 * t)), (tail.rotation.y = 0.3 * Math.sin(1.9 * t));
+        legs.forEach((lg, k) => KIT.stride(lg, 10 * t + (k % 2 ^ (k >> 1) ? Math.PI : 0), 0.5 * wk, 0.6 * wk));
+      },
+    });
+  };
+
+  // SOMLET = GRATELET + SOMNUX.
+  // A floating cotton puffball (GRATELET) squared off like SOMNUX's box body, with SOMNUX's sleepy
+  // face (lashes, blush, little "o" mouth) and GRATELET's swirl, SOMNUX's starry blue nightcap,
+  // GRATELET's cream-puff hands and dangling root tentacles, tinted plum between GRATELET's red and
+  // the nightcap's blue.
+  BORN.somlet = (g) => {
+    const cream = KIT.surf("felt", "#f2e4b4", { rep: 2, bump: 0.025, shine: 12 }),
+      cream2 = KIT.surf("felt", "#ead6a0", { rep: 2, bump: 0.025, shine: 12 }),
+      root = new THREE.Group(),
+      fl = new THREE.Group();
+    g.add(root), (fl.position.y = 1.35), root.add(fl);
+    // rounded-cube puff body
+    const geo = new THREE.SphereGeometry(1, 32, 24),
+      P = geo.attributes.position,
+      v = new c0();
+    for (let k = 0; k < P.count; k++) {
+      v.fromBufferAttribute(P, k);
+      const n = Math.pow(Math.pow(Math.abs(v.x), 3.2) + Math.pow(Math.abs(v.y), 3.2) + Math.pow(Math.abs(v.z), 3.2), 1 / 3.2);
+      v.divideScalar(n), P.setXYZ(k, 0.82 * v.x, 0.76 * v.y, 0.72 * v.z);
+    }
+    geo.computeVertexNormals();
+    const puff = new THREE.Group();
+    fl.add(puff), R(geo, cream, puff);
+    const r5 = srand(11);
+    for (let k = 0; k < 16; k++) {
+      const a = l * r5(),
+        yy = 0.15 + 0.6 * r5();
+      R(T.sphere(0.13 + 0.07 * r5(), 12, 10), k % 3 ? cream : cream2, puff, [0.74 * Math.cos(a), yy, 0.66 * Math.sin(a) - 0.05]);
+    }
+    // SOMNUX's sleepy face
+    const ink = x.clay("#3a2a2a", { shininess: 20 });
+    [-1, 1].forEach((sx) => {
+      R(T.torus(0.11, 0.018, 6, 14, 2.4), ink, puff, [0.24 * sx, 0.05, 0.73], [0, 0, Math.PI + 0.37]);
+      [-0.08, 0, 0.08].forEach((d) => R(T.box(0.012, 0.05, 0.01), ink, puff, [0.24 * sx + d, -0.06, 0.74], [0, 0, d * 3]));
+      R(T.sphere(1, 12, 8), x.clay("#ff9aa8", { shininess: 20 }), puff, [0.38 * sx, -0.1, 0.71], null, [0.11, 0.07, 0.02]);
+    });
+    R(T.torus(0.04, 0.015, 6, 12), ink, puff, [0, -0.2, 0.74]);
+    // GRATELET's swirl on each side
+    [-1, 1].forEach((sx) => {
+      const pts = [];
+      for (let k = 0; k <= 24; k++) {
+        const a = k * 0.5,
+          r = 0.02 + 0.006 * k;
+        pts.push([0.83 * sx, -0.05 + r * Math.sin(a), r * Math.cos(a)]);
+      }
+      R(ao(pts, 0.012, 0.012, 40, 4), cream2, puff);
+    });
+    // SOMNUX's nightcap
+    const cap = new THREE.Group();
+    (cap.position.y = 0.7), puff.add(cap);
+    R(T.torus(0.62, 0.11, 8, 28), x.clay("#fbf8ee", { shininess: 20 }), cap, [0, 0, 0], [Math.PI / 2, 0, 0], [1, 0.9, 1]);
+    const capPts = [[0, 0, 0], [0, 0.4, -0.04], [0.1, 0.72, -0.08], [0.36, 0.88, -0.1], [0.62, 0.78, -0.08]],
+      capCurve = new THREE.CatmullRomCurve3(capPts.map((q) => new c0(...q))),
+      navy = KIT.surf("felt", "#3a4ab8", { rep: 2, bump: 0.02, shine: 15 });
+    R(ao(capPts, 0.58, 0.07, 24, 18), navy, cap);
+    const starM = x.clay("#ffd23a", { shininess: 40 });
+    [[0.18, 0.4], [0.35, 2.1], [0.5, 4.0], [0.62, 1.2], [0.28, 5.2], [0.72, 3.0]].forEach(([u, a]) => {
+      const pp = capCurve.getPointAt(u),
+        rr = 0.58 + (0.07 - 0.58) * u + 0.01;
+      R(starGeo(), starM, cap, [pp.x + rr * Math.cos(a), pp.y, pp.z + rr * Math.sin(a)], [0, Math.PI / 2 - a, 0], 0.06);
+    });
+    const pom = R(T.sphere(0.13, 12, 10), x.clay("#fbf8ee", { shininess: 20 }), cap, [0.64, 0.74, -0.08]);
+    // GRATELET's cream-puff hands
+    const hands = [-1, 1].map((sx) => {
+      const h = new THREE.Group();
+      h.position.set(0.95 * sx, -0.18, 0.12), puff.add(h);
+      [[0, 0, 0, 0.14], [0.06 * sx, 0.12, 0.02, 0.1], [0.03 * sx, -0.11, 0.05, 0.1]].forEach(([hx, hy, hz, r]) => R(T.sphere(r, 10, 8), cream, h, [hx, hy, hz]));
+      return h;
+    });
+    // root tentacles in plum
+    const plum = KIT.surf("skin", "#b04870", { rep: 1, bump: 0.02, shine: 30 }),
+      tents = [];
+    for (let k = 0; k < 7; k++) {
+      const a = (k / 7) * l,
+        tg = new THREE.Group();
+      tg.position.set(0.32 * Math.cos(a), -0.68, 0.28 * Math.sin(a)), fl.add(tg), tents.push(tg);
+      R(ao([[0, 0, 0], [0.06 * Math.cos(a), -0.3, 0.06 * Math.sin(a)], [0.02, -0.6, 0], [0.12 * Math.cos(a + 1), -0.82, 0.1 * Math.sin(a + 1)]], 0.07, 0.015, 14, 6), plum, tg);
+      R(ao([[0.02, -0.55, 0], [0.12 * Math.cos(a - 1), -0.68, 0.12 * Math.sin(a - 1)]], 0.025, 0.008, 6, 4), plum, tg);
+    }
+    return born(g, {
+      height: 3.0,
+      step(t, dt, tk) {
+        (fl.position.y = 1.35 + 0.1 * Math.sin(1.2 * t)), puff.scale.set(1 + 0.02 * Math.sin(1.6 * t), 1 - 0.02 * Math.sin(1.6 * t), 1);
+        (cap.rotation.z = 0.06 * Math.sin(1.1 * t)), (pom.position.y = 0.74 + 0.03 * Math.sin(2.2 * t));
+        tents.forEach((tg, k) => ((tg.rotation.x = 0.18 * Math.sin(1.4 * t + k)), (tg.rotation.z = 0.12 * Math.sin(1.1 * t + 2 * k))));
+        hands.forEach((h, k) => (h.position.y = -0.18 + 0.05 * Math.sin(1.8 * t + k * 2) + 0.1 * tk));
+      },
+    });
+  };
+
+  // TOEBERT = MR BUN + MISS BUN + BOBERT.
+  // BOBERT's round body and cream muzzle in a fur colour between all three; one upright ear (BOBERT)
+  // and one floppy ear (the Buns); BOBERT's ranger hat with MR BUN's red hat band and MISS BUN's bow;
+  // MR BUN's green vest and red bowtie over MISS BUN's red dress fabric with her white lace trim,
+  // BOBERT's gold star badge; big bunny feet.
+  BORN.toebert = (g) => {
+    const fur = KIT.surf("plush", "#b6824a", { rep: 3, bump: 0.025, shine: 12 }),
+      cream = KIT.surf("plush", "#f4ead2", { rep: 3, bump: 0.02, shine: 12 }),
+      red = KIT.surf("fabric", "#d42a30", { rep: 2, bump: 0.02, shine: 15 }),
+      green = KIT.surf("fabric", "#2c6a3c", { rep: 2, bump: 0.02, shine: 15 }),
+      lace = x.clay("#fdfbf2", { shininess: 20 }),
+      root = new THREE.Group(),
+      body = new THREE.Group();
+    g.add(root), root.add(body);
+    R(T.sphere(1, 26, 20), fur, body, [0, 0.98, 0], null, [0.56, 0.62, 0.52]);
+    R(T.sphere(1, 20, 16), cream, body, [0, 0.82, 0.28], null, [0.4, 0.42, 0.28]);
+    // red dress top, green vest open at the front, lace hem
+    R(latheGeo([[0.5, 0.92], [0.57, 1.05], [0.56, 1.25], [0.46, 1.45], [0.28, 1.55]], 28), red, body);
+    R(latheGeo([[0.56, 0.9], [0.6, 1.05], [0.59, 1.25], [0.49, 1.45], [0.3, 1.56]], 28, 0.6, l - 1.2), green, body);
+    R(T.torus(0.57, 0.035, 6, 32), lace, body, [0, 0.9, 0], [Math.PI / 2, 0, 0]);
+    for (let k = 0; k < 20; k++) {
+      const a = (k / 20) * l;
+      R(T.sphere(0.03, 6, 4), lace, body, [0.6 * Math.sin(a), 0.86, 0.6 * Math.cos(a)]);
+    }
+    R(starGeo(), x.clay("#ffd23a", { shininess: 80 }), body, [-0.28, 1.27, 0.5], [0, -0.45, 0], 0.08);
+    // MR BUN's bowtie
+    [-1, 1].forEach((sx) => R(T.cone(0.07, 0.14, 8), red, body, [0.07 * sx, 1.52, 0.33], [0, 0, (-sx * Math.PI) / 2]));
+    R(T.sphere(0.04, 8, 6), red, body, [0, 1.52, 0.34]);
+    // head with BOBERT's muzzle, the Buns' blush
+    const head = new THREE.Group();
+    head.position.set(0, 1.9, 0.02), body.add(head);
+    R(T.sphere(1, 24, 18), fur, head, [0, 0, 0], null, [0.44, 0.42, 0.42]);
+    R(T.sphere(1, 16, 12), cream, head, [0, -0.12, 0.32], null, [0.24, 0.16, 0.16]);
+    const nose = R(T.sphere(0.055, 10, 8), x.clay("#f08aa0", { shininess: 50 }), head, [0, -0.04, 0.47]);
+    KIT.mouth(head, [0, -0.17, 0.46], 0.05);
+    const lids = [];
+    [-1, 1].forEach((sx) => {
+      lids.push(KIT.eye(head, [0.16 * sx, 0.07, 0.34], 0.08, { iris: "#5a3010", lid: "#b6824a", open: -0.3, rot: [0, 0.3 * sx, 0] }).lid);
+      R(T.sphere(1, 10, 8), x.clay("#ff9aa8", { shininess: 20 }), head, [0.26 * sx, -0.1, 0.32], null, [0.08, 0.05, 0.03]);
+    });
+    // ears: BOBERT's upright one pokes through the hat, the Buns' floppy one hangs
+    const earUp = new THREE.Group();
+    earUp.position.set(0.15, 0.3, -0.04), (earUp.rotation.z = -0.15), head.add(earUp);
+    R(T.sphere(1, 12, 10), fur, earUp, [0, 0.42, 0], null, [0.1, 0.42, 0.07]), R(T.sphere(1, 10, 8), x.clay("#f0b0b8", { shininess: 20 }), earUp, [0, 0.42, 0.04], null, [0.055, 0.32, 0.04]);
+    const earFlop = new THREE.Group();
+    earFlop.position.set(-0.3, 0.25, -0.04), (earFlop.rotation.z = 2.1), head.add(earFlop);
+    R(T.sphere(1, 12, 10), fur, earFlop, [0, 0.38, 0], null, [0.11, 0.4, 0.07]), R(T.sphere(1, 10, 8), x.clay("#f0b0b8", { shininess: 20 }), earFlop, [0, 0.38, 0.04], null, [0.06, 0.3, 0.04]);
+    // BOBERT's ranger hat with MR BUN's band and MISS BUN's bow
+    const hat = new THREE.Group();
+    hat.position.set(0, 0.34, 0), (hat.rotation.z = 0.06), head.add(hat);
+    const tan = KIT.surf("felt", "#c49450", { rep: 1, bump: 0.02, shine: 15 });
+    R(T.cyl(0.56, 0.56, 0.035, 28), tan, hat), R(T.cyl(0.2, 0.3, 0.3, 20), tan, hat, [0, 0.16, 0]);
+    R(T.sphere(1, 12, 8), tan, hat, [0, 0.31, 0], null, [0.2, 0.05, 0.2]);
+    R(T.cyl(0.305, 0.31, 0.07, 20), red, hat, [0, 0.05, 0]);
+    [-1, 1].forEach((sx) => R(T.sphere(1, 10, 8), red, hat, [-0.24 + 0.09 * sx, 0.07, 0.2], [0, 0, 0.5 * sx], [0.08, 0.05, 0.03]));
+    // arms, big feet with toe pads, tail puff
+    const arms = [-1, 1].map((sx) => KIT.arm(body, [0.5 * sx, 1.3, 0.04], { len: 0.52, r: 0.13, mat: fur, hand: "mitt", rot: [0, 0, 0.35 * sx] }));
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(0.2, 14, 10), fur, body, [0.26 * sx, 0.42, 0.04]);
+      R(T.sphere(1, 16, 12), fur, body, [0.27 * sx, 0.11, 0.16], null, [0.2, 0.12, 0.38]);
+      [-1, 0, 1].forEach((k) => R(T.sphere(0.05, 8, 6), cream, body, [0.27 * sx + 0.08 * k, 0.07, 0.5]));
+    });
+    R(T.sphere(0.15, 12, 10), cream, body, [0, 0.72, -0.52]);
+    return born(g, {
+      height: 2.75,
+      lids,
+      step(t, dt, tk, wk) {
+        (earUp.rotation.z = -0.15 + (Math.sin(3.1 * t) > 0.95 ? 0.25 : 0)), (earFlop.rotation.z = 2.1 + 0.08 * Math.sin(1.5 * t));
+        nose.scale.setScalar(1 + 0.12 * Math.max(0, Math.sin(9 * t)) * (Math.sin(0.7 * t) > 0.3 ? 1 : 0));
+        (head.rotation.z = 0.06 * Math.sin(0.9 * t)), (head.rotation.x = 0.04 * Math.sin(1.3 * t) - 0.08 * tk), body.scale.set(1, 1 + 0.015 * Math.sin(2 * t), 1);
+        arms.forEach((a, k) => (a.sh.rotation.x = 0.12 * Math.sin(1.5 * t + 3 * k) + 0.5 * wk * Math.sin(8 * t + k * Math.PI)));
+      },
+    });
+  };
+
+  // JOHN OWL = OWL (gold) + OWL (sky blue) + SHOPKEEPER OWL.
+  // One egg-shaped owl whose scalloped feathers run from the SHOPKEEPER's cocoa crown down into the
+  // gold OWL's golden body; the sky-blue OWL's wings, tail and tuft tips; the shared cream chevron
+  // belly, big ringed eyes and orange beak; the SHOPKEEPER's top hat with its pink band, with a blue
+  // feather tucked into it.
+  BORN.johnowl = (g) => {
+    const feath = gradMat("feather", { rep: 4, bump: 0.03, shine: 20 }),
+      blue = KIT.surf("feather", "#7ac8e8", { rep: 3, bump: 0.03, shine: 20 }),
+      root = new THREE.Group(),
+      body = new THREE.Group();
+    g.add(root), root.add(body);
+    keepR(gradient(latheGeo([[0, 0.18], [0.42, 0.24], [0.62, 0.55], [0.67, 0.98], [0.62, 1.4], [0.44, 1.72], [0, 1.84]], 40), [[0.2, "#d6a85e"], [0.85, "#c4904e"], [1.35, "#9a6a40"], [1.8, "#7a4e32"]]), feath, body);
+    R(T.sphere(1, 20, 16), KIT.surf("feather", "#ece2b8", { rep: 3, bump: 0.025, shine: 15 }), body, [0, 0.74, 0.4], null, [0.44, 0.5, 0.3]);
+    const chev = x.clay("#b89a68", { shininess: 10 });
+    [[0.95, 2], [0.78, 3], [0.6, 2]].forEach(([yy, n]) => {
+      for (let k = 0; k < n; k++) {
+        const xx = (k - (n - 1) / 2) * 0.17;
+        [-1, 1].forEach((s) => R(T.box(0.07, 0.015, 0.01), chev, body, [xx + 0.025 * s, yy, 0.69 - Math.abs(xx) * 0.3], [0, xx, 0.6 * s]));
+      }
+    });
+    // eyes with two-tone rings (blue outer, gold inner)
+    const face = new THREE.Group();
+    (face.position.y = 1.32), body.add(face);
+    const lids = [];
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 20, 14), x.clay("#f4edc8", { shininess: 20 }), face, [0.21 * sx, 0, 0.55], [0, 0.18 * sx, 0], [0.24, 0.24, 0.1]);
+      R(T.torus(0.24, 0.035, 8, 24), x.clay("#6ec2e0", { shininess: 40 }), face, [0.21 * sx, 0, 0.64], [0, 0.18 * sx, 0]);
+      R(T.torus(0.2, 0.018, 6, 24), x.clay("#c8963a", { shininess: 40 }), face, [0.21 * sx, 0, 0.645], [0, 0.18 * sx, 0]);
+      lids.push(KIT.eye(face, [0.21 * sx, 0, 0.6], 0.12, { white: "#141418", iris: "#141418", lid: "#9a6a40", open: -0.45, rot: [0, 0.18 * sx, 0] }).lid);
+    });
+    R(T.cone(0.07, 0.2, 8), x.clay("#f29a2a", { shininess: 50 }), face, [0, -0.17, 0.72], [Math.PI / 2 + 0.6, 0, 0]);
+    // ear tufts with blue tips
+    const tufts = [-1, 1].map((sx) => {
+      const tf = new THREE.Group();
+      tf.position.set(0.3 * sx, 1.66, 0.05), (tf.rotation.z = -0.35 * sx), body.add(tf);
+      R(T.cone(0.1, 0.26, 8), KIT.surf("feather", "#8a5a38", { rep: 1, bump: 0.02, shine: 15 }), tf, [0, 0.12, 0]);
+      return R(T.cone(0.05, 0.12, 6), blue, tf, [0, 0.28, 0]), tf;
+    });
+    // sky-blue wings with gold tips, and tail
+    const wings = [-1, 1].map((sx) => {
+      const w = new THREE.Group();
+      w.position.set(0.6 * sx, 1.15, -0.05), body.add(w);
+      R(T.sphere(1, 14, 12), blue, w, [0, -0.32, -0.02], null, [0.12, 0.45, 0.3]);
+      return R(T.sphere(1, 10, 8), x.clay("#d6a85e", { shininess: 20 }), w, [0, -0.72, -0.06], null, [0.08, 0.12, 0.16]), w;
+    });
+    R(T.cone(0.2, 0.4, 6), blue, body, [0, 0.38, -0.6], [-2.2, 0, 0], [1, 1, 0.4]);
+    // feet
+    [-1, 1].forEach((sx) => [-0.06, 0, 0.06].forEach((k) => R(T.sphere(1, 8, 6), x.clay("#f2a838", { shininess: 40 }), body, [0.2 * sx + k, 0.08, 0.3], [0, k * 4, 0], [0.04, 0.04, 0.12])));
+    // the SHOPKEEPER's top hat with a blue feather in the band
+    const hat = new THREE.Group();
+    hat.position.set(0, 1.8, -0.02), (hat.rotation.z = 0.1), body.add(hat);
+    const hm = x.clay("#2a2433", { shininess: 30 });
+    R(T.cyl(0.36, 0.36, 0.04, 24), hm, hat), R(T.cyl(0.25, 0.27, 0.48, 20), hm, hat, [0, 0.26, 0]);
+    R(T.cyl(0.275, 0.275, 0.09, 20), x.clay("#ff5fb0", { shininess: 40 }), hat, [0, 0.1, 0]);
+    R(T.sphere(1, 10, 8), blue, hat, [0.25, 0.32, -0.06], [0, 0, -0.5], [0.04, 0.24, 0.08]);
+    return born(g, {
+      height: 2.6,
+      lids,
+      crownY: 1.8,
+      step(t, dt, tk) {
+        wings.forEach((w, k) => (w.rotation.z = (k ? -1 : 1) * (0.05 + 0.06 * Math.sin(2.2 * t) + 0.25 * tk)));
+        (face.rotation.y = 0.12 * Math.sin(0.6 * t)), (face.rotation.z = 0.06 * Math.sin(0.9 * t));
+        tufts.forEach((tf, k) => (tf.rotation.z = (k ? 0.35 : -0.35) + 0.05 * Math.sin(1.7 * t + k)));
+        (hat.rotation.z = 0.1 + 0.03 * Math.sin(1.2 * t)), body.scale.set(1, 1 + 0.015 * Math.sin(1.9 * t), 1);
+      },
+    });
+  };
+  for (const k in BORN)
+    so["born_" + k] = (g, d, opts) => {
+      try {
+        return BORN[k](g, d, opts);
+      } catch (err) {
+        vo(err, "model born_" + k);
+        while (g.children.length) g.remove(g.children[0]);
+        return { height: 2, anim() {} };
+      }
+    };
   // FORTIZMO sculpts her geometry after its bounds are computed (and bends her horn at runtime), so
   // taps on her outer body missed her and could select a creature behind her. Refresh the bounds
   // with some headroom so picking always finds her.
@@ -12430,6 +13087,8 @@ const JGP = (() => {
 
   // ---- apply the rows over the engine's defs (runs just before spawn) ----
   function applyCast() {
+    // MISSGUMMERY (jumper) is part of SIRGUMMERY and KOLLOD (orson) is part of ZOLLOD now
+    delete o.jumper, delete n.orson, (t.creaturesRoaming = Object.keys(n).length);
     const all = Object.assign({}, e, o, n);
     for (const key in ROWS) {
       const row = ROWS[key];
@@ -13123,30 +13782,6 @@ const JGP = (() => {
           return ny > 0.5 && n > 0.3 ? [0.3 * sh, 0.55 * sh, 0.22 * sh] : [base[0] * sh * 1.15, base[1] * sh * 1.15, base[2] * sh * 1.15];
         });
       });
-    // leafy bush: overlapping leaf cards on a dome, darker inside, lighter at the rim
-    const bushGeo = (v) =>
-      cached("bush" + v, () => {
-        const tris = [],
-          N2 = VEG_HI ? 40 : 24;
-        for (let k = 0; k < N2; k++) {
-          const u = Math.acos(1 - 1.1 * ((k + 0.5) / N2)),
-            a = k * 2.39996 + v,
-            d = [Math.sin(u) * Math.cos(a), Math.cos(u), Math.sin(u) * Math.sin(a)],
-            c = [0.55 * d[0], 0.35 + 0.5 * d[1], 0.55 * d[2]],
-            t1 = [-d[2], 0, d[0]],
-            L1 = Math.hypot(...t1) || 1,
-            t = t1.map((q) => q / L1),
-            up = [d[0] * 0.3, 1, d[2] * 0.3],
-            sz = 0.2 + 0.06 * hash3(k, v, 3),
-            P0 = c.map((q, i) => q - up[i] * sz * 0.2),
-            P1 = c.map((q, i) => q + t[i] * sz * 0.55 + d[i] * 0.05),
-            P2 = c.map((q, i) => q + up[i] * sz + d[i] * 0.12),
-            P3 = c.map((q, i) => q - t[i] * sz * 0.55 + d[i] * 0.05),
-            sh = 0.62 + 0.45 * d[1] + 0.12 * hash3(k, v, 7);
-          tris.push([P0, P1, P2, sh * 0.8, sh, sh + 0.2], [P0, P2, P3, sh * 0.8, sh + 0.2, sh]);
-        }
-        return triGeo(tris);
-      });
     // a five-petal flower (tinted per placement) with a darker throat
     const flowerGeo = cached("flower", () => {
       const tris = [];
@@ -13258,18 +13893,6 @@ const JGP = (() => {
         add(trunkGeo, "#6a5a3a", S(X, y, Z, 0, 0, 0, 0.36 * s, h, 0.36 * s));
         for (let k = 0; k < 14; k++) frond(X, y + h, Z, (k / 14) * l, rr(1.3, 1.8) * s, 0.2 * s, rr(-0.45, -0.1), k % 2 ? "#2f6a2a" : "#3a7a2a");
       },
-      hibiscus = (X, Z, s) => {
-        const y = groundY(X, Z),
-          fl = ["#e8301e", "#ff5fb0", "#ff8a1a", "#ffd23a"][Math.floor(4 * rnd())],
-          v = Math.floor(3 * rnd());
-        add(bushGeo(v), leafGreens[v], S(X, y, Z, 0, rnd() * l, 0, rr(1.2, 1.6) * s, rr(1.1, 1.4) * s, rr(1.2, 1.6) * s));
-        for (let k = 0; k < 7; k++) {
-          const a = rnd() * l,
-            u = rr(0.3, 1.1),
-            fs = 0.11 * s;
-          add(flowerGeo, fl, S(X + Math.sin(u) * Math.cos(a) * 0.72 * s, y + (0.4 + 0.65 * Math.cos(u)) * 1.15 * s, Z + Math.sin(u) * Math.sin(a) * 0.72 * s, Math.sin(a) * u * 0.8, 0, -Math.cos(a) * u * 0.8, fs, fs, fs));
-        }
-      },
       fern = (X, Z, s) => {
         const y = groundY(X, Z);
         for (let k = 0; k < 8; k++) frond(X, y + 0.06, Z, (k / 8) * l + rnd(), rr(0.9, 1.4) * s, 0.22 * s, rr(-0.75, -0.35), k % 2 ? "#5aa83a" : "#4a9a32");
@@ -13296,7 +13919,7 @@ const JGP = (() => {
         X = Math.cos(a) * rr(47, 60),
         Z = Math.sin(a) * rr(47, 60),
         q = rnd();
-      q < 0.5 ? fern(X, Z, rr(0.9, 1.6)) : q < 0.8 ? hibiscus(X, Z, rr(0.9, 1.4)) : cycad(X, Z, rr(0.7, 1));
+      q < 0.7 ? fern(X, Z, rr(0.9, 1.6)) : cycad(X, Z, rr(0.7, 1));
     }
     // a few props inside the clearing, kept away from stations, the NPC line-up and the spawn
     const busy = [...keepAt, ...Object.values(Object.assign({}, e, o, n)).filter((d) => d && d.at).map((d) => d.at), [0, 20]];
@@ -13312,9 +13935,6 @@ const JGP = (() => {
       if (q < 0.4) {
         if (!freeSpot(X, Z, 1)) continue;
         fern(X, Z, rr(0.7, 1.2)), E.add(X, Z, 1, "fern");
-      } else if (q < 0.6) {
-        if (!freeSpot(X, Z, 1.2)) continue;
-        hibiscus(X, Z, rr(0.7, 1.1)), E.add(X, Z, 1.2, "bush");
       } else if (q < 0.78) {
         if (!freeSpot(X, Z, 1.6)) continue;
         const s = rr(0.6, 1.3);

@@ -4234,6 +4234,7 @@ const bt = { tg: new Map(), chips: [], live: !1 },
         ("raising" === this.phase &&
           (e.hornK || 0) >= 0.999 &&
           ((this.phase = "playing"), (e.hornPlaying = !0), ee.start(t)),
+        "playing" === this.phase && !ee.playing && this.finish(),
         "lowering" === this.phase && (e.hornK || 0) <= 0.001 && ((this.phase = "off"), gcSinger.leave()));
     },
   };
@@ -7669,7 +7670,7 @@ const ee = (function () {
           return c;
         },
         start() {
-          (c = !0), (p = 0), (f = 0);
+          (c = !0), (p = 0), (f = 0), (outroAt = -1);
         },
         stop() {
           c = !1;
@@ -7890,8 +7891,16 @@ const ee = (function () {
       }
       return r;
     }
-    function W(o, a) {
-      if (o >= BARS) return void (c = !1);
+    // the intro plays once, then the head, bridge and shout go round until the event ends; then
+    // outro() plays the tag on the next bar and the tune ends on its long high D
+    let outroAt = -1;
+    const barFor = (o) => (o < 2 ? o : outroAt >= 0 && o >= outroAt ? (o - outroAt < 4 ? 20 + o - outroAt : -1) : 2 + ((o - 2) % 18));
+    y.outro = () => {
+      c && outroAt < 0 && (outroAt = p);
+    };
+    function W(o0, a) {
+      const o = barFor(o0);
+      if (o < 0) return void (c = !1);
       const n = o,
         sec = o < 2 ? "intro" : o < 8 ? "A" : o < 12 ? "B" : o < 20 ? "S" : "T",
         l = (function (e) {
@@ -9330,6 +9339,8 @@ const le = (() => {
       },
       tryStart(t) {
         if (a) return;
+        // for testing, "The Garden" always runs the whole event: planting, BACKPACKA and the music
+        (Kt.rewards.seeds = !0),
         pe.abort(),
           t || (c = !0),
           (a = !0),
@@ -9337,7 +9348,7 @@ const le = (() => {
           (bt.t0 = r),
           (E = 0),
           (s = It.all.filter(
-            (t) => !("companion" !== t.kind && "npc" !== t.kind && "creature" !== t.kind),
+            (t) => !("companion" !== t.kind && "npc" !== t.kind && "creature" !== t.kind) && !JGP.eventActor(t),
           )),
           s.forEach((t) => {
             t.busy && It.release(t, t.busy), (t.busy = e), (t.group.visible = !0);
@@ -9397,6 +9408,8 @@ const le = (() => {
       },
       wrap() {
         if (!a) return;
+        // FORTIZMO finishes the tune with its tag
+        ee.playing && ee.outro(),
         (bt.live = !1),
           (JGP.garden.startAt = 0),
           p && (P(p), (p = null)),
@@ -14617,7 +14630,7 @@ const JGP = (() => {
   // per-creature animation hook, return home) is the original finale system;
   // this block provides the garden, the plants and the planting behaviour.
   const GARDEN_R = 15,
-    GATHER_S = 6, // seconds to gather before planting starts
+    GATHER_S = 0.5, // seconds before planting starts (everyone walks straight into the garden)
     NO_SEEDS_S = 20, // without Seeds the gathering ends after this long
     garden = { slots: [], plants: [], cans: [], startAt: 0 };
   function buildGarden(o) {
@@ -14813,11 +14826,16 @@ const JGP = (() => {
       left -= k;
     });
     list.forEach((ent, k) => {
-      (ent.finaleSlot = spots[k]), (ent.plantNext = now + rr(2, 5));
+      (ent.finaleSlot = spots[k]), (ent.plantNext = now + rr(2, 5)), (ent.watching = !1);
     });
   }
+  // LARRY, NEXTESSA and FORTIZMO come into the garden but don't plant; the line-up's BACKPACKA is
+  // the event's own actor and stays out of the gathering
+  const NO_PLANT = ["frog", "t_larry", "t_nextessa", "t_backpacka"],
+    noPlant = (ent) => !!ent && NO_PLANT.includes(ent.id),
+    eventActor = (ent) => !!ent && "t_backpacka" === ent.id;
   function plantTick(ent, now) {
-    if (ent.moving || now < (ent.plantNext || 0) || ent.hornWant) return;
+    if (ent.moving || now < (ent.plantNext || 0) || ent.hornWant || ent.watching || noPlant(ent)) return;
     ent.plantNext = now + rr(5, 9);
     ent.plantCount = (ent.plantCount || 0) + 1;
     const p = ent.group.position;
@@ -15309,6 +15327,24 @@ const JGP = (() => {
         const fin = It.all.filter((en) => "finale" === en.busy),
           once = (key, at, fn) => e >= at && !flags[key] && ((flags[key] = !0), fn());
         once("arrive", 3, () => fin.forEach((en) => Ut.above(en, "!", M.yellow)));
+        // FORTIZMO raises her horn as he swoops in to the pond (the first note lands as he arrives)
+        // and plays "Backpacka's Rain Strut" until the event ends
+        once("horn", D.inA - 2.2, () => {
+          try {
+            "off" === gcHorn.phase && gcHorn.play();
+          } catch (err) {}
+        });
+        // as he reaches the middle, everyone stops planting and steps out to the walk around the
+        // garden (keeping their order round the circle) to watch him spray
+        once("ring", D.toGarden - 2, () => {
+          const R0 = GARDEN_R + 2.3,
+            byA = fin.slice().sort((p, q) => Math.atan2(p.group.position.z, p.group.position.x) - Math.atan2(q.group.position.z, q.group.position.x)),
+            a0 = byA.length ? Math.atan2(byA[0].group.position.z, byA[0].group.position.x) : 0;
+          byA.forEach((en, k) => {
+            const a = a0 + (k / byA.length) * l;
+            (en.watching = !0), (en.finaleSlot = { x: R0 * Math.cos(a), z: R0 * Math.sin(a) });
+          });
+        });
         once("drink", D.down + 2, () => fin.forEach((en) => Math.random() < 0.6 && Ut.above(en, "?", M.teal)));
         once("fat", D.drink - 1, () => fin.forEach((en) => Ut.above(en, "!", M.pink)));
         once("spray", D.splay, () => {
@@ -15319,34 +15355,30 @@ const JGP = (() => {
         e > D.splay && e < D.spray && Math.random() < 1.2 * dt && fin.length && Ut.above(f(fin), f(["♥", "✿", "♪"]), f([M.pink, M.yellow, M.lime, M.teal]));
       }
     }
+    const lineupBP = (vis) => {
+      const en = It.all.find((q) => "t_backpacka" === q.id);
+      en && (en.group.visible = vis);
+    };
     function hideAll() {
+      lineupBP(!0), It.all.forEach((en) => (en.watching = !1));
       if (!made) return;
       const P = made;
       (P.root.visible = !1), P.ripples.forEach((m) => (m.visible = !1)), P.jets.forEach((J) => (J.m.visible = !1)), (P.rainbow.visible = !1), P.dlife.fill(0), P.dpos.fill(-200), (P.dgeo.attributes.position.needsUpdate = !0);
     }
     function start(now) {
-      made || (made = make()), (active = !0), (t0 = now), (lastE = -1), (flags = {});
-      // FORTIZMO raises her horn and plays "Backpacka's Rain Strut" for the whole visit
-      try {
-        gcHorn.play();
-      } catch (err) {}
-    }
-    function stopHorn() {
-      try {
-        "off" !== gcHorn.phase && "lowering" !== gcHorn.phase && gcHorn.finish();
-      } catch (err) {}
+      made || (made = make()), (active = !0), (t0 = now), (lastE = -1), (flags = {}), lineupBP(!1);
     }
     L.push((tt, dt) => {
       // he sets off once the planting has got going (30 s in, or 40 plants in the ground)
       const live = me.active && bt.live;
       // the event ended early (or was left): put everything away
-      active && !me.active && ((active = !1), hideAll(), stopHorn());
+      active && !me.active && ((active = !1), hideAll());
       if (!live) plantedAt = 0;
       else if (!plantedAt) plantedAt = tt;
       if (!active && live && plantedAt && (tt - plantedAt > 30 || garden.plants.length >= 40)) start(tt);
       if (!active) return;
       const e = tt - t0;
-      if (e > D.gone + 2.5) return (active = !1), hideAll(), void stopHorn();
+      if (e > D.gone + 2.5) return (active = !1), void hideAll();
       e > D.gone && (made.root.visible = !1);
       pose(e, lastE < 0 ? 0 : Math.min(0.1, e - lastE)), (lastE = e);
     });
@@ -17632,6 +17664,8 @@ const JGP = (() => {
     fireBlossom,
     ufoNow: () => UFO_FLY && UFO_FLY(),
     backpacka: BP,
+    noPlant,
+    eventActor,
     vignette: VIG,
     KIT,
     beforeSpawn() {
@@ -22596,9 +22630,10 @@ if (
                 key: Xt(t),
                 grp: t.group,
                 ent: t,
-                want: o && ("finale" === t.busy || !(!t.def || !t.def.stationary)) && !t.moving,
+                want: o && ("finale" === t.busy || !(!t.def || !t.def.stationary)) && !t.moving && !JGP.noPlant(t) && !t.watching,
               });
-            st.group && n.push({ key: "keeper", grp: st.group, ent: null, want: o && st.away() });
+            // the shopkeeper (LARRY) doesn't plant
+            st.group && n.push({ key: "keeper", grp: st.group, ent: null, want: !1 });
             for (const o of n) {
               let n = bt.tg.get(o.grp);
               n || ((n = { k: 0, lx: o.grp.position.x, lz: o.grp.position.z, mv: 0 }), bt.tg.set(o.grp, n));

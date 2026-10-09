@@ -13583,33 +13583,43 @@ const JGP = (() => {
     kioskGeo = {},
     cachedGeo = (key, mk) => kioskGeo[key] || (kioskGeo[key] = mk());
 
-  // The Post Office: navy walls, red roof, and letters piled up everywhere: stacked on the counter
-  // and the crates, heaped on the deck, spilling from mail sacks, stuffed into the sorting cubbies,
-  // with parcels and a blue collection box.
+  // The Post Office: navy walls, red roof, and comically too much mail: wobbling stacks on the
+  // counter that hold up the roof, more on the crates, two swaying letter towers taller than the
+  // kiosk out on the lawn, knee-high heaps on the deck, overflowing mail sacks, stuffed sorting
+  // cubbies, parcels and a blue collection box.
   function buildPostOffice(o) {
     const fx = kioskFrame(o, { sign: "POST OFFICE", ink: "#22325a", wall: "#33508f", wall2: "#26407a", tin: [150, 42, 38] }),
       G = goods(),
       rs = srand(707),
       ENV = ["#fbf8f0", "#f4ecd8", "#e8dcc0", "#d8c49a", "#ffffff", "#e6eef6", "#f6e6ea"];
-    // one envelope (with a stamp now and then) lying at (px, py, pz), turned by ry and tipped a little
-    const letter = (px, py, pz, ry, tip = 0.05) => {
+    // one envelope (with a stamp now and then) lying at (px, py, pz), turned by ry and tipped a
+    // little; th is its thickness (stacks use thick slabs that read as a couple of letters each)
+    const letter = (px, py, pz, ry, tip = 0.05, th = 0.012, Q = G, stampP = 0.45) => {
       const w = 0.24 + 0.06 * rs(),
         d = 0.12 + 0.04 * rs(),
-        mm = G.m(px, py, pz, tip * (rs() - 0.5), ry, tip * (rs() - 0.5));
-      G.add(G.UBX, ENV[(rs() * ENV.length) | 0], mm.clone().multiply(S(0, 0, 0, 0, 0, 0, w, 0.012, d)));
-      rs() < 0.45 && G.add(G.UBX, rs() < 0.5 ? "#c8282a" : "#2a5aa8", mm.clone().multiply(S(0.36 * w, 0.007, -0.28 * d, 0, 0, 0, 0.035, 0.004, 0.04)));
+        mm = Q.m(px, py, pz, tip * (rs() - 0.5), ry, tip * (rs() - 0.5));
+      Q.add(Q.UBX, ENV[(rs() * ENV.length) | 0], mm.clone().multiply(S(0, 0, 0, 0, 0, 0, w, th, d)));
+      rs() < stampP && Q.add(Q.UBX, rs() < 0.5 ? "#c8282a" : "#2a5aa8", mm.clone().multiply(S(0.36 * w, th / 2 + 0.001, -0.28 * d, 0, 0, 0, 0.035, 0.004, 0.04)));
     };
-    // a teetering stack of n letters
-    const stack = (px, py, pz, n, spread = 0.05) => {
-      for (let k = 0; k < n; k++) letter(px + spread * (rs() - 0.5) * 2, py + 0.007 + 0.0125 * k, pz + spread * (rs() - 0.5) * 2, rs() * l);
-    };
+    // a comically tall, wobbling stack h metres high: it sways in an S as it climbs
+    const SLAB = window.__jgpMobile ? 0.03 : 0.021,
+      stack = (px, py, pz, h, sway = 0.12, Q = G) => {
+        const n = Math.max(4, Math.round(h / SLAB)),
+          ph = 6 * rs(),
+          dir = rs() * l;
+        for (let k = 0; k < n; k++) {
+          const u = k / n,
+            off = sway * u * Math.sin(2.6 * u + ph) + 0.012 * (rs() - 0.5);
+          letter(px + off * Math.cos(dir) + 0.01 * (rs() - 0.5), py + SLAB / 2 + SLAB * k, pz + off * Math.sin(dir) + 0.01 * (rs() - 0.5), rs() * l, 0.04, SLAB - 0.001, Q, 0.2);
+        }
+      };
     // a heap: letters thrown into a mound of radius r0
-    const heap = (px, py, pz, r0, n, h = 0.45) => {
+    const heap = (px, py, pz, r0, n, h = 0.45, Q = G) => {
       for (let k = 0; k < n; k++) {
         const u = k / n,
           a = rs() * l,
           rd = r0 * Math.sqrt(rs()) * (1 - 0.8 * u);
-        letter(px + rd * Math.cos(a), py + 0.01 + h * u * (1 - rd / r0), pz + rd * Math.sin(a), rs() * l, 0.6);
+        letter(px + rd * Math.cos(a), py + 0.01 + h * u * (1 - rd / r0), pz + rd * Math.sin(a), rs() * l, 0.6, 0.012, Q);
       }
     };
     // a canvas mail sack with letters spilling out of its mouth
@@ -13619,15 +13629,29 @@ const JGP = (() => {
       G.box("#3a5a9a", px, 0.2 + 0.45 * s, pz + 0.31 * s, 0.22 * s, 0.12 * s, 0.01);
       for (let k = 0; k < 6; k++) letter(px + 0.12 * (rs() - 0.5), 0.2 + 0.95 * s + 0.03 * k, pz + 0.2 * lean + 0.1 * (rs() - 0.5), rs() * l, 1.4);
     };
-    // piles on the counter, bundles tied with string, and more piles on the crates
-    stack(-1.32, 1.12, 0.6, 38), stack(-0.62, 1.12, 0.66, 24), stack(0.12, 1.12, 0.58, 46, 0.07), stack(0.85, 1.12, 0.64, 30), stack(1.45, 1.12, 0.55, 14);
+    // stacks on the counter: the tallest ones run all the way up and prop up the roof
+    stack(-1.32, 1.12, 0.6, 2.85, 0.16), stack(-0.62, 1.12, 0.66, 2.1, 0.2), stack(0.12, 1.12, 0.58, 3.2, 0.1), stack(0.85, 1.12, 0.64, 2.5, 0.18), stack(1.45, 1.12, 0.55, 1.6, 0.22);
+    // bundles tied with string at the front of the counter
     [-1.0, 0.5].forEach((px) => {
-      stack(px, 1.12, 0.36, 10, 0.005);
+      for (let k = 0; k < 10; k++) letter(px, 1.127 + 0.0125 * k, 0.36, 0.02 * (k % 3), 0.01);
       G.box("#c8a060", px, 1.19, 0.36, 0.3, 0.13, 0.012), G.box("#c8a060", px, 1.19, 0.36, 0.012, 0.13, 0.17);
     });
-    [-1, 1].forEach((sx) => (stack(1.42 * sx, 1.0, -0.8, 34, 0.08), stack(1.42 * sx, 1.0, -0.05, 22, 0.08)));
-    // heaps on the deck and one spilling onto the lawn
-    heap(-2.25, 0.2, 1.55, 0.75, 130), heap(2.2, 0.2, 1.7, 0.6, 90), heap(0, 0.2, -1.6, 0.9, 120, 0.55), heap(-2.9, 0, 2.85, 0.6, 50, 0.2);
+    // more towers on the crates, leaning every which way
+    [-1, 1].forEach((sx) => (stack(1.42 * sx, 1.0, -0.8, 2.4, 0.3), stack(1.42 * sx, 1.0, -0.1, 1.7, 0.26)));
+    // knee-high heaps on the deck and one spilling out onto the lawn
+    heap(-2.2, 0.2, 1.5, 0.85, 230, 0.95), heap(2.15, 0.2, 1.65, 0.7, 170, 0.8), heap(0, 0.2, -1.6, 1.0, 190, 0.9), heap(-2.9, 0, 2.9, 0.85, 130, 0.5);
+    // two swaying letter towers out on the lawn, taller than the kiosk itself
+    [
+      [-4.15, 0.6, 7.5],
+      [4.3, -0.7, 6.5],
+    ].forEach(([px, pz, h], k) => {
+      const tw = new THREE.Group(),
+        Q = goods();
+      tw.position.set(px, 0, pz), o.add(tw), stack(0, 0, 0, h, 0.35, Q), heap(0, 0, 0, 0.7, 60, 0.35, Q), Q.done(tw);
+      L.push((tt) => {
+        (tw.rotation.z = 0.035 * Math.sin(1.3 * tt + 2 * k)), (tw.rotation.x = 0.022 * Math.sin(0.9 * tt + k)), tw.updateMatrix();
+      });
+    });
     sack(-2.35, -1.75, 1, -0.15), sack(2.35, -1.85, 1.1, 0.12), sack(-1.85, -2.05, 0.8, 0.2);
     // sorting cubbies on the back wall, every slot stuffed
     const cw = 2.6,

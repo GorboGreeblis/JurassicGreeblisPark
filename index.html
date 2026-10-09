@@ -12300,12 +12300,31 @@ const JGP = (() => {
     const root = new THREE.Group(),
       body = new THREE.Group();
     g.add(root), (body.position.y = 0.55), root.add(body);
-    const goo = gradMat("goo", { rep: 2, bump: 0.012, shine: 90, spec: 10083839 }),
+    const goo = gradMat("goo", { rep: 3, bump: 0.03, shine: 75, spec: 10083839 }),
       stops = [[-0.3, "#f2a274"], [0.45, "#f6b48c"], [0.95, "#62c8ea"], [1.6, "#34b6ea"], [2.4, "#2a9ee0"]];
     keepR(gradient(latheGeo([[0, 0], [0.55, 0.04], [0.95, 0.3], [1.12, 0.75], [1.1, 1.25], [0.95, 1.7], [0.65, 2.05], [0.3, 2.22], [0, 2.25]], 40), stops), goo, body);
     [[-0.95, 0.78, 0.18, 0.55], [0.95, 0.82, 0.12, 0.52], [-0.72, 1.55, -0.12, 0.5], [0.76, 1.6, -0.16, 0.47], [0, 0.5, 0.55, 0.58], [-0.48, 0.5, -0.55, 0.5], [0.52, 0.52, -0.5, 0.5], [0, 1.95, -0.35, 0.45]].forEach(
       ([px, py, pz, r]) => keepR(gradient(new THREE.SphereGeometry(r, 22, 16).translate(px, py, pz), stops), goo, body),
     );
+    // little bubbles caught in the jelly, and goo drips hanging off the lower blobs
+    const bub = x.clay("#e8faff", { transparent: !0, opacity: 0.55, shininess: 140, specular: 16777215 }),
+      rb = srand(19);
+    for (let k = 0; k < 22; k++) {
+      const a = l * rb(),
+        y = 0.35 + 1.7 * rb(),
+        rr0 = Math.max(0.3, 1.12 * Math.sin(Math.min(Math.PI, ((y + 0.1) / 2.35) * Math.PI)));
+      if (Math.abs(Math.sin(a)) > 0.75 && y > 0.9 && y < 1.9 && Math.cos(a) > 0) continue;
+      R(T.sphere(1, 10, 8), bub, body, [rr0 * Math.cos(a), y, rr0 * Math.sin(a)], null, 0.035 + 0.05 * rb());
+    }
+    [
+      [-0.95, 0.42, 0.18, 0.16],
+      [0.55, 0.22, 0.75, 0.13],
+      [0.55, 0.24, -0.5, 0.15],
+      [-0.5, 0.22, -0.55, 0.12],
+    ].forEach(([px, py, pz, sz]) => {
+      keepR(gradient(new THREE.SphereGeometry(sz, 14, 10).scale(1, 1.6, 1).translate(px, py - sz, pz), stops), goo, body);
+      keepR(gradient(new THREE.SphereGeometry(sz * 0.55, 12, 8).translate(px, py - sz * 2.5, pz), stops), goo, body);
+    });
     // face: HOWARD's white "+" eyes (they squint instead of blinking), cheek spots, smile and tongue
     const eyes = new THREE.Group();
     (eyes.position.y = 1.36), body.add(eyes);
@@ -12349,9 +12368,11 @@ const JGP = (() => {
       pg.position.set(0.86 * sx, 1.62, 0.58), (pg.rotation.y = sx * 0.95), (pg.rotation.x = -0.25), body.add(pg);
       R(T.cyl(0.26, 0.26, 0.08, 8), purple, pg, [0, 0, 0], [Math.PI / 2, 0, Math.PI / 8]);
       R(T.torus(0.27, 0.055, 6, 8), rim, pg, [0, 0, 0.03], [0, 0, Math.PI / 8]);
+      R(T.circle(0.19, 8), x.clay("#c8a8ff", { shininess: 140, specular: 16777215, emissive: "#2a1050" }), pg, [0, 0, 0.045], [0, 0, Math.PI / 8]);
+      for (let k = 0; k < 8; k++) R(T.sphere(0.022, 6, 4), x.clay("#f0d0ff", { shininess: 90 }), pg, [0.27 * Math.cos((k * Math.PI) / 4), 0.27 * Math.sin((k * Math.PI) / 4), 0.07]);
     });
     // MAMA's crystal wings
-    const crystal = x.clay("#e8f6ff", { shininess: 120, specular: 16777215 }),
+    const crystal = x.clay("#d8f0ff", { transparent: !0, opacity: 0.78, shininess: 140, specular: 16777215, emissive: "#203848", flatShading: !0 }),
       wings = [];
     [-1, 1].forEach((sx) => {
       const w = new THREE.Group();
@@ -12361,7 +12382,9 @@ const JGP = (() => {
     // the float ring GORBO and MAMA both sit in, with GORBO's AP tag
     const ring = new THREE.Group();
     (ring.position.y = 0.42), root.add(ring);
-    R(T.torus(1.28, 0.26, 12, 40), x.clay("#c8f03a", { shininess: 70 }), ring, [0, 0, 0], [Math.PI / 2, 0, 0]);
+    R(T.torus(1.28, 0.26, 14, 48), KIT.surf("rubber", "#c8f03a", { rep: 2, bump: 0.015, shine: 70 }), ring, [0, 0, 0], [Math.PI / 2, 0, 0]);
+    for (let k = 0; k < 8; k++) R(T.torus(1.28, 0.265, 14, 6, Math.PI / 10), KIT.surf("rubber", "#fbf8f0", { rep: 1, bump: 0.01, shine: 70 }), ring, [0, 0, 0], [Math.PI / 2, 0, (k * Math.PI) / 4]);
+    R(T.cyl(0.05, 0.06, 0.1, 10), x.clay("#e040c8", { shininess: 60 }), ring, [-1.28 * Math.cos(0.4), 0.27, 1.28 * Math.sin(0.4)]), R(T.cyl(0.035, 0.035, 0.05, 8), x.clay("#fbf8f0"), ring, [-1.28 * Math.cos(0.4), 0.33, 1.28 * Math.sin(0.4)]);
     R(T.torus(1.28, 0.2, 10, 40), x.clay("#e040c8", { shininess: 50 }), ring, [0, -0.1, 0], [Math.PI / 2, 0, 0]);
     const tag = b(128, 128, (c) => {
       (c.fillStyle = "#e83a2a"), c.beginPath();
@@ -12925,37 +12948,69 @@ const JGP = (() => {
   // gold at the crown to deep orange at the rim; a cream stem with City's grain, Woods' collar skirt,
   // City's little feet and brows, and the blush both share.
   BORN.mushroom = (g) => {
-    const cream = KIT.surf("wood", "#f6eed4", { rep: 1, bump: 0.012, shine: 25 }),
+    const cream = KIT.surf("wood", "#f6eed4", { rep: 1, bump: 0.014, shine: 25 }),
+      gillM = KIT.surf("fabric", "#ead6a8", { rep: 1, bump: 0.01, shine: 10 }),
       root = new THREE.Group(),
       cap = new THREE.Group(),
       stem = new THREE.Group();
     g.add(root), root.add(stem), (cap.position.y = 1.3), stem.add(cap);
-    R(latheGeo([[0, 0.04], [0.55, 0.06], [0.62, 0.25], [0.55, 0.6], [0.5, 1.0], [0.46, 1.3], [0, 1.32]], 30), cream, stem);
-    R(latheGeo([[0.45, 1.13], [0.58, 1.06], [0.68, 0.97], [0.66, 0.94]], 30), KIT.surf("soft", "#fbf6e4", { rep: 1, bump: 0.01, shine: 30 }), stem);
+    R(latheGeo(smoothProfile([[0, 0.04], [0.55, 0.06], [0.62, 0.25], [0.55, 0.6], [0.5, 1.0], [0.46, 1.3], [0, 1.32]], 40), 36), cream, stem);
+    // Woods' collar skirt, now a frilled ring of drooping scallops
+    const frill = KIT.surf("soft", "#fbf6e4", { rep: 1, bump: 0.015, shine: 30 });
+    R(latheGeo([[0.45, 1.13], [0.58, 1.07], [0.62, 1.04]], 30), frill, stem);
+    for (let k = 0; k < 18; k++) {
+      const a = (k / 18) * l;
+      R(T.sphere(1, 10, 6), frill, stem, [0.64 * Math.cos(a), 0.98, 0.64 * Math.sin(a)], [0, -a, 0.55], [0.07, 0.1, 0.035]);
+    }
+    // the cap, glowing gold at the crown to deep orange at the rim, with a soft dimpled skin
     keepR(
-      gradient(latheGeo([[0, 0.66], [0.55, 0.63], [0.95, 0.46], [1.2, 0.16], [1.26, 0.02], [1.18, -0.02], [0.6, 0.01], [0.3, 0.03], [0, 0.05]], 40), [[0, "#e46a14"], [0.25, "#f08a22"], [0.66, "#f8b83a"]]),
-      gradMat("soft", { rep: 2, bump: 0.012, shine: 50 }),
+      gradient(latheGeo(smoothProfile([[0, 0.66], [0.55, 0.63], [0.95, 0.46], [1.2, 0.16], [1.26, 0.02], [1.18, -0.02], [0.6, 0.01], [0.3, 0.03], [0, 0.05]], 48), 48), [[0, "#e46a14"], [0.25, "#f08a22"], [0.66, "#f8b83a"]]),
+      gradMat("skin", { rep: 3, bump: 0.025, shine: 55 }),
       cap,
     );
-    R(T.torus(1.2, 0.06, 8, 40), x.clay("#d0600e", { shininess: 40 }), cap, [0, 0.03, 0], [Math.PI / 2, 0, 0]);
-    R(latheGeo([[0.25, 0.04], [1.15, 0.0]], 30), x.clay("#e8d8b0", { shininess: 10 }), cap);
-    const spot = x.clay("#fffaf0", { shininess: 30 }),
-      r7 = srand(3);
-    for (let k = 0; k < 13; k++) {
-      const a = l * r7(),
-        ph = 0.25 + 0.95 * r7();
-      onEllipsoid(cap, T.sphere(1, 12, 8), spot, [0, 0.02, 0], [1.22, 0.64, 1.22], [Math.sin(ph) * Math.cos(a), Math.cos(ph), Math.sin(ph) * Math.sin(a)], [0.07 + 0.12 * r7(), 0.06 + 0.1 * r7(), 0.025], 0.995);
+    R(T.torus(1.2, 0.065, 10, 48), KIT.surf("soft", "#d0600e", { rep: 2, bump: 0.02, shine: 40 }), cap, [0, 0.03, 0], [Math.PI / 2, 0, 0]);
+    // gills fanning out under the cap
+    R(latheGeo([[0.25, 0.035], [1.12, -0.005]], 36), x.clay("#d8c090", { shininess: 10 }), cap);
+    for (let k = 0; k < 60; k++) {
+      const a = (k / 60) * l,
+        r0 = k % 2 ? 0.6 : 0.36;
+      R(T.box(1.1 - r0, 0.07, 0.012), gillM, cap, [((r0 + 1.12) / 2) * Math.cos(a), -0.0, ((r0 + 1.12) / 2) * Math.sin(a)], [0, -a, 0.03]);
     }
-    // City's little feet
-    [-1, 1].forEach((sx) => R(T.sphere(1, 12, 8), cream, root, [0.32 * sx, 0.06, 0.38], null, [0.22, 0.1, 0.18]));
-    // face: eyes, City's brows, blush
+    // raised white warts in both sizes, each with a few freckles
+    const spot = KIT.surf("sand", "#fffaf0", { rep: 1, bump: 0.03, shine: 30 }),
+      r7 = srand(3);
+    for (let k = 0; k < 17; k++) {
+      const a = l * r7(),
+        ph = 0.2 + 1.0 * r7(),
+        sz = 0.06 + 0.12 * r7();
+      onEllipsoid(cap, T.sphere(1, 14, 10), spot, [0, 0.02, 0], [1.22, 0.64, 1.22], [Math.sin(ph) * Math.cos(a), Math.cos(ph), Math.sin(ph) * Math.sin(a)], [sz, sz * 0.85, 0.045 + 0.03 * r7()], 0.985);
+    }
+    // City's little feet, with threads of mycelium trailing off them
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 14, 10), cream, root, [0.32 * sx, 0.06, 0.38], null, [0.22, 0.1, 0.18]);
+      for (let k = 0; k < 3; k++) {
+        const a = sx > 0 ? -0.6 + 0.6 * k : Math.PI - 0.6 + 0.6 * k;
+        R(ao([[0.4 * sx, 0.03, 0.3], [0.4 * sx + 0.25 * Math.cos(a), 0.01, 0.3 + 0.25 * Math.sin(a)], [0.4 * sx + 0.4 * Math.cos(a + 0.3), 0.005, 0.3 + 0.4 * Math.sin(a + 0.3)]], 0.016, 0.004, 8, 4), x.clay("#fbf6ec", { shininess: 10 }), root);
+      }
+    });
+    // two baby mushrooms clinging to the stem
+    [
+      [-0.52, 0.36, 0.22, 0.32, "#f08a22"],
+      [0.5, 0.2, -0.24, 0.24, "#f8b83a"],
+    ].forEach(([px, py, pz, sz, cc]) => {
+      R(T.cyl(0.05 * sz * 4, 0.06 * sz * 4, 0.3 * sz * 2, 10), cream, stem, [px, py + 0.15 * sz * 2, pz], [0, 0, -0.4 * Math.sign(px)]);
+      R(new THREE.SphereGeometry(0.22 * sz * 2.6, 16, 8, 0, l, 0, Math.PI / 2), KIT.surf("skin", cc, { rep: 1, bump: 0.02, shine: 50 }), stem, [px + 0.14 * sz * Math.sign(px), py + 0.33 * sz * 2, pz], [0, 0, -0.4 * Math.sign(px)], [1, 0.75, 1]);
+      R(T.sphere(0.035 * sz * 3, 8, 6), spot, stem, [px + 0.14 * sz * Math.sign(px), py + 0.33 * sz * 2 + 0.11 * sz * 2.6, pz]);
+    });
+    // face: eyes, City's brows, blush, and a little smile
     const lids = [];
     [-1, 1].forEach((sx) => {
-      lids.push(KIT.eye(stem, [0.2 * sx, 0.78, 0.47], 0.09, { iris: "#1a1a20", lid: "#f6eed4", open: -0.3, rot: [0, 0.35 * sx, 0] }).lid);
+      lids.push(KIT.eye(stem, [0.2 * sx, 0.78, 0.47], 0.095, { iris: "#1a1a20", lid: "#f6eed4", open: -0.3, rot: [0, 0.35 * sx, 0] }).lid);
       R(T.box(0.15, 0.035, 0.03), x.clay("#7a4a24"), stem, [0.21 * sx, 0.93, 0.48], [0, 0.35 * sx, 0.18 * sx]);
-      R(T.sphere(1, 10, 8), x.clay("#ffaac4", { shininess: 10 }), stem, [0.36 * sx, 0.6, 0.44], [0, 0.6 * sx, 0], [0.09, 0.06, 0.02]);
+      R(T.sphere(1, 12, 8), x.clay("#ffaac4", { shininess: 10 }), stem, [0.36 * sx, 0.6, 0.44], [0, 0.6 * sx, 0], [0.09, 0.06, 0.02]);
+      for (let k = 0; k < 3; k++) R(T.sphere(0.012, 6, 4), x.clay("#c88a5a"), stem, [0.34 * sx + 0.04 * (k - 1), 0.62 + 0.02 * (k % 2), 0.47]);
     });
-    KIT.mouth(stem, [0, 0.58, 0.52], 0.07);
+    KIT.mouth(stem, [0, 0.58, 0.52], 0.075);
     return born(g, {
       height: 2.0,
       lids,
@@ -13230,59 +13285,116 @@ const JGP = (() => {
   // band on Park's purple base, ringed with Park's cyan spikes and topped with Woods' coloured gem pins;
   // Park's cyan scale tiles down the spine; a curled cyan tail (Woods) ending in Park's ring.
   BORN.kingdino = (g) => {
-    const yellow = KIT.surf("felt", "#f6e21a", { rep: 3, bump: 0.035, shine: 30 }),
-      cyanM = x.clay("#2ad8e0", { shininess: 70 }),
-      root = new THREE.Group(),
+    const root = new THREE.Group(),
       body = new THREE.Group();
     g.add(root), root.add(body);
-    // smooth egg, a little wider low down
+    // the egg, a little wider low down: fine scales going from warm gold at the crown to butter yellow
     const rAt = (y) => {
         const th = Math.acos(Math.max(-1, Math.min(1, 1 - (y - 0.22) / 1.02)));
         return 0.9 * Math.sin(th) * (1 + 0.08 * Math.cos(th));
       },
       egg = [];
-    for (let k = 0; k <= 28; k++) {
-      const th = (k / 28) * Math.PI;
+    for (let k = 0; k <= 36; k++) {
+      const th = (k / 36) * Math.PI;
       egg.push([0.9 * Math.sin(th) * (1 + 0.08 * Math.cos(th)), 0.22 + 1.02 * (1 - Math.cos(th))]);
     }
-    R(latheGeo(egg, 40), yellow, body);
-    R(T.sphere(1, 18, 12), KIT.surf("felt", "#f2c81a", { rep: 2, bump: 0.03, shine: 30 }), body, [0, 1.42, 0.8], null, [0.4, 0.13, 0.34]);
+    keepR(gradient(latheGeo(egg, 48), [[0.25, "#f6dc2a"], [1.1, "#f8e436"], [2.2, "#f0c818"]]), gradMat("scale", { rep: 7, bump: 0.018, shine: 40 }), body);
+    const yellow = KIT.surf("scale", "#f6de2a", { rep: 3, bump: 0.02, shine: 40 }),
+      gold = KIT.surf("metal", "#e8b830", { rep: 1, bump: 0.01, shine: 90, spec: 16777215 }),
+      cyan = KIT.surf("scale", "#2ad8e0", { rep: 2, bump: 0.02, shine: 70 }),
+      bill = KIT.surf("rubber", "#f4a01c", { rep: 1, bump: 0.01, shine: 50 }),
+      claw = x.clay("#fbf2d8", { shininess: 60 }),
+      dark = x.clay("#3a1a10", { shininess: 20 });
+    // cream belly plates down the front
+    onEllipsoid(body, T.sphere(1, 24, 16), KIT.surf("scute", "#fbeeb0", { rep: 1, bump: 0.02, shine: 30 }), [0, 1.0, 0], [0.92, 1.0, 0.92], [0, -0.15, 1], [0.44, 0.58, 0.1], 0.9);
+    // the duck bill: a broad upper bill with nostrils over a lower bill, the mouth open a little
+    const billG = new THREE.Group();
+    billG.position.set(0, 1.44, rAt(1.44) - 0.12), body.add(billG);
+    R(T.sphere(1, 24, 14), bill, billG, [0, 0.03, 0.2], [-0.08, 0, 0], [0.42, 0.11, 0.36]);
+    R(T.sphere(1, 20, 12), KIT.surf("rubber", "#e8901a", { rep: 1, bump: 0.01, shine: 40 }), billG, [0, -0.08, 0.16], [0.1, 0, 0], [0.36, 0.07, 0.3]);
+    R(T.sphere(1, 16, 10), dark, billG, [0, -0.03, 0.17], null, [0.3, 0.035, 0.24]);
+    R(T.sphere(1, 12, 8), x.clay("#ff7a8a", { shininess: 30 }), billG, [0, -0.05, 0.2], null, [0.14, 0.03, 0.12]);
+    [-1, 1].forEach((sx) => R(T.sphere(1, 8, 6), dark, billG, [0.09 * sx, 0.12, 0.42], [0.4, 0, 0], [0.03, 0.015, 0.02]));
+    // the square pixel eyes both games share, with a pixel glint and a little pixel brow
     const eyes = new THREE.Group();
     body.add(eyes);
     [-1, 1].forEach((sx) => {
       const ez = Math.sqrt(rAt(1.74) ** 2 - 0.09) + 0.005;
-      R(T.box(0.18, 0.18, 0.04), x.basic("#141418"), eyes, [0.3 * sx, 1.74, ez], [0, 0.4 * sx, 0]);
-      R(T.box(0.06, 0.06, 0.02), x.basic("#ffffff"), eyes, [0.3 * sx - 0.03, 1.78, ez + 0.03], [0, 0.4 * sx, 0]);
-      // little stubby arms
-      R(T.sphere(1, 12, 10), yellow, body, [0.86 * sx, 1.05, 0.25], [0, 0, -0.5 * sx], [0.12, 0.22, 0.12]);
+      R(T.box(0.2, 0.2, 0.05), x.basic("#141418"), eyes, [0.3 * sx, 1.74, ez], [0, 0.4 * sx, 0]);
+      R(T.box(0.065, 0.065, 0.02), x.basic("#ffffff"), eyes, [0.3 * sx - 0.035, 1.785, ez + 0.03], [0, 0.4 * sx, 0]);
+      R(T.box(0.03, 0.03, 0.02), x.basic("#ffffff"), eyes, [0.3 * sx + 0.045, 1.69, ez + 0.03], [0, 0.4 * sx, 0]);
+      R(T.box(0.22, 0.05, 0.05), x.basic("#141418"), body, [0.3 * sx, 1.92, Math.sqrt(rAt(1.92) ** 2 - 0.09) + 0.01], [-0.2, 0.4 * sx, -0.12 * sx]);
     });
-    // crown
+    // stubby arms with three little claws
+    const arms = [-1, 1].map((sx) => {
+      const a = new THREE.Group();
+      a.position.set(0.82 * sx, 1.12, 0.28), (a.rotation.z = -0.5 * sx), body.add(a);
+      R(T.sphere(1, 14, 10), yellow, a, [0.06 * sx, -0.1, 0], null, [0.13, 0.24, 0.13]);
+      for (let k = 0; k < 3; k++) R(T.cone(0.028, 0.09, 6), claw, a, [0.06 * sx + 0.05 * (k - 1), -0.33, 0.05], [0.3, 0, 0]);
+      return a;
+    });
+    // feet: three toes with claws
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 16, 10), yellow, body, [0.35 * sx, 0.12, 0.22], null, [0.26, 0.12, 0.32]);
+      for (let k = 0; k < 3; k++) {
+        const a = (k - 1) * 0.45;
+        R(T.sphere(1, 10, 8), yellow, body, [0.35 * sx + 0.2 * Math.sin(a), 0.08, 0.42 + 0.14 * Math.cos(a)], [0, a, 0], [0.08, 0.07, 0.12]);
+        R(T.cone(0.035, 0.1, 6), claw, body, [0.35 * sx + 0.27 * Math.sin(a), 0.07, 0.53 + 0.14 * Math.cos(a)], [Math.PI / 2, 0, -a]);
+      }
+    });
+    // the crown: a purple velvet cushion with an ermine trim, the teal band, cyan spikes and gem pins
     const crown = new THREE.Group();
-    (crown.position.y = 2.16), body.add(crown);
-    R(T.cyl(0.46, 0.46, 0.08, 24), x.clay("#8a3ae0", { shininess: 60 }), crown, [0, 0.02, 0]);
-    R(T.cyl(0.42, 0.42, 0.24, 24), x.clay("#2ac8a0", { shininess: 50 }), crown, [0, 0.18, 0]);
+    (crown.position.y = 2.14), body.add(crown);
+    R(T.sphere(1, 24, 12), KIT.surf("plush", "#8a3ae0", { rep: 2, bump: 0.03, shine: 20 }), crown, [0, 0.12, 0], null, [0.4, 0.2, 0.4]);
+    R(T.torus(0.45, 0.07, 10, 32), KIT.surf("fur", "#fbfaf4", { rep: 2, bump: 0.03, shine: 10 }), crown, [0, 0.03, 0], [Math.PI / 2, 0, 0]);
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * l;
+      R(T.sphere(1, 6, 4), dark, crown, [0.5 * Math.sin(a), 0.05, 0.5 * Math.cos(a)], null, [0.022, 0.04, 0.022]);
+    }
+    R(latheGeo([[0.42, 0.06], [0.43, 0.3], [0.41, 0.31], [0.4, 0.07]], 32), KIT.surf("metal", "#2ac8a0", { rep: 1, bump: 0.01, shine: 80 }), crown);
     const gemCols = ["#e8302a", "#2a6ae8", "#ffd21a"];
     for (let k = 0; k < 6; k++) {
       const a = (k / 6) * l;
-      R(T.cone(0.07, 0.24, 6), cyanM, crown, [0.36 * Math.sin(a), 0.42, 0.36 * Math.cos(a)]);
-      k % 2 || R(T.sphere(0.07, 10, 8), x.clay(gemCols[k / 2], { shininess: 90 }), crown, [0.36 * Math.sin(a), 0.58, 0.36 * Math.cos(a)]);
+      R(T.cone(0.075, 0.26, 8), cyan, crown, [0.38 * Math.sin(a), 0.43, 0.38 * Math.cos(a)]);
+      R(T.sphere(0.035, 8, 6), gold, crown, [0.38 * Math.sin(a), 0.57, 0.38 * Math.cos(a)]);
+      k % 2 || R(new THREE.OctahedronGeometry(0.08, 0), x.clay(gemCols[k / 2], { shininess: 120, specular: 16777215 }), crown, [0.43 * Math.sin(a), 0.2, 0.43 * Math.cos(a)], [0, a, 0], [0.8, 1.2, 0.5]);
     }
-    // spine tiles
-    for (let k = 0; k < 4; k++) {
-      const yy = 1.85 - 0.33 * k;
-      R(T.box(0.18, 0.18, 0.1), cyanM, body, [0, yy, -rAt(yy) + 0.02], [0.35 - 0.2 * k, 0, Math.PI / 4]);
+    R(T.sphere(0.07, 12, 8), gold, crown, [0, 0.33, 0]);
+    R(new THREE.OctahedronGeometry(0.06, 0), x.clay("#e8302a", { shininess: 120, specular: 16777215 }), crown, [0, 0.43, 0]);
+    // a royal cape with an ermine hem, draped over the back and following the egg's curve
+    const cape = new THREE.Group();
+    body.add(cape);
+    const capeP = [];
+    for (let k = 0; k <= 12; k++) {
+      const y = 1.78 - (1.2 * k) / 12;
+      capeP.push([rAt(y) + 0.05 + 0.1 * (k / 12) ** 2, y]);
     }
-    // feet and tail
-    [-1, 1].forEach((sx) => R(T.sphere(1, 14, 10), yellow, body, [0.35 * sx, 0.1, 0.25], null, [0.24, 0.11, 0.3]));
+    R(latheGeo(capeP, 24, Math.PI - 0.95, 1.9), Object.assign(KIT.surf("plush", "#7a2ad0", { rep: 2, bump: 0.03, shine: 20 }).clone(), { side: THREE.DoubleSide }), cape);
+    const ermine = KIT.surf("fur", "#fbfaf4", { rep: 2, bump: 0.03, shine: 10 });
+    [capeP[0], capeP[12]].forEach(([rr0, y]) => R(T.torus(rr0, 0.06, 8, 30, 1.9), ermine, cape, [0, y, 0], [Math.PI / 2, 0, -Math.PI / 2 - 0.95]));
+    for (let k = 0; k < 7; k++) {
+      const a = Math.PI - 0.8 + (1.6 * k) / 6,
+        rr0 = capeP[12][0] + 0.01;
+      R(T.sphere(1, 6, 4), dark, cape, [rr0 * Math.sin(a), capeP[12][1] + 0.01, rr0 * Math.cos(a)], null, [0.022, 0.04, 0.022]);
+    }
+    // cyan scale tiles down the spine, getting smaller toward the tail
+    for (let k = 0; k < 6; k++) {
+      const yy = 1.95 - 0.27 * k,
+        sz = 0.2 - 0.018 * k;
+      R(T.box(sz, sz, 0.1), cyan, body, [0, yy, -rAt(yy) - 0.1 - 0.012 * k], [0.35 - 0.16 * k, 0, Math.PI / 4]);
+    }
+    // the curled tail with its ring
     const tail = new THREE.Group();
     tail.position.set(0, 0.6, -0.78), body.add(tail);
-    R(ao([[0, 0, 0], [0, -0.22, -0.32], [0, -0.05, -0.62], [0, 0.25, -0.58]], 0.13, 0.08, 16, 10), cyanM, tail);
-    R(T.torus(0.15, 0.06, 10, 20), cyanM, tail, [0, 0.38, -0.55], [0, Math.PI / 2, 0]);
+    R(ao([[0, 0.05, 0.12], [0, -0.22, -0.32], [0, -0.05, -0.62], [0, 0.25, -0.58]], 0.16, 0.08, 20, 12), cyan, tail);
+    [0.3, 0.55].forEach((f, k) => R(T.cone(0.05, 0.14, 6), cyan, tail, [0, 0.0 + 0.1 * k, -0.25 - 0.3 * f], [-0.6, 0, 0]));
+    R(T.torus(0.15, 0.06, 10, 24), gold, tail, [0, 0.38, -0.55], [0, Math.PI / 2, 0]);
     return born(g, {
       height: 2.9,
       step(t, dt, tk, wk) {
         (body.rotation.z = 0.05 * Math.sin(1.6 * t) + 0.08 * wk * Math.sin(8 * t)), (tail.rotation.y = 0.3 * Math.sin(1.9 * t));
-        (crown.position.y = 2.16 + 0.02 * Math.sin(3.2 * t)), (eyes.scale.y = (((t % 3.9) + 3.9) % 3.9) < 0.15 && t > 1 ? 0.15 : 1);
+        (crown.position.y = 2.14 + 0.02 * Math.sin(3.2 * t)), (eyes.scale.y = (((t % 3.9) + 3.9) % 3.9) < 0.15 && t > 1 ? 0.15 : 1);
+        (cape.rotation.x = 0.02 * Math.sin(1.3 * t)), arms.forEach((a, k) => (a.rotation.x = 0.15 * Math.sin(2 * t + k)));
       },
     });
   };
@@ -13432,17 +13544,34 @@ const JGP = (() => {
         latheGeo(etchP, 44),
         [[0.3, "#6ad8b0"], [1.2, "#9ee09a"], [1.9, "#d4cc5a"], [2.8, "#eebf34"]],
       ),
-      gradMat("plastic", { rep: 2, bump: 0.006, shine: 80 }),
+      gradMat("skin", { rep: 4, bump: 0.022, shine: 55 }),
       body,
     );
-    const silver = x.clay("#c8ccd4", { shininess: 120, specular: 16777215 }),
-      cyan = x.clay("#3ae0e8", { shininess: 90 });
+    const silver = KIT.surf("metal", "#c8ccd4", { rep: 1, bump: 0.01, shine: 110, spec: 16777215 }),
+      cyan = x.clay("#3ae0e8", { shininess: 90 }),
+      goldM = KIT.surf("metal", "#e8b830", { rep: 1, bump: 0.01, shine: 90, spec: 16777215 });
+    // gold collars where the stacked segments meet, each with a row of rivets
+    [1.45, 2.12].forEach((y) => {
+      const rr0 = profileR(etchP, y) + 0.01;
+      R(T.torus(rr0, 0.035, 8, 40), goldM, body, [0, y, 0], [Math.PI / 2, 0, 0]);
+      for (let k = 0; k < 10; k++) R(T.sphere(0.018, 6, 4), silver, body, [(rr0 + 0.03) * Math.cos((k / 10) * l), y, (rr0 + 0.03) * Math.sin((k / 10) * l)]);
+    });
+    // freckles of gold on the lower segment
+    const rf = srand(23);
+    for (let k = 0; k < 14; k++) {
+      const a = l * rf(),
+        y = 0.45 + 0.85 * rf();
+      if (Math.cos(a - Math.PI / 2) > 0.6 && y > 0.8) continue;
+      onEllipsoid(body, T.sphere(1, 8, 6), x.clay("#c8d070", { shininess: 30 }), [0, y, 0], [profileR(etchP, y), 0.01, profileR(etchP, y)], [Math.cos(a), 0, Math.sin(a)], [0.03 + 0.02 * rf(), 0.03 + 0.02 * rf(), 0.01], 1.0);
+    }
     // ETCHELON's ring as a belt, SEALIO's struts as a tripod with spiked feet
-    R(T.torus(0.74, 0.07, 10, 36), silver, body, [0, 0.95, 0], [Math.PI / 2, 0, 0]);
+    R(T.torus(0.75, 0.075, 12, 48), silver, body, [0, 0.95, 0], [Math.PI / 2, 0, 0]);
+    for (let k = 0; k < 16; k++) R(T.sphere(0.025, 6, 4), goldM, body, [0.83 * Math.cos((k / 16) * l), 0.95, 0.83 * Math.sin((k / 16) * l)]);
     [Math.PI / 2 + 0.5, Math.PI / 2 - 0.5 + Math.PI, -0.05].forEach((a) => {
       const c = Math.cos(a),
         sn = Math.sin(a);
       R(ao([[0.32 * c, 0.5, 0.32 * sn], [0.7 * c, 0.3, 0.7 * sn], [1.0 * c, 0.08, 1.0 * sn]], 0.07, 0.06, 10, 8), silver, root);
+      R(T.sphere(0.09, 12, 8), goldM, root, [0.66 * c, 0.32, 0.66 * sn]);
       R(T.cone(0.07, 0.22, 8), cyan, root, [1.08 * c, 0.06, 1.08 * sn], [0, 0, 0]).quaternion.setFromUnitVectors(new c0(0, 1, 0), new c0(c, -0.25, sn).normalize());
     });
     // face, curly antenna with a bulb
@@ -13450,7 +13579,16 @@ const JGP = (() => {
     head.position.y = 2.45, body.add(head);
     const onHead = (px, py, out = 0) => Math.sqrt(Math.max(0, profileR(etchP, 2.45 + py) ** 2 - px * px)) + out;
     const lids = [-1, 1].map((sx) => KIT.eye(head, [0.16 * sx, 0.06, onHead(0.16, 0.06, -0.03)], 0.095, { iris: "#1a1a20", lid: "#eebf34", open: -0.3, rot: [0, 0.38 * sx, 0] }).lid);
-    KIT.mouth(head, [0, -0.12, onHead(0, -0.12, -0.01)], 0.08);
+    // SEALIO's seal muzzle: two whisker pads, a black nose, whiskers, and the smile under them
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 14, 10), KIT.surf("skin", "#f6dc70", { rep: 1, bump: 0.02, shine: 40 }), head, [0.075 * sx, -0.08, onHead(0.075, -0.08, -0.04)], null, [0.1, 0.075, 0.08]);
+      for (let k = 0; k < 3; k++) {
+        R(T.sphere(0.008, 4, 3), x.clay("#6a4a20"), head, [0.06 * sx + 0.025 * (k - 1) * sx, -0.07 + 0.02 * (k - 1), onHead(0.075, -0.08, 0.035)]);
+        R(ao([[0.12 * sx, -0.07 + 0.025 * (k - 1), onHead(0.12, -0.07, -0.01)], [0.3 * sx, -0.05 + 0.05 * (k - 1), onHead(0.12, -0.07, -0.06)]], 0.005, 0.002, 4, 3), x.clay("#fbf8f0"), head);
+      }
+    });
+    R(T.sphere(1, 12, 8), x.clay("#1a1418", { shininess: 90 }), head, [0, -0.03, onHead(0, -0.03, 0.03)], null, [0.05, 0.035, 0.03]);
+    KIT.mouth(head, [0, -0.17, onHead(0, -0.17, -0.0)], 0.07);
     const ant = new THREE.Group();
     ant.position.set(0.05, 0.36, 0), head.add(ant);
     R(ao([[0, 0, 0], [0.05, 0.2, 0], [0.18, 0.34, 0.02], [0.28, 0.3, 0.04], [0.26, 0.2, 0.05]], 0.03, 0.022, 16, 6), x.clay("#d8a82a", { shininess: 60 }), ant);
@@ -13474,7 +13612,11 @@ const JGP = (() => {
     const flips = [-1, 1].map((sx) => {
       const f = new THREE.Group();
       f.position.set(0.66 * sx, 1.15, 0.12), (f.rotation.z = -0.5 * sx), body.add(f);
-      R(T.sphere(1, 14, 10), x.clay("#7ee0b8", { shininess: 80 }), f, [0.12 * sx, -0.12, 0], null, [0.11, 0.26, 0.1]);
+      const fm = KIT.surf("skin", "#7ee0b8", { rep: 1, bump: 0.02, shine: 50 });
+      R(T.sphere(1, 16, 12), fm, f, [0.12 * sx, -0.12, 0], null, [0.11, 0.26, 0.1]);
+      // the flipper's fingers show as ridges, and a pale palm
+      for (let k = 0; k < 3; k++) R(T.sphere(1, 8, 6), fm, f, [0.12 * sx + 0.045 * (k - 1), -0.33, 0.02], null, [0.03, 0.07, 0.04]);
+      R(T.sphere(1, 10, 8), x.clay("#c8f4dc", { shininess: 30 }), f, [0.12 * sx, -0.14, 0.07], null, [0.07, 0.16, 0.04]);
       return f;
     });
     const held = new THREE.Group();
@@ -13506,16 +13648,34 @@ const JGP = (() => {
     g.add(root), root.add(body);
     keepR(
       gradient(latheGeo(gemP, 44), [[1.2, "#a8a0ec"], [1.85, "#c870d0"], [2.7, "#ec3aa8"]]),
-      gradMat("plastic", { rep: 2, bump: 0.006, shine: 80 }),
+      gradMat("soft", { rep: 3, bump: 0.025, shine: 60 }),
       body,
     );
-    const purple = x.clay("#5a2a9a", { shininess: 60 });
-    R(T.torus(0.58, 0.07, 10, 36), x.clay("#8a3ae8", { shininess: 60 }), body, [0, 1.42, 0], [Math.PI / 2, 0, 0]);
+    const purple = KIT.surf("rubber", "#5a2a9a", { rep: 2, bump: 0.02, shine: 60 }),
+      silverG = KIT.surf("metal", "#d8dce0", { rep: 1, bump: 0.01, shine: 120, spec: 16777215 });
+    // the belt, studded with silver
+    R(T.torus(0.58, 0.075, 12, 48), KIT.surf("rubber", "#8a3ae8", { rep: 2, bump: 0.015, shine: 60 }), body, [0, 1.42, 0], [Math.PI / 2, 0, 0]);
+    for (let k = 0; k < 14; k++) R(T.sphere(0.028, 8, 6), silverG, body, [0.65 * Math.cos((k / 14) * l), 1.42, 0.65 * Math.sin((k / 14) * l)]);
+    // tiny gems grown into the skin, as GEMWING's are
+    const rg = srand(31),
+      gcs = ["#ff7ad8", "#b8a8ff", "#ffffff", "#ff4ab0"];
+    for (let k = 0; k < 18; k++) {
+      const a = l * rg(),
+        y = 1.65 + 1.0 * rg();
+      if (Math.cos(a - Math.PI / 2) > 0.55 && y < 2.35) continue;
+      const rr0 = profileR(gemP, y);
+      R(new THREE.OctahedronGeometry(0.035 + 0.025 * rg(), 0), x.clay(gcs[k % 4], { shininess: 140, specular: 16777215 }), body, [rr0 * Math.cos(a), y, rr0 * Math.sin(a)], [rg(), a, rg()]);
+    }
     // white cloud collar under the face
     [[0, 0.5], [-0.28, 0.42], [0.28, 0.42], [-0.45, 0.2], [0.45, 0.2]].forEach(([px, pz], k) => R(T.sphere(1, 14, 10), x.clay("#f8f6ff", { shininess: 50 }), body, [px, 1.55 + 0.03 * k, pz], null, [0.2, 0.15, 0.17]));
     // face
-    const lids = [-1, 1].map((sx) => KIT.eye(body, [0.2 * sx, 2.16, onEgg(0.2, 2.16, -0.04)], 0.125, { iris: "#c8202a", lid: "#d060c0", open: -0.25, rot: [0, 0.36 * sx, 0] }).lid);
-    KIT.mouth(body, [0, 1.9, onEgg(0, 1.9, -0.01)], 0.1);
+    const lids = [-1, 1].map((sx) => KIT.eye(body, [0.21 * sx, 2.17, onEgg(0.21, 2.17, -0.045)], 0.14, { iris: "#c8202a", lid: "#d060c0", open: -0.25, rot: [0, 0.36 * sx, 0] }).lid);
+    // lashes over each eye
+    [-1, 1].forEach((sx) => {
+      for (let k = 0; k < 3; k++) R(T.cone(0.012, 0.09, 4), x.clay("#2a0a2a"), body, [0.21 * sx + 0.06 * (k - 1), 2.33 - 0.02 * Math.abs(k - 1), onEgg(0.21, 2.3, 0.0)], [-0.3, 0, -0.4 * (k - 1)]);
+    });
+    KIT.mouth(body, [0, 1.9, onEgg(0, 1.9, -0.01)], 0.12);
+    R(T.cone(0.022, 0.06, 6), x.clay("#fbf8f0", { shininess: 60 }), body, [0.05, 1.87, onEgg(0.05, 1.87, 0.0)], [Math.PI, 0, 0]);
     // gem-pink cheeks
     [-1, 1].forEach((sx) => R(T.sphere(1, 12, 8), x.clay("#ff7ac8", { shininess: 30 }), body, [0.36 * sx, 1.97, onEgg(0.36, 1.97, -0.035)], [0, 0.6 * sx, 0], [0.09, 0.055, 0.04]));
     // crown: GEMWING's spikes and the spinning petal fan
@@ -13526,7 +13686,8 @@ const JGP = (() => {
       const a = (k / 6) * l,
         pg = new THREE.Group();
       (pg.rotation.y = a), fan.add(pg);
-      R(T.sphere(1, 14, 8), x.clay(k % 2 ? "#a8a0ec" : "#f06ac8", { shininess: 50 }), pg, [0.55, 0.22, 0], [0, 0, 0.35], [0.55, 0.06, 0.16]);
+      R(T.sphere(1, 18, 10), KIT.surf("leaf", k % 2 ? "#a8a0ec" : "#f06ac8", { rep: 1, bump: 0.02, shine: 50 }), pg, [0.55, 0.22, 0], [0, 0, 0.35], [0.55, 0.06, 0.16]);
+      R(T.box(1.0, 0.012, 0.012), x.clay(k % 2 ? "#7a6ad0" : "#c8389a"), pg, [0.55, 0.255, 0], [0, 0, 0.35]);
     }
     R(T.sphere(0.09, 10, 8), purple, fan, [0, 0.12, 0]);
     // loop legs ending in gem toes set in silver rings
@@ -13537,10 +13698,15 @@ const JGP = (() => {
         c = Math.cos(a),
         sn = Math.sin(a),
         P = (r, y) => [r * c, y, r * sn];
-      R(ao([P(0.3, 1.2), P(0.75, 0.95), P(1.15, 0.45), P(1.35, 0.15), P(1.6, 0.12), P(1.7, 0.3), P(1.5, 0.42), P(1.3, 0.3)], 0.08, 0.07, 30, 8), purple, root);
+      R(ao([P(0.3, 1.2), P(0.75, 0.95), P(1.15, 0.45), P(1.35, 0.15), P(1.6, 0.12), P(1.7, 0.3), P(1.5, 0.42), P(1.3, 0.3)], 0.085, 0.07, 40, 10), purple, root);
+      // knuckle rings along the leg
+      [
+        [0.75, 0.95],
+        [1.15, 0.45],
+      ].forEach(([r0, y]) => R(T.torus(0.085, 0.025, 6, 16), silverG, root, P(r0, y), [Math.PI / 2 - 0.9, a, 0]));
       const toe = new THREE.Group();
       toe.position.set(1.85 * c, 0.2, 1.85 * sn), root.add(toe), toes.push(toe);
-      R(T.torus(0.2, 0.04, 8, 20), x.clay("#d8dce0", { shininess: 120, specular: 16777215 }), toe, [0, -0.1, 0], [Math.PI / 2, 0, 0]);
+      R(T.torus(0.2, 0.045, 10, 28), silverG, toe, [0, -0.1, 0], [Math.PI / 2, 0, 0]);
       R(new THREE.OctahedronGeometry(0.22, 0), x.clay(gemCols[k], { shininess: 140, specular: 16777215 }), toe, [0, 0.06, 0], [0, a, 0], [1, 1.3, 1]);
       R(ao([P(1.62, 0.13), P(1.78, 0.14)], 0.06, 0.05, 4, 6), purple, root);
     }
@@ -13563,7 +13729,7 @@ const JGP = (() => {
     const root = new THREE.Group(),
       body = new THREE.Group();
     g.add(root), root.add(body);
-    const gm = gradMat("plastic", { rep: 2, bump: 0.006, shine: 70 });
+    const gm = gradMat("soft", { rep: 3, bump: 0.025, shine: 55 });
     const glyP = smoothProfile([[0, 0.3], [0.46, 0.38], [0.64, 0.8], [0.68, 1.3], [0.6, 1.78], [0.42, 2.02], [0, 2.08]], 56);
     keepR(gradient(latheGeo(glyP, 44), [[0.3, "#3aa8d8"], [1.1, "#78a8c8"], [1.9, "#e88a8a"]]), gm, body);
     const head = new THREE.Group();
@@ -13573,7 +13739,12 @@ const JGP = (() => {
     R(T.box(0.42, 0.16, 0.12), x.clay("#141418", { shininess: 30 }), head, [0, -0.12, 0.42], [-0.15, 0, 0]);
     for (let k = 0; k < 5; k++) R(T.box(0.06, 0.07, 0.04), x.clay("#fbf8f0", { shininess: 60 }), head, [-0.16 + 0.08 * k, -0.075, 0.48], [-0.15, 0, 0]);
     [-0.08, 0.08].forEach((px) => R(T.box(0.06, 0.06, 0.04), x.clay("#fbf8f0", { shininess: 60 }), head, [px, -0.17, 0.47], [-0.15, 0, 0]));
-    const lids = [-1, 1].map((sx) => KIT.eye(head, [0.18 * sx, 0.12, 0.4], 0.08, { iris: "#2ac8e0", lid: "#f0a0a0", open: -0.3, rot: [0, 0.35 * sx, 0] }).lid);
+    const lids = [-1, 1].map((sx) => KIT.eye(head, [0.18 * sx, 0.12, 0.42], 0.09, { iris: "#2ac8e0", lid: "#f0a0a0", open: -0.3, rot: [0, 0.35 * sx, 0] }).lid);
+    // nostrils and freckled cheeks
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 8, 6), x.clay("#8a3a3a"), head, [0.05 * sx, 0.02, 0.495], null, [0.022, 0.016, 0.012]);
+      for (let k = 0; k < 4; k++) R(T.sphere(0.012, 6, 4), x.clay("#d06a6a"), head, [0.3 * sx + 0.04 * ((k % 2) - 0.5), -0.02 - 0.03 * (k >> 1), 0.38]);
+    });
     // AURAMEL's orange crown, GIGGLYPH's cyan spines down the back of the head
     [-0.13, 0, 0.13].forEach((px, k) => R(T.cone(0.07, 0.36 - 0.08 * Math.abs(k - 1), 8), x.clay("#f8a020", { shininess: 60 }), head, [px, 0.55, 0.02], [0, 0, -1.2 * px]));
     for (let k = 0; k < 4; k++) R(T.cone(0.06, 0.2, 6), x.clay("#3ad8e8", { shininess: 60 }), head, [0, 0.36 - 0.17 * k, -0.4 - 0.05 * k], [-1.0 - 0.15 * k, 0, 0]);
@@ -13583,7 +13754,7 @@ const JGP = (() => {
       R(T.sphere(0.055, 10, 8), x.clay(k % 2 ? "#ff7ab8" : "#3ae0e8", { shininess: 80 }), body, [0.44 * Math.sin(a), 1.98 - 0.05 * Math.cos(a), 0.4 * Math.cos(a)]);
     }
     // belly: AURAMEL's white ribs on GIGGLYPH's tan patch, with a carved glyph tile
-    R(T.sphere(1, 18, 14), x.clay("#e0c08a", { shininess: 30 }), body, [0, 0.82, 0.34], null, [0.4, 0.38, 0.34]);
+    R(T.sphere(1, 20, 14), KIT.surf("soft", "#e0c08a", { rep: 1, bump: 0.03, shine: 25 }), body, [0, 0.82, 0.34], null, [0.4, 0.38, 0.34]);
     for (let k = 0; k < 4; k++) R(T.torus(0.685 - 0.012 * k, 0.022, 5, 24, 1.3), x.clay("#ffffff", { shininess: 40 }), body, [0, 1.22 + 0.15 * k, 0], [Math.PI / 2, 0, Math.PI / 2 - 0.65]);
     const glyphTex = (seed) =>
       b(64, 64, (c) => {
@@ -13613,13 +13784,21 @@ const JGP = (() => {
     const arms = [-1, 1].map((sx) => {
       const a = new THREE.Group();
       a.position.set(0.62 * sx, 1.45, 0.05), body.add(a);
-      R(T.sphere(1, 12, 10), x.clay(sx < 0 ? "#b898b8" : "#c09aa8", { shininess: 50 }), a, [0.12 * sx, -0.05, 0], [0, 0, -0.6 * sx], [0.22, 0.1, 0.12]);
+      const am = KIT.surf("soft", sx < 0 ? "#b898b8" : "#c09aa8", { rep: 1, bump: 0.02, shine: 45 });
+      R(T.sphere(1, 14, 10), am, a, [0.12 * sx, -0.05, 0], [0, 0, -0.6 * sx], [0.22, 0.1, 0.12]);
+      // three stubby fingers
+      for (let k = 0; k < 3; k++) R(T.sphere(1, 8, 6), am, a, [0.3 * sx, -0.16 + 0.02 * k, 0.06 * (k - 1)], [0, 0, -0.9 * sx], [0.06, 0.035, 0.035]);
       return a;
     });
-    [-1, 1].forEach((sx) => R(T.sphere(1, 14, 10), x.clay("#fbf8f0", { shininess: 40 }), root, [0.26 * sx, 0.1, 0.18], null, [0.22, 0.1, 0.3]));
+    const footM = KIT.surf("soft", "#fbf8f0", { rep: 1, bump: 0.02, shine: 35 });
+    [-1, 1].forEach((sx) => {
+      R(T.sphere(1, 16, 10), footM, root, [0.26 * sx, 0.1, 0.18], null, [0.22, 0.1, 0.3]);
+      for (let k = 0; k < 3; k++) R(T.sphere(1, 8, 6), footM, root, [0.26 * sx + 0.09 * (k - 1), 0.07, 0.46], null, [0.05, 0.05, 0.06]);
+    });
     const tail = new THREE.Group();
     tail.position.set(0, 0.6, -0.5), body.add(tail);
-    R(ao([[0, 0, 0], [0, -0.2, -0.35], [0.08, -0.4, -0.75], [0.15, -0.48, -1.05]], 0.22, 0.05, 16, 10), x.clay("#3aa8d8", { shininess: 70 }), tail);
+    R(ao([[0, 0, 0], [0, -0.2, -0.35], [0.08, -0.4, -0.75], [0.15, -0.48, -1.05]], 0.22, 0.05, 20, 12), KIT.surf("scale", "#3aa8d8", { rep: 2, bump: 0.02, shine: 60 }), tail);
+    [0.25, 0.5, 0.72].forEach((f, k) => R(T.cone(0.045 - 0.008 * k, 0.14, 6), x.clay("#3ad8e8", { shininess: 60 }), tail, [0.03 * f, -0.2 * f * 1.9 + 0.15 - 0.04 * k, -0.35 - 0.7 * f], [-0.7, 0, 0]));
     return born(g, {
       height: 3.1,
       lids,
@@ -16441,6 +16620,7 @@ const JGP = (() => {
     buildGardenSupplies,
     fireBlossom,
     ufoNow: () => UFO_FLY && UFO_FLY(),
+    KIT,
     beforeSpawn() {
       try {
         applyCast();

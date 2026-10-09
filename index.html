@@ -12291,15 +12291,22 @@ const JGP = (() => {
         const r = so[src.b](sub, Object.assign({}, d, src.def || {}), src.opts || {}) || {};
         let node = sub;
         for (const k of src.path) node = node.children[k];
-        // keep entries are child indices, or "i/j" for a part nested one level further down
-        const kids = {},
+        // keep entries are child indices, or "i/j" for a part nested one level further down.
+        // Parts with nothing visible in them (anchors and pivots) are always kept: effects such as
+        // the Woods GORBO's goo strands follow them, and would drift to the map origin without them.
+        const empty = (n) => {
+            let v = !0;
+            n.traverse((q) => (q.isMesh || q.isSprite || q.isPoints || q.isLine) && (v = !1));
+            return v;
+          },
+          kids = {},
           prune = (n, pre) => {
             n.children.slice().forEach((ch, k) => {
               const id = pre + k;
               kids[id] = ch;
               if (src.keep.includes(k) && !pre) return;
               if (src.keep.includes(id)) return;
-              src.keep.some((q) => typeof q == "string" && q.startsWith(id + "/")) ? prune(ch, id + "/") : n.remove(ch);
+              src.keep.some((q) => typeof q == "string" && q.startsWith(id + "/")) ? prune(ch, id + "/") : empty(ch) || n.remove(ch);
             });
           };
         prune(node, "");

@@ -1790,7 +1790,12 @@ function De(t, e, o, a) {
       (t.gcStuckN = 0),
       void (t.pst = null)
     );
-  Be(t, r, s, e), i && (t.gcNavHome = !0);
+  // (a creature that works inside a kiosk or behind a bar goes back in by its way in, not straight)
+  const via = i && t.def && t.def.via;
+  via && via.length
+    ? (Be(t, via[via.length - 1][0], via[via.length - 1][1], e), t.gcNav.push(...via.slice(0, -1).reverse().map((w) => [w[0], w[1]]), [t.home.x, t.home.z]))
+    : Be(t, r, s, e),
+    i && (t.gcNavHome = !0);
 }
 let Oe = null;
 function qe(t) {
@@ -4505,7 +4510,23 @@ const It = {
   lo = {
     post: function (t, e, o, a) {
       const n = t.group.position,
-        r = t.home,
+        via = t.def && t.def.via;
+      // a worker coming back to its place inside a kiosk or behind a bar comes in by its way in
+      if (via && via.length) {
+        const dh = Math.hypot(n.x - t.home.x, n.z - t.home.z);
+        dh > 4 && (t.vbk = via.length - 1);
+        for (; t.vbk >= 0 && Math.hypot(via[t.vbk][0] - n.x, via[t.vbk][1] - n.z) < 0.35; ) t.vbk--;
+        if (t.vbk >= 0 && dh > 0.3) {
+          const w = via[t.vbk],
+            dx = w[0] - n.x,
+            dz = w[1] - n.z,
+            d = Math.hypot(dx, dz) || 1,
+            st = Math.min(d, 1.4 * o);
+          return { x: n.x + (dx / d) * st, z: n.z + (dz / d) * st, y: 0, face: Math.atan2(dx, dz), direct: !0 };
+        }
+        t.vbk = -1;
+      }
+      const r = t.home,
         s = r.x - n.x,
         i = r.z - n.z,
         l = Math.hypot(s, i),
@@ -9297,13 +9318,14 @@ const JGP = (() => {
       face: -Math.PI / 2,
       list: [
         ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [34, -27.78]],
-        ["orbiter", "SPARKAKUS", "born_sparkakus", {"color": "#2c4cc0", "bodyR": 1.0, "talkR": 4.2}, [34, -18.61]],
-        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [34, -9.44]],
-        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [34, -0.27]],
-        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [34, 8.9]],
-        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [34, 18.07]],
-        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [34, 27.24]],
-        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [34, 36.41]],
+        ["orbiter", "SPARKAKUS", "born_sparkakus", {"color": "#2c4cc0", "bodyR": 1.0, "talkR": 4.2}, [34, -19.75]],
+        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [34, -11.73]],
+        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [34, -3.7]],
+        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [34, 4.32]],
+        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [34, 12.35]],
+        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [34, 20.37]],
+        ["p_gorton", "GORTON", "born_gorton", {"color": "#2fa6a2", "bodyR": 1.0, "talkR": 3.8}, [34, 28.4]],
+        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [34, 36.42]],
       ],
     },
     final: {
@@ -12406,6 +12428,307 @@ const JGP = (() => {
     });
   };
 
+  // GORTON, after the Gorton artwork: a round, egg-shaped creature glazed like old painted pottery,
+  // teal at the crown running into coral pink and mustard low down, speckled all over with gold and
+  // dark flecks. A pale cream face mask with two small glossy eyes and a quiet mouth; antennae with
+  // ball tips, a branching twig with yellow buds, little spotted mushrooms and knobs sprouting from his
+  // head, and a big pale-pink flower behind one cheek. He is fitted out like a little machine: a brass
+  // porthole with a glowing green grid, a small screen with a doodle on it fed by a coiled ribbed hose,
+  // a pipe vent, rings, gauges and knobs, a cluster of coral bumps, and on his back a leather harness
+  // holding a pack of coiled pink tubes with a pouch and a hanging gourd. Two stubby coral legs.
+  BORN.gorton = (g) => {
+    const root = new THREE.Group(),
+      body = new THREE.Group();
+    g.add(root), root.add(body);
+    const rs = srand(4711),
+      teal = new THREE.Color("#2fa6a2"),
+      teal2 = new THREE.Color("#4ab8a8"),
+      pink = new THREE.Color("#e2687a"),
+      mustard = new THREE.Color("#dca63a"),
+      coral = new THREE.Color("#e27a6a"),
+      cream = new THREE.Color("#f0e2c6"),
+      tmp = new THREE.Color(),
+      C = [0, 1.2, 0],
+      faceDir = new c0(0.08, 0.5, 0.86).normalize(),
+      nz = (x0, y0, z0) => Math.sin(3.1 * x0 + 1.7 * y0) * Math.cos(2.3 * z0 - 1.1 * x0) + 0.5 * Math.sin(5.3 * y0 + 2.9 * z0),
+      bb = blobBody(
+        [
+          [0, 1.18, 0, 0.84, 0.92, 0.8],
+          [0, 0.82, 0.04, 0.9, 0.62, 0.84],
+          [0, 1.72, -0.02, 0.6, 0.5, 0.58],
+          [-0.36, 0.25, 0.06, 0.21, 0.3, 0.23],
+          [0.36, 0.25, 0.06, 0.21, 0.3, 0.23],
+        ],
+        C,
+        {
+          k: 0.2,
+          uvLen: 1.6,
+          col: (p, fold, cc) => {
+            // teal above, coral and mustard patches below, coral legs, the cream face mask
+            const up = Math.max(0, Math.min(1, (p.y - 0.7) / 0.9)),
+              n0 = nz(p.x, p.y, p.z);
+            const n1 = Math.sin(6.1 * p.x - 2.3 * p.z + 1.3) * Math.sin(4.7 * p.y + 3.1 * p.x);
+            cc.copy(n0 + 0.6 * n1 > -0.15 ? pink : mustard).lerp(tmp.copy(n1 > 0.4 ? mustard : coral), 0.25);
+            cc.lerp(n0 > 0.3 ? teal2 : teal, Math.max(0, Math.min(1, up * 1.5 - 0.25 + 0.25 * n0)));
+            p.y < 0.5 && cc.lerp(coral, Math.max(0, Math.min(1, (0.5 - p.y) / 0.15)));
+            const d = new c0(p.x - C[0], p.y - C[1], p.z - C[2]).normalize().dot(faceDir);
+            cc.lerp(cream, Math.max(0, Math.min(1, (d - 0.88) / 0.04))).multiplyScalar(1 - 0.12 * fold);
+          },
+        },
+      ),
+      hit = bb.hit;
+    // speckles: gold and dark flecks over the glaze
+    const speck = b(
+      256,
+      256,
+      (c) => {
+        const r = srand(77);
+        (c.fillStyle = "#f2f2f2"), c.fillRect(0, 0, 256, 256);
+        for (let k = 0; k < 900; k++) {
+          const v = r();
+          (c.fillStyle = v < 0.45 ? "#e8c040" : v < 0.8 ? "#5a3a2a" : "#ffffff"), c.beginPath(), c.arc(256 * r(), 256 * r(), 0.6 + 1.6 * r() * r(), 0, l), c.fill();
+        }
+      },
+      { smooth: !0 },
+    );
+    (speck.wrapS = speck.wrapT = THREE.RepeatWrapping), speck.repeat.set(3, 3);
+    keepR(bb.geo, new THREE.MeshPhongMaterial({ map: speck, bumpMap: speck, bumpScale: 0.012, vertexColors: !0, shininess: 35, specular: 3355443 }), body);
+    const brass = KIT.surf("metal", "#b88a4a", { rep: 1, bump: 0.02, shine: 70, spec: 13421772 }),
+      rust = KIT.surf("metal", "#a8643a", { rep: 1, bump: 0.025, shine: 40 }),
+      tealM = KIT.surf("skin", "#2fa6a2", { rep: 2, bump: 0.02, shine: 40 }),
+      coralM = KIT.surf("skin", "#e27a6a", { rep: 2, bump: 0.02, shine: 30 }),
+      leather = KIT.surf("felt", "#8a5a30", { rep: 2, bump: 0.035, shine: 22 }),
+      darkM = x.clay("#1a1410", { shininess: 60 }),
+      place = (dir, out, from = C) => {
+        const { p, n } = hit(from, dir),
+          o = faceTo(new THREE.Group(), n);
+        return o.position.copy(p).addScaledVector(n, out), body.add(o), o;
+      };
+    // the face: two small glossy eyes with amber rims, lids for the blink, and a quiet mouth
+    const lids = [];
+    [-1, 1].forEach((sx) => {
+      const e = place([sx * 0.2, 0.42, 0.88], -0.03);
+      R(T.sphere(0.068, 16, 12), x.clay("#1a120c", { shininess: 160, specular: 16777215 }), e);
+      R(T.torus(0.07, 0.018, 8, 22), x.clay("#c8823a", { shininess: 60 }), e, [0, 0, 0.012]);
+      R(T.sphere(0.016, 8, 6), x.basic("#ffffff"), e, [-0.02 * sx, 0.025, 0.06]);
+      const lid = new THREE.Group();
+      e.add(lid), R(new THREE.SphereGeometry(0.076, 14, 8, 0, l, 0, Math.PI / 2), KIT.surf("skin", "#e8d8b8", { rep: 1, bump: 0.01, shine: 20 }), lid);
+      (lid.userData.open = -0.35), (lid.rotation.x = -0.35), lids.push(lid);
+    });
+    {
+      const ml = [];
+      for (let k = 0; k <= 8; k++) {
+        const u = k / 8 - 0.5,
+          q = hit(C, [0.42 * u, 0.24 - 0.02 * Math.abs(u), 0.95]);
+        ml.push(q.p.addScaledVector(q.n, 0.002));
+      }
+      R(ao(ml, 0.008, 0.008, 12, 5), x.clay("#6a4a2a", { shininess: 20 }), body);
+    }
+    // the crown: antennae with ball tips, a branching twig with yellow buds, mushrooms and knobs
+    const sway = [],
+      stalk = (dir, h, bend, col, tipCol, r0 = 0.05) => {
+        const { p, n } = hit(C, dir),
+          sg = new THREE.Group();
+        sg.position.copy(p).addScaledVector(n, -0.04), sg.quaternion.setFromUnitVectors(new c0(0, 1, 0), n.clone().lerp(new c0(0, 1, 0), 0.6).normalize()), body.add(sg), sway.push(sg);
+        R(ao([[0, 0, 0], [bend * 0.3, h * 0.45, 0], [bend, h, bend * 0.3]], r0 * 1.8, r0 * 0.5, 14, 8), KIT.surf("skin", col, { rep: 1, bump: 0.02, shine: 40 }), sg);
+        R(T.sphere(r0 * 1.7, 12, 10), x.clay(tipCol, { shininess: 50 }), sg, [bend, h + r0 * 0.8, bend * 0.3]);
+        R(T.torus(r0 * 1.05, r0 * 0.3, 6, 14), x.clay("#7a4a2a"), sg, [bend, h - r0 * 0.6, bend * 0.3], [Math.PI / 2, 0, 0]);
+        return sg;
+      };
+    stalk([-0.1, 1, 0.15], 0.75, 0.08, "#d86a7a", "#e8707a");
+    stalk([0.18, 1, -0.05], 0.85, -0.05, "#2fa6a2", "#d8607a");
+    stalk([-0.5, 1, 0.1], 0.38, -0.12, "#2a98b0", "#3ab0a0", 0.04);
+    stalk([0.35, 0.9, 0.35], 0.28, 0.06, "#d8a040", "#c87a3a", 0.035);
+    stalk([-0.32, 0.9, -0.3], 0.3, -0.05, "#4ab8a8", "#e8a83a", 0.035);
+    {
+      const { p, n } = hit(C, [0.28, 1, -0.32]),
+        tw = new THREE.Group(),
+        twig = KIT.surf("wood", "#c8823a", { rep: 1, bump: 0.02, shine: 20 }),
+        bud = x.clay("#f2d23a", { shininess: 60 });
+      tw.position.copy(p), tw.quaternion.setFromUnitVectors(new c0(0, 1, 0), n.clone().lerp(new c0(0, 1, 0), 0.7).normalize()), body.add(tw), sway.push(tw);
+      R(ao([[0, -0.03, 0], [0, 0.3, 0], [0.02, 0.55, 0]], 0.03, 0.015, 8, 6), twig, tw);
+      [[0.0, 0.3, -0.18, 0.62, 0.05], [0.02, 0.4, 0.2, 0.75, -0.05], [0.0, 0.48, -0.1, 0.82, 0.1], [0.02, 0.55, 0.08, 0.86, 0.0], [0.0, 0.2, 0.22, 0.48, 0.12]].forEach(([bx, by, ex, ey, ez]) => {
+        R(ao([[bx, by, 0], [(bx + ex) / 2, (by + ey) / 2, ez / 2], [ex, ey, ez]], 0.012, 0.008, 6, 5), twig, tw);
+        R(T.sphere(0.035, 10, 8), bud, tw, [ex, ey + 0.02, ez]);
+      });
+    }
+    const shroom = (dir, h, capR, capCol, tilt) => {
+      const { p, n } = hit(C, dir),
+        mg = new THREE.Group();
+      mg.position.copy(p).addScaledVector(n, -0.02), mg.quaternion.setFromUnitVectors(new c0(0, 1, 0), n.clone().lerp(new c0(0, 1, 0), 0.75).normalize()), (mg.rotation.z += tilt), body.add(mg), sway.push(mg);
+      R(ao([[0, 0, 0], [0.02, h * 0.5, 0], [0.03, h, 0.01]], 0.022, 0.016, 8, 6), x.clay("#efe2c6", { shininess: 30 }), mg);
+      R(new THREE.SphereGeometry(capR, 16, 6, 0, l, 0, Math.PI / 2), KIT.surf("skin", capCol, { rep: 1, bump: 0.02, shine: 40 }), mg, [0.03, h, 0.01], null, [1, 0.42, 1]);
+      R(new THREE.CircleGeometry(capR * 0.95, 16), x.clay("#d8b08a", { side: THREE.DoubleSide }), mg, [0.03, h - 0.005, 0.01], [Math.PI / 2, 0, 0]);
+      for (let k = 0; k < 5; k++) {
+        const a = (k / 5) * l + rs();
+        R(T.sphere(capR * 0.12, 6, 4), x.clay("#f6e6c8"), mg, [0.03 + capR * 0.55 * Math.cos(a), h + capR * 0.3, 0.01 + capR * 0.55 * Math.sin(a)]);
+      }
+    };
+    shroom([0.5, 0.8, -0.45], 0.45, 0.16, "#e8a060", 0.25);
+    shroom([0.35, 0.75, -0.6], 0.3, 0.11, "#d8805a", -0.15);
+    shroom([0.15, 1, 0.45], 0.18, 0.09, "#f0a050", 0.1);
+    shroom([0.62, 0.55, -0.55], 0.22, 0.08, "#e8c070", 0.3);
+    const knobCols = ["#e8a83a", "#2fa6a2", "#d8607a", "#3a8a7a", "#e8c050", "#7a4a2a"];
+    for (let k = 0; k < 30; k++) {
+      const a = l * rs(),
+        e = 0.35 + 0.6 * rs(),
+        d = [Math.cos(e) * Math.sin(a), Math.sin(e) + 0.15, Math.cos(e) * Math.cos(a)];
+      if (new c0(...d).normalize().dot(faceDir) > 0.82) continue;
+      const kn = place(d, -0.005);
+      k % 3 ? R(T.sphere(0.022 + 0.022 * rs(), 8, 6), x.clay(knobCols[k % knobCols.length], { shininess: 40 }), kn) : R(T.cone(0.03, 0.08, 8), x.clay(knobCols[k % knobCols.length], { shininess: 40 }), kn, [0, 0, 0.03], [Math.PI / 2, 0, 0]);
+    }
+    // the big pale-pink flower behind his right cheek
+    const flower = place([0.78, 0.55, 0.5], 0.02);
+    flower.scale.setScalar(1.75);
+    {
+      const petal = KIT.surf("felt", "#f2c8c8", { rep: 1, bump: 0.02, shine: 20 }),
+        petal2 = KIT.surf("felt", "#f6dcd0", { rep: 1, bump: 0.02, shine: 20 });
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * l;
+        R(T.sphere(1, 12, 8), k % 2 ? petal : petal2, flower, [0.13 * Math.cos(a), 0.13 * Math.sin(a), 0.01 * (k % 2)], [0, 0, a], [0.14, 0.065, 0.014]);
+      }
+      R(T.sphere(1, 14, 10), x.clay("#f2c21a", { shininess: 40 }), flower, [0, 0, 0.02], null, [0.055, 0.055, 0.03]);
+      for (let k = 0; k < 12; k++) R(T.sphere(0.008, 5, 4), x.clay("#c88a1a"), flower, [0.05 * Math.cos(k), 0.05 * Math.sin(k), 0.035]);
+    }
+    // the brass porthole with its glowing green grid, low on his front
+    const gridTex = b(
+      128,
+      128,
+      (c) => {
+        const gr = c.createRadialGradient(64, 64, 10, 64, 64, 64);
+        gr.addColorStop(0, "#9af0c8"), gr.addColorStop(1, "#2a9a7a"), (c.fillStyle = gr), c.fillRect(0, 0, 128, 128), (c.strokeStyle = "rgba(20,80,60,0.6)"), (c.lineWidth = 3);
+        for (let k = 12; k < 128; k += 16) c.beginPath(), c.moveTo(k, 0), c.lineTo(k, 128), c.moveTo(0, k), c.lineTo(128, k), c.stroke();
+      },
+      { smooth: !0 },
+    );
+    const glassM = x.clay("#ffffff", { map: gridTex, emissive: "#ffffff", emissiveMap: gridTex, emissiveIntensity: 0.55, shininess: 120, specular: 16777215 });
+    {
+      const ph = place([-0.4, -0.38, 0.85], 0.0);
+      R(T.torus(0.2, 0.06, 12, 32), brass, ph, [0, 0, 0.02]);
+      R(T.torus(0.15, 0.02, 8, 28), rust, ph, [0, 0, 0.05]);
+      R(new THREE.SphereGeometry(0.17, 20, 8, 0, l, 0, 0.5), glassM, ph, [0, 0, -0.08], [Math.PI / 2, 0, 0]);
+      for (let k = 0; k < 10; k++) R(T.sphere(0.014, 6, 4), brass, ph, [0.2 * Math.cos((k / 10) * l), 0.2 * Math.sin((k / 10) * l), 0.08]);
+    }
+    // the little screen with a doodle on it, a coiled ribbed hose from a pipe fitting into it, knobs
+    const doodle = b(
+      128,
+      112,
+      (c) => {
+        (c.fillStyle = "#a8e8a0"), c.fillRect(0, 0, 128, 112), (c.strokeStyle = "#2a4a2a"), (c.lineWidth = 2.5), (c.lineCap = "round");
+        c.beginPath(), c.arc(64, 50, 16, 0, l), c.stroke();
+        c.beginPath(), c.moveTo(54, 37), c.lineTo(50, 18), c.moveTo(74, 37), c.lineTo(78, 18), c.stroke();
+        c.beginPath(), c.arc(58, 48, 2, 0, l), c.arc(70, 48, 2, 0, l), c.stroke();
+        c.beginPath(), c.moveTo(56, 66), c.lineTo(50, 90), c.moveTo(72, 66), c.lineTo(78, 90), c.moveTo(48, 78), c.lineTo(80, 78), c.stroke();
+        (c.fillStyle = "rgba(255,255,255,0.18)"), c.fillRect(0, 0, 128, 40);
+      },
+      { smooth: !0 },
+    );
+    const screenM = x.clay("#ffffff", { map: doodle, emissive: "#ffffff", emissiveMap: doodle, emissiveIntensity: 0.45, shininess: 90 });
+    {
+      const sc = place([-0.88, -0.05, 0.42], 0.06),
+        s = new THREE.Shape(),
+        w = 0.19,
+        h = 0.17,
+        r = 0.05;
+      s.moveTo(-w + r, -h), s.lineTo(w - r, -h), s.quadraticCurveTo(w, -h, w, -h + r), s.lineTo(w, h - r), s.quadraticCurveTo(w, h, w - r, h), s.lineTo(-w + r, h), s.quadraticCurveTo(-w, h, -w, h - r), s.lineTo(-w, -h + r), s.quadraticCurveTo(-w, -h, -w + r, -h);
+      R(new THREE.ExtrudeGeometry(s, { depth: 0.1, bevelEnabled: !0, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 2, curveSegments: 4 }), KIT.surf("plastic", "#4a6a5a", { rep: 1, bump: 0.02, shine: 40 }), sc, [0, 0, -0.12]);
+      R(new THREE.PlaneGeometry(0.3, 0.26), screenM, sc, [0, 0, 0.012]);
+      [[-0.12, "#8a2a2a"], [0, "#2a2a2e"], [0.12, "#8a2a2a"]].forEach(([kx, kc]) => R(T.cyl(0.025, 0.025, 0.03, 12), x.clay(kc, { shininess: 60 }), sc, [kx, -0.25, -0.01], [Math.PI / 2, 0, 0]));
+      // the pipe fitting the hose comes from, and the hose coiling round into the screen
+      const fit = place([-0.55, 0.12, 0.85], 0.02);
+      R(T.cyl(0.07, 0.08, 0.1, 14), brass, fit, [0, 0, 0.03], [Math.PI / 2, 0, 0]), R(T.torus(0.075, 0.018, 6, 16), rust, fit, [0, 0, 0.08]);
+      const a = new c0(),
+        bpt = new c0();
+      body.updateWorldMatrix(!0, !0), fit.localToWorld(a.set(0, 0, 0.09)), sc.localToWorld(bpt.set(0.2, 0.05, -0.02));
+      body.worldToLocal(a), body.worldToLocal(bpt);
+      const mid = a.clone().lerp(bpt, 0.5),
+        out = mid.clone().sub(new c0(C[0], mid.y, C[2])).normalize();
+      R(ridgedTube([[a.x, a.y, a.z], [a.x + out.x * 0.2, a.y + 0.05, a.z + out.z * 0.2], [mid.x + out.x * 0.28, mid.y - 0.18, mid.z + out.z * 0.28], [bpt.x + out.x * 0.12, bpt.y - 0.12, bpt.z + out.z * 0.12], [bpt.x, bpt.y, bpt.z]], 0.045, 0.045, 60, 26, 0.22, 10), KIT.surf("rubber", "#d8705a", { rep: 1, bump: 0.02, shine: 40 }), body);
+    }
+    // a pipe vent, a gauge eye, small rings and rivets on his sides
+    {
+      const v1 = place([-0.62, 0.42, 0.62], 0.02);
+      R(T.cyl(0.11, 0.12, 0.16, 18, 1, !0), Object.assign(KIT.surf("skin", "#2a8a86", { rep: 1, bump: 0.02, shine: 40 }).clone(), { side: THREE.DoubleSide }), v1, [0, 0, 0.06], [Math.PI / 2, 0, 0]);
+      R(T.torus(0.115, 0.03, 8, 20), x.clay("#c8823a", { shininess: 50 }), v1, [0, 0, 0.14]);
+      R(T.cyl(0.1, 0.1, 0.02, 16), darkM, v1, [0, 0, 0.02], [Math.PI / 2, 0, 0]);
+      const ge = place([-0.8, 0.35, 0.05], 0.0);
+      R(T.torus(0.08, 0.03, 8, 20), tealM, ge, [0, 0, 0.02]), R(T.sphere(0.06, 14, 10), x.clay("#141418", { shininess: 160, specular: 16777215 }), ge, [0, 0, 0.0]);
+      [[-0.95, -0.2, 0.15], [-0.7, -0.62, 0.5], [0.85, -0.3, 0.45], [0.6, 0.0, 0.8]].forEach((d, k) => {
+        const rg = place(d, 0.0);
+        R(T.torus(0.07 - 0.01 * (k % 2), 0.025, 8, 20), k % 2 ? coralM : rust, rg, [0, 0, 0.015]), R(T.sphere(0.035, 10, 8), darkM, rg, [0, 0, -0.01]);
+      });
+      for (let k = 0; k < 12; k++) {
+        const a = l * rs(),
+          d = [Math.sin(a), -0.6 + 1.3 * rs(), Math.cos(a)],
+          rv = place(d, 0.0);
+        R(T.sphere(0.018, 6, 4), k % 2 ? brass : x.clay("#3a7a6a"), rv);
+      }
+    }
+    // a cluster of coral bumps low on his left side
+    {
+      const bc = ["#e8687a", "#f08a5a", "#d8506a", "#e8a050"];
+      for (let k = 0; k < 18; k++) {
+        const a = -1.0 - 0.7 * rs(),
+          d = [Math.sin(a), -0.55 - 0.35 * rs(), Math.cos(a) + 0.2],
+          cb = place(d, 0.0),
+          r0 = 0.03 + 0.03 * rs();
+        R(T.torus(r0, r0 * 0.55, 8, 14), x.clay(bc[k % 4], { shininess: 30 }), cb, [0, 0, 0.01]);
+      }
+    }
+    // the harness: a strap over each shoulder and a belt round the back, with brass buckles, and the
+    // pack on his back: coiled pink tubes, a pouch with a buckle and a little gourd hanging off it
+    const strapM = Object.assign(leather.clone(), { side: THREE.DoubleSide });
+    [-1, 1].forEach((sx) => apronBib(hit, C, sx > 0 ? 1.62 : -1.82, sx > 0 ? 1.82 : -1.62, 0.55, 1.85, strapM, body, 0.035));
+    apronBib(hit, C, Math.PI - 1.9, Math.PI + 1.9, 1.02, 1.14, strapM, body, 0.04);
+    [-1, 1].forEach((sx) => {
+      const bk = place([sx * Math.sin(1.72), 0.0, Math.cos(1.72)], 0.05);
+      R(T.box(0.12, 0.13, 0.02), brass, bk), R(T.box(0.07, 0.08, 0.025), darkM, bk);
+    });
+    const pack = new THREE.Group();
+    {
+      const { p, n } = hit(C, [0, 0.05, -1]);
+      pack.position.copy(p).addScaledVector(n, 0.12), faceTo(pack, n.clone().negate()), body.add(pack);
+      R(T.box(0.8, 0.7, 0.26), leather, pack, [0, 0, 0.0]);
+      R(T.box(0.82, 0.08, 0.28), KIT.surf("felt", "#6a4020", { rep: 1, bump: 0.03, shine: 20 }), pack, [0, 0.31, 0.0]);
+      const tubeM = KIT.surf("rubber", "#e26a8a", { rep: 1, bump: 0.02, shine: 40 }),
+        tubeM2 = KIT.surf("rubber", "#d8885a", { rep: 1, bump: 0.02, shine: 40 });
+      [[-0.22, 0.48, tubeM], [0.0, 0.52, tubeM2], [0.22, 0.47, tubeM]].forEach(([tx, ty, tm]) => {
+        const pts = [];
+        for (let k = 0; k <= 30; k++) {
+          const a = (k / 30) * 2.5 * l;
+          pts.push([tx + 0.09 * Math.cos(a), ty + 0.035 * Math.sin(a) + 0.02 * (k / 30), -0.05 + 0.09 * Math.sin(a)]);
+        }
+        R(ao(pts, 0.032, 0.032, 80, 8), tm, pack);
+      });
+      R(T.box(0.34, 0.26, 0.12), KIT.surf("felt", "#c8a070", { rep: 1, bump: 0.03, shine: 10 }), pack, [0.12, -0.12, -0.18]);
+      R(T.box(0.08, 0.1, 0.02), brass, pack, [0.12, -0.08, -0.25]);
+      R(T.cyl(0.06, 0.06, 0.06, 14), darkM, pack, [-0.22, -0.1, -0.16], [Math.PI / 2, 0, 0]), R(T.torus(0.065, 0.015, 6, 16), brass, pack, [-0.22, -0.1, -0.19]);
+      const gourd = new THREE.Group();
+      gourd.position.set(-0.42, -0.2, -0.05), pack.add(gourd), sway.push(gourd);
+      R(ao([[0, 0, 0], [-0.03, -0.12, 0], [0, -0.22, 0]], 0.012, 0.012, 6, 4), leather, gourd);
+      R(T.sphere(1, 14, 10), KIT.surf("skin", "#d8a840", { rep: 1, bump: 0.02, shine: 40 }), gourd, [0, -0.33, 0], null, [0.09, 0.12, 0.09]);
+      R(T.sphere(1, 12, 8), KIT.surf("skin", "#d8a840", { rep: 1, bump: 0.02, shine: 40 }), gourd, [0, -0.2, 0], null, [0.055, 0.06, 0.055]);
+    }
+    // stubby coral feet with three round toes
+    const feet = [-1, 1].map((sx) => {
+      const f = new THREE.Group();
+      f.position.set(0.36 * sx, 0.0, 0.08), body.add(f);
+      R(T.sphere(1, 16, 10), coralM, f, [0, 0.07, 0.04], null, [0.22, 0.09, 0.25]);
+      [-1, 0, 1].forEach((k) => R(T.sphere(1, 10, 8), coralM, f, [0.1 * k, 0.05, 0.25 - 0.03 * Math.abs(k)], null, [0.06, 0.05, 0.07]));
+      return f;
+    });
+    return born(g, {
+      height: 2.85,
+      lids,
+      step(t, dt, tk, wk) {
+        (body.position.y = 0.015 * Math.sin(1.8 * t) + 0.05 * wk * Math.abs(Math.sin(7 * t))), (body.rotation.z = 0.02 * Math.sin(1.2 * t) + 0.05 * wk * Math.sin(7 * t));
+        sway.forEach((sg, k) => (sg.rotation.x = 0.06 * Math.sin(1.6 * t + 1.3 * k)));
+        (flower.rotation.z = 0.15 * Math.sin(0.8 * t)), (glassM.emissiveIntensity = 0.5 + 0.08 * Math.sin(3 * t)), (screenM.emissiveIntensity = 0.42 + 0.05 * Math.sin(9 * t) * Math.sin(1.3 * t));
+        feet.forEach((f, k) => (f.position.y = 0.08 * wk * Math.max(0, Math.sin(7 * t + k * Math.PI))));
+      },
+    });
+  };
+
   // BACKPACKA standing in the line-up for testing: the event's model, hovering on his wings, half
   // full, his neck swaying and his legs dangling
   // (BACKPACKA's model is final: keep it as it is.)
@@ -13707,6 +14030,7 @@ const JGP = (() => {
     p_etcher: ["pat", 2.1, 0.9],
     p_gemtoe: ["scatter", 2.4, 1],
     p_glyph: ["dig", 2.3, 1],
+    p_gorton: ["pat", 1.9, 1],
     t_larry: ["scatter", 1.7, 0.9],
     gorbo: ["pat", 1.6, 1.1],
     sparky: ["dig", 2.8, 1, 0.1],

@@ -4753,6 +4753,9 @@ const xe = (() => {
 				o.push({ verb: "interact", label: "Talk to " + a, run: () => te(e) }),
 					Kt.blossoms > 0 &&
 						o.push({ verb: "give", label: "Give a fire blossom", run: () => te(e, !0) });
+				// every creature dances and plants (its own dance, its own planting move) when asked
+				o.push({ verb: "dance", label: "Ask " + a + " to dance", run: () => ((e.act = { kind: "dance", until: Re.t + 6 }), Ut.above(e, "♪", M.pink)) });
+				o.push({ verb: "plant", label: "Ask " + a + " to plant", run: () => ((e.act = { kind: "plant", until: Re.t + 6 }), Ut.above(e, "✿", M.lime)) });
 			} else e && o.push({ verb: "interact", label: e.label(), run: e.run });
 			return o;
 		}
@@ -9370,13 +9373,15 @@ const JGP = (() => {
 	};
 
 
-	// MAMA GORBO, after the Mama Gorbo artwork, in her own peach and at her old size: a great glossy
-	// balloon of a head leaning back over a narrowing chin that drips goo; two octagon ports set
-	// into her face (magenta rims round glassy purple lenses), the big one high and the small one
-	// low; a thick lime goo tail that runs down her left side, under her chin and curls up on
-	// her right; white smoke wisps trailing off her right side, yellow sparks crackling off her left,
-	// and her red tags (AP, IP and wifi) with a purple wifi sign floating round her. From GORBO she
-	// keeps the ports and the goo drips that splat on the ground.
+	// MAMA GORBO, after the Mama Gorbo artwork, in her own peach and at her old size: a round, glossy
+	// goo drop of a body, a big round head melting down into a foot of goo spread on the ground in a
+	// shiny puddle, with runs of paler goo sliding down her sides, each ending in a hanging drop that
+	// drips and splats; her eyes are the two octagon ports set into her face (magenta rims round
+	// glassy purple lenses, the big one high and the small one low) and they blink together; a thick
+	// lime goo tail runs down her left side, round the front of her foot and curls up on her right;
+	// white smoke wisps trail off her right side, yellow sparks crackle off her upper left, and her
+	// red pin tags (AP, IP and wifi) and a purple wifi sign orbit well clear of her. She breathes and
+	// jiggles like a jelly. From GORBO she keeps the ports and the goo drips.
 	BORN.mamagorbo = (g) => {
 		const root = new THREE.Group(),
 			body = new THREE.Group();
@@ -10604,7 +10609,12 @@ const JGP = (() => {
 	// over a dead, burning world and carries the old computer (the Originator, its AI still stirring
 	// on the screen) up out of the ruins, its cable pulled free of the ground. Painted on a 384 x 1024
 	// layout (a lancet: the top 256 px is the pointed arch) and drawn into a canvas `SC` times larger.
-	const paintTravelerWindow = (cx) => {
+	// THE STAINED-GLASS KIT shared by the church windows: every window is painted on a 384 x 1024
+	// lancet layout (the top 256 px is the pointed arch) into a canvas drawn at twice that size.
+	// glass(): one pane with a soft sheen, streaks and seed bubbles and its lead came; oval(): a round
+	// pane; panes(): a field of irregular panes (a jittered grid, as leaded glass is cut); border(): the
+	// band of jewels up the sides and over the arch, with a gold bar along the foot.
+	const stainedKit = (cx) => {
 		const W0 = 384,
 			H0 = 1024,
 			LEAD = "#1a1c22",
@@ -10615,6 +10625,7 @@ const JGP = (() => {
 				return "#" + c.setRGB(Math.min(1, c.r * k), Math.min(1, c.g * k), Math.min(1, c.b * k)).getHexString();
 			};
 		let seed = 7;
+		const reseed = (sd) => (seed = sd);
 		const rnd = () => (seed = (16807 * seed) % 2147483647) / 2147483647;
 		// one pane of glass: its colour, a soft sheen across it, a few streaks and seed bubbles, then the
 		// lead came round it (a dark core with a faint bevel highlight)
@@ -10674,10 +10685,189 @@ const JGP = (() => {
 				}
 		};
 
+		const border = () => {
+			// up the sides and over the pointed arch
+			const archPt = (t) => {
+				// t 0..1 from the bottom left, up, over the point, down to the bottom right
+				const side = 768 / 1024;
+				if (t < 0.3) return [0, H0 - (t / 0.3) * H0 * side];
+				if (t <= 0.5) {
+					const u = (t - 0.3) / 0.2,
+						a = [0, 256],
+						c = [0, 256 - 0.78 * 256],
+						b2 = [192, 0];
+					return [(1 - u) ** 2 * a[0] + 2 * (1 - u) * u * c[0] + u * u * b2[0], (1 - u) ** 2 * a[1] + 2 * (1 - u) * u * c[1] + u * u * b2[1]];
+				}
+				const [ax, ay] = archPt(1 - t);
+				return [W0 - ax, ay];
+			};
+			const IN = 15,
+				inset = (t) => {
+					const p0 = archPt(Math.max(0, t - 0.003)),
+						p1 = archPt(Math.min(1, t + 0.003)),
+						dx = p1[0] - p0[0],
+						dy = p1[1] - p0[1],
+						n = Math.hypot(dx, dy) || 1,
+						p = archPt(t);
+					return [p[0] - (dy / n) * IN, p[1] + (dx / n) * IN];
+				};
+			const JEWELS = ["#e8203a", "#2a5ae8", "#ffd23a", "#2ab85a", "#a83ae0"];
+			for (let k = 0; k < 64; k++) {
+				const t0 = k / 64,
+					t1 = (k + 1) / 64,
+					q0 = archPt(t0),
+					q1 = archPt(t1),
+					i1 = inset(t1),
+					i0 = inset(t0);
+				glass([q0, q1, i1, i0], JEWELS[k % 5], 4);
+			}
+			glass([[0, H0 - 15], [W0, H0 - 15], [W0, H0], [0, H0]], "#ffd23a", 4);
+		};
+		return { W0, H0, LEAD, mix, shade, rnd, reseed, glass, oval, panes, border };
+	};
+	// THE GARDEN WINDOW (the right-hand window of the cathedral in Greeblis City), redrawn at twice
+	// the resolution with more detail: a bright summer sky with a rayed sun and clouds over a meadow of
+	// flowers; a figure in a white robe (no face: a smooth oval of pale light under the hair) stands
+	// with MAMA GORBO beside them: her round cyan body with its highlights, her octagon port eyes, her
+	// lime goo tail, smoke wisps, her AP / IP / wifi tags and crackling sparks. swap puts the figure on
+	// the left and MAMA GORBO on the right (the copy on the church's left side).
+	const paintGardenWindow = (cx, swap) => {
+		const { W0, LEAD, mix, shade, glass, oval, panes, border } = stainedKit(cx),
+			// the figures' x positions (only the two figures change sides; the sky and meadow stay put)
+			X = (x) => (swap ? W0 - x : x),
+			P = (pts) => pts.map(([x, y]) => [X(x), y]),
+			R0 = (r) => (swap ? -r : r);
+		// ---- sky: deep blue at the top of the arch to pale blue at the horizon ----
+		panes(0, 0, W0, 870, (x0, y, q) => shade(mix("#245ec8", "#b0e4ff", y / 870), 0.9 + 0.2 * q), 6, 15, 19);
+		// the sun: a ring of rays round a golden disc with a bright core
+		{
+			const sx = 92,
+				sy = 250;
+			for (let k = 0; k < 16; k++) {
+				const a = (k / 16) * l + 0.13;
+				glass([[sx + 54 * Math.cos(a - 0.15), sy + 54 * Math.sin(a - 0.15)], [sx + (k % 2 ? 84 : 98) * Math.cos(a), sy + (k % 2 ? 84 : 98) * Math.sin(a)], [sx + 54 * Math.cos(a + 0.15), sy + 54 * Math.sin(a + 0.15)]], k % 2 ? "#ffb02a" : "#ffd84a", 4.5);
+			}
+			const sg = cx.createRadialGradient(sx - 10, sy - 12, 4, sx, sy, 54);
+			sg.addColorStop(0, "#fffbe0"), sg.addColorStop(0.45, "#ffe86a"), sg.addColorStop(1, "#ffc83a");
+			oval(sx, sy, 52, 52, sg, 7);
+		}
+		// clouds: rounded puffs over a flat underside
+		const cloud = (px, py, s) => {
+			const puffs = [[-1.1, 0.25, 0.55], [-0.45, -0.2, 0.75], [0.35, -0.3, 0.7], [1, 0.2, 0.55], [0, 0.3, 0.65]];
+			puffs.forEach(([a, b2, r]) => oval(px + a * s, py + b2 * s, r * s, r * s * 0.85, null, 10));
+			puffs.forEach(([a, b2, r]) => oval(px + a * s, py + b2 * s, r * s, r * s * 0.85, mix("#ffffff", "#e4eef8", 0.3 + 0.5 * b2), 0));
+			(cx.strokeStyle = "#cfdcea"), (cx.lineWidth = 4), cx.beginPath(), cx.moveTo(px - 1.1 * s, py + 0.55 * s), cx.lineTo(px + 1.1 * s, py + 0.55 * s), cx.stroke();
+		};
+		cloud(250, 140, 58), cloud(302, 262, 38), cloud(swap ? 300 : 84, 520, 46);
+		// ---- the meadow: rolling greens below the horizon ----
+		const hill = [[0, 870], [120, 846], [260, 858], [384, 840], [384, 1024], [0, 1024]];
+		cx.save(), cx.beginPath(), hill.forEach((p, k) => (k ? cx.lineTo(p[0], p[1]) : cx.moveTo(p[0], p[1]))), cx.closePath(), cx.clip();
+		panes(0, 820, W0, 1024, (x0, y, q) => shade(mix("#62cc3e", "#2a7a26", (y - 840) / 180), 0.9 + 0.2 * q), 6, 4, 29);
+		cx.restore(), glass(hill, null, 7);
+		// flowers in the meadow: a stem with a leaf, six petals round a centre
+		const flower = (px, py, s, petal, mid, foot) => {
+			(cx.strokeStyle = LEAD), (cx.lineWidth = 11), cx.beginPath(), cx.moveTo(px, py), cx.lineTo(px + 4, foot), cx.stroke();
+			(cx.strokeStyle = "#2a8a2a"), (cx.lineWidth = 6), cx.stroke();
+			glass([[px + 2, py + 0.55 * (foot - py)], [px + 2 + 1.1 * s, py + 0.35 * (foot - py)], [px + 2 + 0.4 * s, py + 0.7 * (foot - py)]], "#3aa83a", 5);
+			for (let k = 0; k < 6; k++) {
+				const a = (k / 6) * l;
+				oval(px + Math.cos(a) * s * 0.78, py + Math.sin(a) * s * 0.78, 0.5 * s, 0.34 * s, petal, 5, a);
+			}
+			oval(px, py, 0.42 * s, 0.42 * s, mid, 5);
+		};
+		flower(30, 900, 30, "#ff5aa8", "#ffd84a", 1000), flower(196, 924, 32, "#ffd84a", "#ff7a1a", 1020), flower(352, 892, 30, "#ff4a3a", "#ffe45a", 1000);
+		flower(110, 966, 28, "#ffffff", "#ffb02a", 1024), flower(300, 972, 28, "#ff9a2a", "#c83ad8", 1024), flower(256, 1000, 22, "#7ab8ff", "#ffe45a", 1024);
+
+		// ---- the figure in the white robe ----
+		// sandals, robe with its folds, sleeves and hands
+		glass(P([[228, 842], [256, 842], [258, 862], [222, 862]]), "#5a4632", 6), glass(P([[268, 842], [296, 842], [302, 862], [266, 862]]), "#5a4632", 6);
+		{
+			const rg = cx.createLinearGradient(X(196), 0, X(330), 0);
+			rg.addColorStop(0, "#e6eaf0"), rg.addColorStop(0.5, "#ffffff"), rg.addColorStop(1, "#dfe4ec");
+			glass(P([[206, 450], [318, 450], [332, 600], [326, 844], [198, 844], [192, 600]]), rg, 9);
+		}
+		(cx.strokeStyle = "#c8ceda"), (cx.lineWidth = 4), cx.beginPath();
+		[[262, 470, 262, 840], [232, 600, 222, 840], [292, 600, 302, 840], [246, 640, 240, 840], [278, 640, 284, 840]].forEach(([a, b2, c, d]) => (cx.moveTo(X(a), b2), cx.lineTo(X(c), d)));
+		cx.stroke();
+		glass(P([[214, 560], [312, 560], [314, 574], [212, 574]]), "#d8b04a", 5);
+		glass(P([[206, 456], [182, 470], [170, 640], [192, 650], [200, 520]]), "#f4f6fa", 7), glass(P([[318, 456], [342, 470], [354, 640], [332, 650], [324, 520]]), "#f4f6fa", 7);
+		oval(X(180), 656, 13, 14, "#f0c8a0", 5), oval(X(344), 656, 13, 14, "#f0c8a0", 5);
+		// neck, then the head: brown hair over a face left blank (a smooth oval of pale light)
+		glass(P([[248, 432], [276, 432], [276, 456], [248, 456]]), "#f0c8a0", 5);
+		{
+			const fg = cx.createRadialGradient(X(262), 388, 4, X(262), 394, 44);
+			fg.addColorStop(0, "#ffffff"), fg.addColorStop(0.6, "#fff4d6"), fg.addColorStop(1, "#f6deb0");
+			oval(X(262), 394, 40, 46, fg, 7);
+		}
+		glass(P([[220, 384], [224, 352], [252, 336], [286, 338], [304, 360], [304, 384], [292, 366], [262, 360], [234, 366]]), "#6a4a2a", 6);
+		glass(P([[220, 384], [214, 420], [226, 424], [230, 380]]), "#5e4024", 5), glass(P([[304, 384], [310, 420], [298, 424], [294, 380]]), "#5e4024", 5);
+
+		// ---- MAMA GORBO ----
+		// the lime goo tail sweeping round beneath her (dark lead, lime, pale highlight)
+		{
+			const tl = P([[52, 744], [30, 792], [46, 842], [100, 866], [158, 852], [176, 812], [168, 782]]);
+			[[34, LEAD], [24, "#c8ec3a"], [9, "#eaff7a"]].forEach(([w, c], k) => {
+				cx.save(), 2 === k && cx.translate(swap ? 3 : -3, -4), cx.beginPath(), cx.moveTo(...tl[0]);
+				for (let j = 1; j < tl.length - 1; j++) cx.quadraticCurveTo(tl[j][0], tl[j][1], (tl[j][0] + tl[j + 1][0]) / 2, (tl[j][1] + tl[j + 1][1]) / 2);
+				cx.lineTo(...tl[tl.length - 1]), (cx.strokeStyle = c), (cx.lineWidth = w), (cx.lineCap = "round"), (cx.lineJoin = "round"), cx.stroke(), cx.restore();
+			});
+		}
+		// her body: a glossy cyan balloon with a rounded lower lobe, shaded and lit from the top left
+		{
+			const bg = cx.createRadialGradient(X(70), 670, 10, X(100), 712, 96);
+			bg.addColorStop(0, "#9af0ff"), bg.addColorStop(0.55, "#3ac8ee"), bg.addColorStop(1, "#1e98c8");
+			oval(X(128), 770, 38, 30, "#2fb4e0", 0, R0(-0.3));
+			oval(X(100), 712, 84, 70, bg, 0, R0(-0.5));
+			(cx.strokeStyle = LEAD), (cx.lineWidth = 9), cx.beginPath(), cx.ellipse(X(128), 770, 38, 30, R0(-0.3), swap ? -0.05 * Math.PI : 0.1 * Math.PI, swap ? 0.9 * Math.PI : 1.05 * Math.PI), cx.stroke();
+			oval(X(100), 712, 84, 70, null, 9, R0(-0.5));
+			oval(X(58), 672, 16, 9, "#d4f8ff", 0, R0(-0.6)), oval(X(82), 654, 9, 5, "#ffffff", 0, R0(-0.6)), oval(X(40), 708, 6, 10, "#8ae6fa", 0, R0(-0.3));
+			(cx.strokeStyle = "#2a8ab8"), (cx.lineWidth = 3), cx.beginPath(), cx.arc(X(150), 700, 30, swap ? Math.PI - 1.3 : 0.4, swap ? Math.PI - 0.4 : 1.3), cx.stroke();
+		}
+		// her eyes: two octagon ports (magenta rim, purple lens, a glint)
+		const oct = (px, py, r, rot, fill, lead) => glass(Array.from({ length: 8 }, (_, k) => [px + r * Math.cos(rot + (k * Math.PI) / 4 + Math.PI / 8), py + r * Math.sin(rot + (k * Math.PI) / 4 + Math.PI / 8)]), fill, lead);
+		[[128, 676, 33], [70, 752, 28]].forEach(([px, py, r]) => {
+			oct(X(px), py, r, R0(-0.5), "#e2409e", 8);
+			const lg = cx.createRadialGradient(X(px) - 0.25 * r, py - 0.3 * r, 2, X(px), py, 0.7 * r);
+			lg.addColorStop(0, "#d8b8ff"), lg.addColorStop(0.5, "#9a52e0"), lg.addColorStop(1, "#6a2ab8");
+			oct(X(px), py, 0.7 * r, R0(-0.5), lg, 5);
+			oval(X(px - 0.25 * r), py - 0.25 * r, 0.24 * r, 0.15 * r, "#f0e4ff", 0, R0(-0.6));
+		});
+		// smoke wisps trailing off her far side
+		[[[172, 668], [186, 690], [174, 712], [186, 734]], [[176, 752], [166, 776], [182, 796], [172, 820]]].forEach((w) => {
+			const q = P(w);
+			[[13, LEAD], [7, "#f4f8ff"]].forEach(([lw, c]) => (cx.beginPath(), cx.moveTo(...q[0]), cx.bezierCurveTo(...q[1], ...q[2], ...q[3]), (cx.strokeStyle = c), (cx.lineWidth = lw), (cx.lineCap = "round"), cx.stroke()));
+		});
+		// her tags: red hexagons (wifi, AP, IP) and a purple wifi sign, and sparks
+		const hex = (px, py, r, fill) => glass(Array.from({ length: 6 }, (_, k) => [px + r * Math.cos((k * Math.PI) / 3 + Math.PI / 6), py + r * Math.sin((k * Math.PI) / 3 + Math.PI / 6)]), fill, 5);
+		const wifi = (px, py, s, c, lw) => {
+			(cx.strokeStyle = c), (cx.lineWidth = lw), (cx.lineCap = "round");
+			for (let k = 1; k <= 3; k++) cx.beginPath(), cx.arc(px, py, 5.5 * k * s, -0.78 * Math.PI, -0.22 * Math.PI), cx.stroke();
+			(cx.fillStyle = c), cx.beginPath(), cx.arc(px, py, 2.2 * s, 0, l), cx.fill();
+		};
+		hex(X(24), 712, 15, "#e04058"), wifi(X(24), 718, 0.9, "#ffffff", 2.6);
+		hex(X(170), 700, 14, "#e04058"), hex(X(172), 794, 14, "#e04058");
+		(cx.fillStyle = "#ffffff"), (cx.textAlign = "center"), (cx.textBaseline = "middle"), (cx.font = "bold 13px Arial, sans-serif");
+		cx.fillText("AP", X(170), 701), cx.fillText("IP", X(172), 795);
+		wifi(X(156), 626, 1.1, LEAD, 7), wifi(X(156), 626, 1.1, "#b05ae8", 3.5);
+		[[14, 636, 30, 618], [22, 652, 44, 640], [12, 664, 26, 662]].forEach(([a, b2, c, d]) => {
+			cx.beginPath(), cx.moveTo(X(a), b2), cx.lineTo(X(c), d), (cx.strokeStyle = LEAD), (cx.lineWidth = 8), cx.stroke(), (cx.strokeStyle = "#ffe23a"), (cx.lineWidth = 4), cx.stroke();
+		});
+		// two butterflies in the open sky beside the figure
+		[[150, 392], [40, 432]].forEach(([px, py], k) => {
+			const c = ["#ff8a2a", "#ff5aa8"][k];
+			oval(X(px) - 8, py, 9, 6, c, 4, -0.5), oval(X(px) + 8, py, 9, 6, c, 4, 0.5), oval(X(px), py + 2, 2.5, 7, LEAD, 0);
+		});
+
+		// ---- the jewelled border ----
+		border();
+	};
+	const paintTravelerWindow = (cx) => {
+		const { W0, LEAD, mix, shade, rnd, reseed, glass, oval, panes, border } = stainedKit(cx);
+
 		// ---- the night sky over the dead world: indigo above, burning red-orange towards the ground ----
 		panes(0, 0, W0, 800, (x0, y, q) => shade(y < 300 ? mix("#1e1660", "#4a2a8a", y / 300) : mix("#5a2a7a", "#c8401a", (y - 300) / 500), 0.85 + 0.3 * q), 6, 13, 7);
 		// stars in the sky (outside the beam)
-		seed = 31;
+		reseed(31);
 		for (let k = 0; k < 22; k++) {
 			const sx = 12 + 360 * rnd(),
 				sy = 20 + 300 * rnd();
@@ -10815,42 +11005,8 @@ const JGP = (() => {
 			(cx.strokeStyle = "#ff4a12"), (cx.lineWidth = 8), cx.stroke(), (cx.strokeStyle = "#ffc84a"), (cx.lineWidth = 2.5), cx.stroke();
 		});
 
-		// ---- a border of jewels following the lancet: up the sides and over the pointed arch ----
-		const archPt = (t) => {
-			// t 0..1 from the bottom left, up, over the point, down to the bottom right
-			const side = 768 / 1024;
-			if (t < 0.3) return [0, H0 - (t / 0.3) * H0 * side];
-			if (t <= 0.5) {
-				const u = (t - 0.3) / 0.2,
-					a = [0, 256],
-					c = [0, 256 - 0.78 * 256],
-					b2 = [192, 0];
-				return [(1 - u) ** 2 * a[0] + 2 * (1 - u) * u * c[0] + u * u * b2[0], (1 - u) ** 2 * a[1] + 2 * (1 - u) * u * c[1] + u * u * b2[1]];
-			}
-			const [ax, ay] = archPt(1 - t);
-			return [W0 - ax, ay];
-		};
-		const IN = 15,
-			inset = (t) => {
-				const p0 = archPt(Math.max(0, t - 0.003)),
-					p1 = archPt(Math.min(1, t + 0.003)),
-					dx = p1[0] - p0[0],
-					dy = p1[1] - p0[1],
-					n = Math.hypot(dx, dy) || 1,
-					p = archPt(t);
-				return [p[0] - (dy / n) * IN, p[1] + (dx / n) * IN];
-			};
-		const JEWELS = ["#e8203a", "#2a5ae8", "#ffd23a", "#2ab85a", "#a83ae0"];
-		for (let k = 0; k < 64; k++) {
-			const t0 = k / 64,
-				t1 = (k + 1) / 64,
-				q0 = archPt(t0),
-				q1 = archPt(t1),
-				i1 = inset(t1),
-				i0 = inset(t0);
-			glass([q0, q1, i1, i0], JEWELS[k % 5], 4);
-		}
-		glass([[0, H0 - 15], [W0, H0 - 15], [W0, H0], [0, H0]], "#ffd23a", 4);
+		// ---- the jewelled border ----
+		border();
 	};
 
 	function buildGarden(o) {
@@ -11030,7 +11186,61 @@ const JGP = (() => {
 		blinker: ["dig", 1.5, 1],
 		cutebex: ["dig", 3, 0.8],
 		keeper: ["pat", 1.6, 1],
+		// (those who don't plant at the Event still have a move, for when they're asked to plant)
+		p_mamagorbo: ["pat", 1.3, 1.2],
+		t_nextessa: ["scatter", 2.2, 0.9],
+		t_backpacka: ["dig", 1.4, 0.8],
 	};
+	// every creature's own dance (step, beat in rad/s, size): played when asked to dance, and round the
+	// garden while FORTIZMO plays at the Event. The beats sit near the drum set's 104 bpm. HENNRICK
+	// dances his own built-in dance instead.
+	const DANCES = {
+		m_kingdino: ["groove", 5.45, 1.1],
+		m_somlet: ["sway", 2.7, 0.8],
+		p_etcher: ["wiggle", 5.45, 1],
+		p_gemtoe: ["twirl", 2.7, 1],
+		p_glyph: ["hop", 5.45, 1],
+		w_mont: ["robot", 5.45, 1],
+		gorbo: ["bounce", 5.45, 1.1],
+		orbiter: ["twist", 5.45, 1],
+		drifter: ["shimmy", 5.45, 1],
+		frog: ["sway", 5.45, 1],
+		blinker: ["stomp", 5.45, 1],
+		cutebex: ["groove", 5.45, 0.9],
+		p_mamagorbo: ["jelly", 5.45, 1],
+		t_nextessa: ["twist", 5.45, 0.9],
+		t_backpacka: ["bounce", 2.7, 0.8],
+		keeper: ["twist", 5.45, 1],
+	};
+	function danceMove(key, t) {
+		const [type, w, a] = DANCES[key] || ["bounce", 5.45, 1],
+			s = Math.sin(w * t),
+			b2 = Math.abs(s);
+		switch (type) {
+			case "bounce":
+				return { y: 0.12 * a * b2, sy: 1 + 0.05 * a * Math.cos(2 * w * t), rz: 0.05 * a * Math.sin(0.5 * w * t) };
+			case "sway":
+				return { rz: 0.16 * a * s, x: 0.08 * a * s, ry: 0.15 * a * Math.sin(0.5 * w * t), y: 0.02 * b2 };
+			case "twirl":
+				return { ry: 2.4 * a * Math.sin(0.4 * w * t), y: 0.05 * a * b2, rz: 0.05 * a * s };
+			case "hop":
+				return { y: 0.25 * a * Math.max(0, s), sy: 1 - 0.07 * a * Math.max(0, -s), rz: 0.04 * a * Math.sin(0.5 * w * t) };
+			case "wiggle":
+				return { rx: 0.1 * a * s, rz: 0.1 * a * Math.cos(w * t), y: 0.03 * b2 };
+			case "twist":
+				return { ry: 0.6 * a * s, rz: 0.08 * a * Math.sin(2 * w * t), y: 0.04 * a * b2 };
+			case "robot":
+				return { ry: 0.35 * a * Math.tanh(4 * Math.sin(0.5 * w * t)), y: 0.05 * a * Math.abs(Math.sin(w * t)), rz: 0.04 * a * Math.tanh(4 * s) };
+			case "shimmy":
+				return { x: 0.06 * a * Math.sin(3 * w * t), rz: 0.06 * a * Math.sin(3 * w * t), y: 0.05 * a * b2 };
+			case "stomp":
+				return { rz: 0.12 * a * s, y: 0.06 * a * Math.max(0, Math.sin(2 * w * t)), rx: 0.04 * a * b2 };
+			case "groove":
+				return { y: 0.05 * a * b2, rz: 0.1 * a * Math.sin(0.5 * w * t), rx: 0.06 * a * s, ry: 0.2 * a * Math.sin(0.25 * w * t) };
+			case "jelly":
+				return { sy: 1 + 0.12 * a * s, sx: 1 - 0.06 * a * s, sz: 1 - 0.06 * a * s, rz: 0.06 * a * Math.sin(0.5 * w * t) };
+		}
+	}
 	function plantMove(key, t) {
 		const [type, w, a, extra = 0] = MOVES[key] || ["dig", 1.8, 1],
 			s = Math.sin(w * t),
@@ -13128,7 +13338,8 @@ const JGP = (() => {
 			const glassC = ["#7a2a3a", "#2a3a7a", "#7a6a2a", "#2a5a4a"];
 			[-1, 1].forEach((sx) => {
 				const Sd = B.sub((sx * w) / 2, -D / 2, (sx * Math.PI) / 2);
-				[-7.5, -2.5, 2.5, 7.5].forEach((px, k) => {
+				// (the middle of each side wall holds a great window of THE GARDEN, below)
+				[-7.5, 7.5].forEach((px, k) => {
 					Sd.win(px, 2.4, 1.3, 3.6, { trim: wh, glass: glassC[k % 4] });
 					Sd.box("lit", glassC[(k + 1) % 4], px, 6.2, -0.02, 0.92, 0.92, 0.08, 0, 0, Math.PI / 4).box("plain", wh, px, 6.2, 0.02, 1.15, 1.15, 0.06, 0, 0, Math.PI / 4);
 				});
@@ -13162,11 +13373,39 @@ const JGP = (() => {
 				const gm = new THREE.MeshLambertMaterial({ map: tex, emissiveMap: tex, emissive: 16777215, emissiveIntensity: 0.32 }),
 					gw = new THREE.Group();
 				gw.position.set(cx, 0, cz), (gw.rotation.y = ry), (gw.userData.keepInFinale = !0), C.add(gw);
-				R(gg, gm, gw, [0, Y0, 3.23]), H(gw);
+				R(gg, gm, gw, [0, Y0, 3.23]);
+				// on each side wall, THE GARDEN (the other window of the Greeblis City cathedral): on the
+				// right side (local +x, the right as you face the church) as it was there, on the left a copy
+				// with the figure and MAMA GORBO changing places. Smaller lancets in the same carved stone
+				// frames, at the middle of the nave; painted at 1.5x the layout's resolution.
+				const SW = 2.6,
+					SH = (SW * 12) / 6,
+					SN = (SW * 4) / 6,
+					SY = 1.7,
+					sfr = lancet(SW + 0.44, SH, SN + 0.24),
+					sgg = new THREE.ShapeGeometry(lancet(SW, SH, SN), 24),
+					spa = sgg.attributes.position,
+					suv = new Float32Array(2 * spa.count);
+				sfr.holes.push(new THREE.Path(lancet(SW, SH, SN).getPoints(40)));
+				for (let k = 0; k < spa.count; k++) (suv[2 * k] = (spa.getX(k) + SW / 2) / SW), (suv[2 * k + 1] = spa.getY(k) / (SH + SN));
+				sgg.setAttribute("uv", new THREE.BufferAttribute(suv, 2));
+				const mats = [gm];
+				[-1, 1].forEach((sx) => {
+					const Sd = B.sub((sx * w) / 2, -D / 2, (sx * Math.PI) / 2);
+					Sd.geo("stone", new THREE.ExtrudeGeometry(sfr, { depth: 0.14, bevelEnabled: !1, curveSegments: 16 }), "#e6dfcf", 0, SY, 0.01);
+					Sd.box("stone", "#d8d0be", 0, SY - 0.11, 0.12, SW + 0.6, 0.22, 0.26);
+					const st = b(576, 1536, (c) => (c.scale(1.5, 1.5), paintGardenWindow(c, sx < 0)), { smooth: !0 });
+					st.anisotropy = tex.anisotropy;
+					const sm = new THREE.MeshLambertMaterial({ map: st, emissiveMap: st, emissive: 16777215, emissiveIntensity: 0.32 }),
+						side = new THREE.Group();
+					side.position.set((sx * w) / 2, 0, -D / 2), (side.rotation.y = (sx * Math.PI) / 2), gw.add(side);
+					R(sgg, sm, side, [0, SY, 0.04]), mats.push(sm);
+				});
+				H(gw);
 				let nk = -1;
 				L.push(() => {
 					const k = I.nightK || 0;
-					Math.abs(k - nk) > 0.01 && ((nk = k), (gm.emissiveIntensity = 0.32 + 0.75 * k));
+					Math.abs(k - nk) > 0.01 && ((nk = k), mats.forEach((m) => (m.emissiveIntensity = 0.32 + 0.75 * k)));
 				});
 			}
 			B.box("siding", wh, 0, 0.82 + 14.4, 1.0, 3.8, 3.16, 3.8);
@@ -14353,6 +14592,7 @@ const JGP = (() => {
 		beginPlanting,
 		plantTick,
 		plantMove,
+		danceMove,
 		buildLibrary,
 		// where the shop panel hangs (Garden Supplies), and where SPARKAKUS steps out to at the Library
 		shopAt: () => KIOSK_AT.front("garden")[0],
@@ -14783,15 +15023,21 @@ if (
 						e = e || 0.016;
 						const o = me.active && bt.live,
 							a = t;
-						const n = [];
-						for (const t of It.all)
+						const n = [],
+							// while FORTIZMO plays at the Event, everyone round the garden dances
+							music = me.active && ee.playing;
+						for (const t of It.all) {
+							const req = t.act && a < t.act.until ? t.act.kind : null,
+								at = "finale" === t.busy && !t.moving && !t.hornWant && !JGP.eventActor(t);
 							n.push({
 								key: Xt(t),
 								grp: t.group,
 								ent: t,
-								want: o && "finale" === t.busy && !t.moving && !t.watching && !t.hornWant && !JGP.eventActor(t),
+								// what the creature is doing: dancing or planting, or nothing
+								want: req || (music && at ? "dance" : o && at && !t.watching ? "plant" : null),
 							});
-						st.group && n.push({ key: "keeper", grp: st.group, ent: null, want: o && st.away() });
+						}
+						st.group && n.push({ key: "keeper", grp: st.group, ent: null, want: st.away() ? (music ? "dance" : o ? "plant" : null) : null });
 						for (const o of n) {
 							let n = bt.tg.get(o.grp);
 							n || ((n = { k: 0, lx: o.grp.position.x, lz: o.grp.position.z, mv: 0 }), bt.tg.set(o.grp, n));
@@ -14799,10 +15045,15 @@ if (
 							(n.lx = o.grp.position.x),
 								(n.lz = o.grp.position.z),
 								(n.mv += ((r > 0.6 ? 1 : 0) - n.mv) * Math.min(1, 8 * e));
-							const s = o.want && n.mv < 0.5;
-							(n.k += ((s ? 1 : 0) - n.k) * Math.min(1, 4 * e)), o.ent && (o.ent.concertDance = s);
-							const i = o.ent && "gratelet" === o.ent.id,
-								c = o.grp.userData.gcW;
+							// (changing from one to the other eases out of the first before easing into the second)
+							const s = o.want && n.mv < 0.5 ? o.want : null;
+							s && n.mode !== s && n.k < 0.02 && (n.mode = s);
+							(n.k += ((s && s === n.mode ? 1 : 0) - n.k) * Math.min(1, 4 * e)), o.ent && (o.ent.concertDance = "dance" === n.mode && n.k > 0.02);
+							const i = o.ent && "gratelet" === o.ent.id && "dance" === n.mode;
+							let c = o.grp.userData.gcW;
+							// (a creature asked to dance or plant outside the Event gets its move wrapper, and the
+							// footprint that keeps its feet on the ground, the first time)
+							if (!c && s) (c = wt(o.grp)), (c.userData.gcFP = null), zt(o.grp, c);
 							if (!c) continue;
 							if (i) {
 								c.position.set(0, 0, 0), c.rotation.set(0, 0, 0), c.scale.set(1, 1, 1), n.k > 0.002 && kt(o.grp, c);
@@ -14818,7 +15069,7 @@ if (
 								}
 								continue;
 							}
-							const h = JGP.plantMove(o.key, a),
+							const h = "dance" === n.mode ? JGP.danceMove(o.key, a) : JGP.plantMove(o.key, a),
 								p = n.k;
 							c.position.set((h.x || 0) * p, (h.y || 0) * p, (h.z || 0) * p),
 								c.rotation.set((h.rx || 0) * p, (h.ry || 0) * p, (h.rz || 0) * p),

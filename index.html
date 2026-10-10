@@ -9163,20 +9163,25 @@ const JGP = (() => {
         ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [34, -27.78]],
         ["orbiter", "MALTOE", "born_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "talkR": 4.2}, [34, -22.14]],
         ["drifter", "MUSHROOM", "born_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [34, -16.85]],
-        ["blinker", "ANOMALEE", "anomaleePeg", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2}, [34, -11.91]],
-        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [34, -7.67]],
-        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [34, -2.04]],
-        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#2a9ccf", "bodyR": 1.1}, [34, 3.12]],
-        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [34, 7.08]],
-        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [34, 11.27]],
-        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [34, 16.17]],
-        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [34, 21.79]],
-        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [34, 27.05]],
-        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [34, 31.30]],
-        ["t_nextessa", "NEXTESSA", "city_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [34, 35.49]],
+        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [34, -11.91]],
+        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [34, -6.28]],
+        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#e8862a", "bodyR": 1.1}, [34, -1.12]],
+        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [34, 2.84]],
+        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [34, 7.03]],
+        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [34, 11.93]],
+        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [34, 17.55]],
+        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [34, 22.81]],
+        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [34, 27.06]],
+        ["t_nextessa", "NEXTESSA", "city_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [34, 31.25]],
         // for testing: the garden event's BACKPACKA
-        ["t_backpacka", "BACKPACKA", "born_backpacka", {"color": "#d48e64", "bodyR": 1.4}, [34, 40.66]],
+        ["t_backpacka", "BACKPACKA", "born_backpacka", {"color": "#d48e64", "bodyR": 1.4}, [34, 36.42]],
       ],
+    },
+    // ANOMALEE stands before the church in the south-west corner, gazing up at the Traveler window
+    // (her spot and facing are worked out from where the church stands)
+    church: {
+      face: (at) => Math.atan2(CHURCH_AT.tower[0] - at[0], CHURCH_AT.tower[1] - at[1]),
+      list: [["blinker", "ANOMALEE", "anomaleePeg", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2, "gazeUp": 0.6}, () => CHURCH_AT.at(CHURCH_AT.sFront - 4.2, 1.9)]],
     },
     // FORTIZMO tends the Juice Bar on the west side of the square. "via" is her way out through the
     // gap in the counter (from behind the bar to the front), so she never walks through the bar
@@ -9995,8 +10000,9 @@ const JGP = (() => {
   // SPARK's and SPARKY's tails. IMMUTO (Greeblis Park) joined later: his orange shows as a warm
   // saddle and socks, his boxy muzzle replaces the long snout, and his ball-tipped antenna tail
   // now carries the star.
+  // (his colours are swapped from his parents: orange fur with blue highlights)
   BORN.sparkstar = (g) => {
-    const fur = KIT.surf("fur", "#2a9ccf", { rep: 3, bump: 0.035, shine: 18 }),
+    const fur = KIT.surf("fur", "#e8862a", { rep: 3, bump: 0.035, shine: 18 }),
       cream = KIT.surf("fur", "#f3ead2", { rep: 3, bump: 0.03, shine: 15 }),
       dark = x.clay("#141418", { shininess: 60 }),
       root = new THREE.Group(),
@@ -10007,13 +10013,13 @@ const JGP = (() => {
     R(T.sphere(1, 22, 16), fur, body, [0, 0.03, -0.6], null, [0.68, 0.62, 0.56]);
     R(T.sphere(1, 22, 16), cream, body, [0, -0.3, 0.12], null, [0.56, 0.4, 0.86]);
     // IMMUTO's orange as a warm saddle and patches
-    const orange = KIT.surf("fur", "#e8862a", { rep: 3, bump: 0.03, shine: 20 });
-    R(new THREE.SphereGeometry(1, 30, 8, 0, l, 0, 0.62), orange, body, [0, 0.004, -0.06], null, [0.795, 0.735, 1.07]);
+    const accent = KIT.surf("fur", "#2a9ccf", { rep: 3, bump: 0.03, shine: 20 });
+    R(new THREE.SphereGeometry(1, 30, 8, 0, l, 0, 0.62), accent, body, [0, 0.004, -0.06], null, [0.795, 0.735, 1.07]);
     [
       [[0.7, 0.35, -0.45], [0.26, 0.22, 0.05]],
       [[-0.72, 0.3, 0.1], [0.22, 0.2, 0.05]],
       [[-0.6, 0.55, -0.62], [0.2, 0.18, 0.05]],
-    ].forEach(([dir, sc]) => onEllipsoid(body, T.sphere(1, 16, 10), orange, [0, 0, 0], [0.78, 0.72, 1.05], dir, sc, 0.985));
+    ].forEach(([dir, sc]) => onEllipsoid(body, T.sphere(1, 16, 10), accent, [0, 0, 0], [0.78, 0.72, 1.05], dir, sc, 0.985));
     for (let k = 0; k < 11; k++) {
       const a = -1.1 + (2.2 * k) / 10;
       R(T.sphere(1, 10, 8), cream, body, [0.5 * Math.sin(a), 0.32 - 0.22 * Math.abs(Math.sin(a)) - 0.1 * (k % 2), 0.95 + 0.06 * Math.cos(a)], [0.25, a * 0.8, -a * 0.5], [0.12, 0.26, 0.06]);
@@ -10034,18 +10040,18 @@ const JGP = (() => {
       [0.42, -0.32, 0.55, 1.2],
       [-0.44, -0.28, -0.6, 1.5],
       [0.44, -0.28, -0.6, 1.5],
-    ].map(([lx, ly, lz, th]) => KIT.leg(body, [lx, ly, lz], { len: 0.7, r: 0.16, mat: fur, thigh: th, foot: "paw", footMat: orange }));
+    ].map(([lx, ly, lz, th]) => KIT.leg(body, [lx, ly, lz], { len: 0.7, r: 0.16, mat: fur, thigh: th, foot: "paw", footMat: accent }));
     // head: REVEREND SPARK's long snout and tall ears, sleepy yellow eyes
     const head = new THREE.Group();
     head.position.set(0, 0.62, 0.98), body.add(head);
     R(T.sphere(1, 22, 16), fur, head, [0, 0, 0], null, [0.42, 0.4, 0.44]);
-    // IMMUTO's boxy muzzle in his orange, with a cream chin
-    R(T.box(0.36, 0.26, 0.44), orange, head, [0, -0.1, 0.42]), R(T.box(0.37, 0.05, 0.45), cream, head, [0, -0.22, 0.42]);
+    // IMMUTO's boxy muzzle in the blue accent, with a cream chin
+    R(T.box(0.36, 0.26, 0.44), accent, head, [0, -0.1, 0.42]), R(T.box(0.37, 0.05, 0.45), cream, head, [0, -0.22, 0.42]);
     R(T.sphere(0.09, 12, 8), dark, head, [0, -0.01, 0.66]);
     KIT.mouth(head, [0, -0.17, 0.645], 0.08);
     const lids = [];
     [-1, 1].forEach((sx) => {
-      const e = KIT.eye(head, [0.17 * sx, 0.1, 0.33], 0.085, { iris: "#f2c21a", lid: "#2a9ccf", open: -0.02, rot: [0, 0.25 * sx, 0] });
+      const e = KIT.eye(head, [0.17 * sx, 0.1, 0.33], 0.085, { iris: "#f2c21a", lid: "#e8862a", open: -0.02, rot: [0, 0.25 * sx, 0] });
       lids.push(e.lid);
     });
     const ears = [-1, 1].map((sx) => {
@@ -10082,11 +10088,11 @@ const JGP = (() => {
         }
         return R(T.sphere(0.09, 10, 8), x.clay("#c87a10", { shininess: 40 }), fl, [0, 0, 0.02], null, [1, 1, 0.5]), fl;
       });
-    // IMMUTO's antenna tail: a stiff orange rod with his ball, carrying the star and wifi arcs
+    // IMMUTO's antenna tail: a stiff accent rod with his ball, carrying the star and wifi arcs
     const tail = new THREE.Group();
     tail.position.set(0, 0.2, -1.0), body.add(tail);
     R(ao([[0, 0, 0], [0, 0.16, -0.32], [0, 0.42, -0.55], [0, 0.95, -0.72]], 0.13, 0.05, 16, 8), fur, tail);
-    R(T.cyl(0.045, 0.045, 0.3, 8), orange, tail, [0, 1.08, -0.75], [-0.3, 0, 0]), R(T.sphere(0.12, 14, 10), orange, tail, [0, 1.24, -0.8]);
+    R(T.cyl(0.045, 0.045, 0.3, 8), accent, tail, [0, 1.08, -0.75], [-0.3, 0, 0]), R(T.sphere(0.12, 14, 10), accent, tail, [0, 1.24, -0.8]);
     const tip = new THREE.Group();
     tip.position.set(0, 1.45, -0.82), tail.add(tip);
     R(starGeo(), gold, tip, [0, 0, 0], [0, Math.PI / 2, 0], 0.2);
@@ -11035,6 +11041,20 @@ const JGP = (() => {
       cl && cl.r > 0.7 && cl.g < 0.35 && cl.b > 0.7 && (m.material = new THREE.MeshPhongMaterial({ map: scan, emissive: new THREE.Color("#5a0a5a"), emissiveMap: scan, shininess: 120, specular: 16777215 }));
     });
     texturize(g, "plastic", { rep: 1, bump: 0.02 });
+    // gazing up (at the church window): her screen head tips back while she stands at her spot,
+    // and eases level again whenever she walks off or is busy
+    if (d && d.gazeUp) {
+      let head = null,
+        gk = 0;
+      g.traverse((n) => !head && n.isGroup && Math.abs(n.position.y - 2.15) < 0.01 && Math.abs(n.position.z - 0.35) < 0.01 && (head = n));
+      const a0 = r.anim;
+      head &&
+        (r.anim = function (t2, dt2, ent) {
+          a0.apply(this, arguments);
+          const want = ent && !ent.moving && !ent.busy ? 1 : 0;
+          (gk += (want - gk) * Math.min(1, 2.5 * (dt2 || 0.016))), (head.rotation.x -= d.gazeUp * gk);
+        });
+    }
     if (!hip) return r;
     const skin = hip.children[0] && hip.children[0].material;
     while (hip.children.length) hip.remove(hip.children[0]);
@@ -11067,7 +11087,8 @@ const JGP = (() => {
     const all = Object.assign({}, e, o, n);
     for (const key in ROWS) {
       const row = ROWS[key];
-      row.list.forEach(([id, name, builder, extra, at]) => {
+      row.list.forEach(([id, name, builder, extra, at0]) => {
+        const at = "function" == typeof at0 ? at0() : at0;
         let d = all[id];
         if (!d) (d = o[id] = { emotes: ["!", "♥", "✿"] }), (Zt[id] = { g: [-0.8, 1.2, 0.45], c: [0.8, 1.0, 0.45] });
         // drop the engine's old model settings, then take the pulled model's own
@@ -11076,7 +11097,7 @@ const JGP = (() => {
           name,
           builder,
           at: at.slice(),
-          pattern: ["post", { face: "center" === row.face ? Math.atan2(-at[0], -at[1]) : row.face }],
+          pattern: ["post", { face: "center" === row.face ? Math.atan2(-at[0], -at[1]) : "function" == typeof row.face ? row.face(at) : row.face }],
           stationary: !0,
           // every creature has the same options (the test models of LARRY and NEXTESSA keep theirs)
           lines: /^t_/.test(id) ? L3() : ["Placeholder 1", "Placeholder 2", "Placeholder 3"],
@@ -11853,6 +11874,278 @@ const JGP = (() => {
     GATHER_S = 0.5, // seconds before planting starts (everyone walks straight into the garden)
     NO_SEEDS_S = 20, // without Seeds the gathering ends after this long
     garden = { slots: [], plants: [], cans: [], startAt: 0 };
+  // The church stands in the square's south-west corner on the walk from the garden: its back
+  // to the corner, its steps (and the Traveler window over the door) facing the garden.
+  // s runs along the walk from the garden's ring toward the corner, p across it.
+  const CHURCH_AT = (() => {
+    const r0 = GARDEN_R + 3.2,
+      x0 = -r0 / Math.SQRT2,
+      z0 = r0 / Math.SQRT2,
+      cx0 = -t.parkHalf,
+      cz0 = t.parkSouth,
+      len = Math.hypot(cx0 - x0, cz0 - z0),
+      ux = (cx0 - x0) / len,
+      uz = (cz0 - z0) / len,
+      D = 18, // the nave's length
+      sFront = len - 11 - (D + 4.9),
+      at = (s, p = 0) => [x0 + ux * s - uz * p, z0 + uz * s + ux * p];
+    const [x, z] = at(sFront + 4.7);
+    return { ux, uz, D, sFront, at, x, z, ry: Math.atan2(-ux, -uz), tower: at(sFront + 1.5) };
+  })();
+  // THE TRAVELER SAVES THE ORIGINATOR: the stained glass window of the cathedral in Greeblis City,
+  // redrawn at twice the resolution with more detail (no words, and no face on the Traveler). The winged Traveler comes down a beam of light
+  // over a dead, burning world and carries the old computer (the Originator, its AI still stirring
+  // on the screen) up out of the ruins, its cable pulled free of the ground. Painted on a 384 x 1024
+  // layout (a lancet: the top 256 px is the pointed arch) and drawn into a canvas `SC` times larger.
+  const paintTravelerWindow = (cx) => {
+    const W0 = 384,
+      H0 = 1024,
+      LEAD = "#1a1c22",
+      col = (h) => new THREE.Color(h),
+      mix = (a, b2, q) => "#" + col(a).lerp(col(b2), Math.max(0, Math.min(1, q))).getHexString(),
+      shade = (h, k) => {
+        const c = col(h);
+        return "#" + c.setRGB(Math.min(1, c.r * k), Math.min(1, c.g * k), Math.min(1, c.b * k)).getHexString();
+      };
+    let seed = 7;
+    const rnd = () => (seed = (16807 * seed) % 2147483647) / 2147483647;
+    // one pane of glass: its colour, a soft sheen across it, a few streaks and seed bubbles, then the
+    // lead came round it (a dark core with a faint bevel highlight)
+    const glass = (pts, fill, lead = 6) => {
+      cx.save(), cx.beginPath(), pts.forEach((p, k) => (k ? cx.lineTo(p[0], p[1]) : cx.moveTo(p[0], p[1]))), cx.closePath();
+      if (fill) {
+        let x0 = 1e9,
+          y0 = 1e9,
+          x1 = -1e9,
+          y1 = -1e9;
+        pts.forEach(([px, py]) => ((x0 = Math.min(x0, px)), (y0 = Math.min(y0, py)), (x1 = Math.max(x1, px)), (y1 = Math.max(y1, py))));
+        const g2 = cx.createLinearGradient(x0, y0, x1, y1);
+        "string" == typeof fill && "#" === fill[0] ? (g2.addColorStop(0, shade(fill, 1.18)), g2.addColorStop(0.55, fill), g2.addColorStop(1, shade(fill, 0.86)), (cx.fillStyle = g2)) : (cx.fillStyle = fill);
+        cx.fill(), cx.clip();
+        const n = Math.max(1, Math.round(((x1 - x0) * (y1 - y0)) / 2600));
+        for (let k = 0; k < n; k++) {
+          const sx = x0 + (x1 - x0) * rnd(),
+            sy = y0 + (y1 - y0) * rnd();
+          (cx.strokeStyle = "rgba(255,255,255,.13)"), (cx.lineWidth = 1.2), cx.beginPath(), cx.moveTo(sx, sy), cx.lineTo(sx + 10 + 14 * rnd(), sy - 4 - 8 * rnd()), cx.stroke();
+          rnd() < 0.5 && ((cx.fillStyle = "rgba(255,255,255,.16)"), cx.beginPath(), cx.arc(x0 + (x1 - x0) * rnd(), y0 + (y1 - y0) * rnd(), 1 + 1.4 * rnd(), 0, l), cx.fill());
+        }
+      }
+      cx.restore();
+      if (lead) {
+        cx.beginPath(), pts.forEach((p, k) => (k ? cx.lineTo(p[0], p[1]) : cx.moveTo(p[0], p[1]))), cx.closePath();
+        (cx.strokeStyle = LEAD), (cx.lineWidth = lead), (cx.lineJoin = "round"), cx.stroke();
+        (cx.strokeStyle = "rgba(150,156,170,.35)"), (cx.lineWidth = Math.max(1, lead * 0.18)), cx.stroke();
+      }
+    };
+    const oval = (px, py, rx, ry, fill, lead = 6, rot = 0) => {
+      const pts = [];
+      for (let k = 0; k < 28; k++) {
+        const a = (k / 28) * l;
+        pts.push([px + rx * Math.cos(a) * Math.cos(rot) - ry * Math.sin(a) * Math.sin(rot), py + rx * Math.cos(a) * Math.sin(rot) + ry * Math.sin(a) * Math.cos(rot)]);
+      }
+      glass(pts, fill, lead);
+    };
+    // a field of irregular panes (a jittered grid, as leaded glass is cut)
+    const panes = (x0, y0, x1, y1, colour, nx, ny, sd) => {
+      seed = sd;
+      const g2 = [];
+      for (let j = 0; j <= ny; j++) {
+        const row = [];
+        for (let i = 0; i <= nx; i++) {
+          const edge = !i || !j || i === nx || j === ny;
+          row.push([x0 + ((x1 - x0) * i) / nx + (edge ? 0 : (rnd() - 0.5) * ((x1 - x0) / nx) * 0.6), y0 + ((y1 - y0) * j) / ny + (edge ? 0 : (rnd() - 0.5) * ((y1 - y0) / ny) * 0.6)]);
+        }
+        g2.push(row);
+      }
+      for (let j = 0; j < ny; j++)
+        for (let i = 0; i < nx; i++) {
+          const a = g2[j][i],
+            b2 = g2[j][i + 1],
+            c = g2[j + 1][i + 1],
+            d = g2[j + 1][i];
+          glass([a, b2, c, d], colour((a[0] + c[0]) / 2, (a[1] + c[1]) / 2, rnd()), 3.5);
+        }
+    };
+
+    // ---- the night sky over the dead world: indigo above, burning red-orange towards the ground ----
+    panes(0, 0, W0, 800, (x0, y, q) => shade(y < 300 ? mix("#1e1660", "#4a2a8a", y / 300) : mix("#5a2a7a", "#c8401a", (y - 300) / 500), 0.85 + 0.3 * q), 6, 13, 7);
+    // stars in the sky (outside the beam)
+    seed = 31;
+    for (let k = 0; k < 22; k++) {
+      const sx = 12 + 360 * rnd(),
+        sy = 20 + 300 * rnd();
+      if (Math.abs(sx - 192) < 70 + sy * 0.12) continue;
+      const r = 3 + 4 * rnd();
+      glass([[sx, sy - r * 1.8], [sx + r * 0.45, sy - r * 0.45], [sx + r * 1.8, sy], [sx + r * 0.45, sy + r * 0.45], [sx, sy + r * 1.8], [sx - r * 0.45, sy + r * 0.45], [sx - r * 1.8, sy], [sx - r * 0.45, sy - r * 0.45]], "#fff6c8", 2.5);
+    }
+    // ---- the beam of light the Traveler comes down, with rays fanning inside it ----
+    const beam = [[146, 0], [238, 0], [318, 640], [66, 640]];
+    cx.save(), cx.beginPath(), beam.forEach((p, k) => (k ? cx.lineTo(...p) : cx.moveTo(...p))), cx.closePath(), cx.clip();
+    panes(0, 0, W0, 640, (x0, y, q) => shade(mix("#fff6c8", "#ffd25a", y / 640), 0.92 + 0.12 * q), 5, 9, 11);
+    (cx.strokeStyle = "rgba(255,255,255,.45)"), (cx.lineWidth = 3);
+    for (let k = 0; k < 7; k++) cx.beginPath(), cx.moveTo(192, -20), cx.lineTo(80 + 37 * k, 660), cx.stroke();
+    cx.restore(), glass(beam, null, 5);
+
+    // ---- the ruined city: broken towers with a few windows still burning ----
+    [
+      [6, 650, 72, [0, 30, 10, 0, 40]],
+      [292, 640, 84, [0, 34, 6, 22, 0]],
+      [86, 700, 50, [0, 20, 0, 34]],
+      [244, 700, 50, [0, 18, 4]],
+    ].forEach(([x0, y0, w, prof]) => {
+      const pts = [[x0, 800]];
+      prof.forEach((dy, k) => pts.push([x0 + (w * k) / (prof.length - 1), y0 + dy]));
+      pts.push([x0 + w, 800]), glass(pts, "#3a3846", 6);
+      for (let k = 0; k < 4; k++) {
+        const wx = x0 + 10 + ((18 * k) % (w - 16)),
+          wy = y0 + 46 + 26 * k;
+        wy < 790 && glass([[wx, wy], [wx + 10, wy], [wx + 10, wy + 14], [wx, wy + 14]], k % 2 ? "#ff8a2a" : "#ffc84a", 2.5);
+      }
+      // cracks down the walls
+      (cx.strokeStyle = LEAD), (cx.lineWidth = 2.5), cx.beginPath(), cx.moveTo(x0 + w * 0.6, y0 + 20), cx.lineTo(x0 + w * 0.45, y0 + 60), cx.lineTo(x0 + w * 0.55, y0 + 95), cx.stroke();
+    });
+    // the scorched ground, with glowing lava cracks
+    glass([[0, 790], [80, 772], [150, 798], [240, 776], [320, 794], [384, 780], [384, 1024], [0, 1024]], "#2a2830", 7);
+    [[30, 850, 90, 920, 60, 1000], [300, 850, 350, 920, 330, 1010], [150, 880, 120, 960], [240, 880, 268, 970], [196, 900, 200, 1000]].forEach((p) => {
+      cx.beginPath(), cx.moveTo(p[0], p[1]);
+      for (let k = 2; k < p.length; k += 2) cx.lineTo(p[k], p[k + 1]);
+      (cx.strokeStyle = "#ff4a12"), (cx.lineWidth = 9), cx.stroke(), (cx.strokeStyle = "#ffc84a"), (cx.lineWidth = 3), cx.stroke();
+    });
+    // the crater the computer was pulled from
+    oval(192, 828, 92, 30, "#120e14", 7), oval(192, 834, 70, 18, "#ff5a1a", 4), oval(192, 838, 44, 10, "#ffd84a", 0);
+    // flames: three tongues each, red outside, orange, then a yellow heart
+    [[26, 776, 26], [356, 768, 30], [100, 800, 18], [292, 796, 20], [146, 786, 12], [236, 782, 13]].forEach(([fx, fy, s]) => {
+      glass([[fx - s, fy + 10], [fx - 0.3 * s, fy - 1.6 * s], [fx, fy - 0.7 * s], [fx + 0.4 * s, fy - 2.2 * s], [fx + s, fy + 10]], "#e8301a", 5);
+      glass([[fx - 0.7 * s, fy + 9], [fx - 0.15 * s, fy - 1.2 * s], [fx + 0.25 * s, fy - 0.5 * s], [fx + 0.4 * s, fy - 1.5 * s], [fx + 0.7 * s, fy + 9]], "#ff8a1a", 3.5);
+      glass([[fx - 0.4 * s, fy + 8], [fx - 0.05 * s, fy - 0.8 * s], [fx + 0.4 * s, fy + 8]], "#ffe45a", 3);
+    });
+    // falling shards of the old world
+    [[150, 700, 14, 0.3], [228, 728, 11, 1.1], [176, 758, 9, 0.7], [118, 742, 8, 2], [258, 682, 10, 1.6]].forEach(([px, py, r, a]) =>
+      glass([[px + r * Math.cos(a), py + r * Math.sin(a)], [px + r * Math.cos(a + 2.2), py + r * Math.sin(a + 2.2)], [px + r * Math.cos(a + 4.1), py + r * Math.sin(a + 4.1)]], "#4a4450", 4),
+    );
+    // the cable, pulled free of the ground, its plug dangling
+    cx.beginPath(), cx.moveTo(192, 612), cx.bezierCurveTo(170, 660, 214, 700, 186, 760);
+    (cx.strokeStyle = LEAD), (cx.lineWidth = 12), cx.stroke(), (cx.strokeStyle = "#5a5f6e"), (cx.lineWidth = 6), cx.stroke();
+    glass([[180, 758], [192, 760], [196, 774], [184, 776]], "#ffb84a", 3);
+    [[184, 776], [190, 777]].forEach(([px, py]) => glass([[px, py], [px + 2.5, py], [px + 2.5, py + 9], [px, py + 9]], "#c8ccd4", 1.5));
+
+    // ---- the Traveler ----
+    // a gold halo behind the head, with rays
+    for (let k = 0; k < 16; k++) {
+      const a = (k / 16) * l;
+      glass([[192 + 52 * Math.cos(a - 0.08), 316 + 52 * Math.sin(a - 0.08)], [192 + 74 * Math.cos(a), 316 + 74 * Math.sin(a)], [192 + 52 * Math.cos(a + 0.08), 316 + 52 * Math.sin(a + 0.08)]], k % 2 ? "#ffd84a" : "#fff0a0", 3);
+    }
+    oval(192, 316, 54, 54, "#ffe27a", 6);
+    // wings: scalloped feather tips and the vanes drawn in
+    [-1, 1].forEach((sd) => {
+      const bx = 192 + 18 * sd,
+        outline = [[bx, 350], [192 + 56 * sd, 250], [192 + 104 * sd, 170], [192 + 160 * sd, 112], [192 + 178 * sd, 190], [192 + 170 * sd, 270], [192 + 130 * sd, 340], [192 + 60 * sd, 400]];
+      glass(outline, "#fffaf0", 8);
+      // the long flight feathers, each its own pane
+      for (let k = 0; k < 5; k++) {
+        const t0 = k / 5,
+          t1 = (k + 1) / 5,
+          tip = (t) => [192 + (160 + 18 * Math.sin(t * Math.PI)) * sd - 40 * t * sd, 112 + 228 * t],
+          a0 = tip(t0),
+          a1 = tip(t1);
+        glass([[bx + 6 * sd, 356 + 8 * k], a0, [(a0[0] + a1[0]) / 2 + 10 * sd, (a0[1] + a1[1]) / 2 + 6], a1, [bx + 6 * sd, 362 + 8 * k]], k % 2 ? "#f4ecdc" : "#fffaf0", 3.5);
+      }
+    });
+    // the robe, its folds, and a gold sash
+    glass([[168, 368], [216, 368], [244, 470], [262, 600], [122, 600], [140, 470]], "#ffffff", 8);
+    (cx.strokeStyle = "#cfd4de"), (cx.lineWidth = 4), cx.beginPath();
+    [[178, 400, 160, 596], [192, 404, 192, 598], [206, 400, 224, 596]].forEach(([a, b2, c, d]) => (cx.moveTo(a, b2), cx.quadraticCurveTo((a + c) / 2 + 6, (b2 + d) / 2, c, d)));
+    cx.stroke();
+    glass([[148, 446], [236, 446], [238, 462], [146, 462]], "#e8b830", 4), oval(192, 454, 9, 9, "#ff4a6a", 3);
+    // the computer, held up in both arms: bezel, screen, buttons, a little stand, and on the screen
+    // the Originator, the AI still stirring: a glowing face over circuit traces
+    glass([[90, 452], [294, 452], [294, 600], [90, 600]], "#c8ccd4", 9);
+    glass([[106, 466], [278, 466], [278, 586], [106, 586]], "#2a3a5a", 6);
+    {
+      const sg = cx.createLinearGradient(0, 470, 0, 582);
+      sg.addColorStop(0, "#c8fbff"), sg.addColorStop(0.5, "#5ae0ff"), sg.addColorStop(1, "#1a8ad0");
+      glass([[112, 472], [272, 472], [272, 580], [112, 580]], sg, 4);
+      (cx.strokeStyle = "rgba(20,90,140,.55)"), (cx.lineWidth = 2.5);
+      [[118, 500, 150, 500, 150, 520], [266, 494, 236, 494, 236, 510], [124, 566, 156, 566], [260, 560, 228, 560, 228, 548]].forEach((p) => {
+        cx.beginPath(), cx.moveTo(p[0], p[1]);
+        for (let k = 2; k < p.length; k += 2) cx.lineTo(p[k], p[k + 1]);
+        cx.stroke(), (cx.fillStyle = "rgba(20,90,140,.7)"), cx.beginPath(), cx.arc(p[p.length - 2], p[p.length - 1], 3, 0, l), cx.fill();
+      });
+      // the AI stirring in the machine: a seed of light in rings, its threads running out along the
+      // circuit traces
+      (cx.strokeStyle = "rgba(255,255,255,.7)"), (cx.lineWidth = 2);
+      [[150, 520], [236, 510], [156, 566], [228, 548]].forEach(([px, py]) => (cx.beginPath(), cx.moveTo(192, 526), cx.lineTo(px, py), cx.stroke()));
+      [34, 25].forEach((r, k) => (cx.beginPath(), cx.arc(192, 526, r, 0, l), (cx.strokeStyle = k ? "rgba(255,255,255,.8)" : "rgba(200,255,255,.6)"), (cx.lineWidth = k ? 3 : 2), cx.stroke()));
+      oval(192, 526, 16, 16, "#eaffff", 3), oval(192, 526, 7, 7, "#ffffff", 0);
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * l + 0.2;
+        cx.beginPath(), cx.moveTo(192 + 18 * Math.cos(a), 526 + 18 * Math.sin(a)), cx.lineTo(192 + 23 * Math.cos(a), 526 + 23 * Math.sin(a)), (cx.strokeStyle = "#ffffff"), (cx.lineWidth = 2.5), cx.stroke();
+      }
+      (cx.fillStyle = "rgba(255,255,255,.35)"), cx.beginPath(), cx.moveTo(118, 478), cx.lineTo(160, 478), cx.lineTo(118, 540), cx.closePath(), cx.fill();
+    }
+    [114, 132, 150].forEach((bx, k) => oval(bx, 593, 4, 3, k ? "#7a808c" : "#3aff7a", 2));
+    glass([[174, 600], [210, 600], [220, 616], [164, 616]], "#9aa3b2", 6);
+    // sleeves and hands holding the screen's sides
+    glass([[170, 382], [128, 430], [78, 500], [96, 516], [140, 456], [180, 404]], "#ffffff", 6);
+    glass([[214, 382], [256, 430], [306, 500], [288, 516], [244, 456], [204, 404]], "#ffffff", 6);
+    oval(88, 522, 15, 18, "#f2c8a0", 5), oval(296, 522, 15, 18, "#f2c8a0", 5);
+    // the head: curly golden hair round a calm, kind face
+    for (let k = 0; k < 9; k++) {
+      const a = Math.PI + (k / 8) * Math.PI;
+      oval(192 + 40 * Math.cos(a), 318 + 36 * Math.sin(a), 13, 12, k % 2 ? "#f2c040" : "#e8a820", 4);
+    }
+    // no face: the head is a smooth oval of pale light inside the curls
+    {
+      const fg = cx.createRadialGradient(192, 322, 4, 192, 326, 34);
+      fg.addColorStop(0, "#ffffff"), fg.addColorStop(0.6, "#fff4d6"), fg.addColorStop(1, "#f6deb0");
+      oval(192, 326, 30, 33, fg, 6);
+    }
+
+    // more of the dead ground's glowing fissures towards the foot of the window
+    [[40, 960, 96, 990, 150, 1006], [230, 1004, 280, 972, 344, 984], [120, 1010, 160, 980]].forEach((p) => {
+      cx.beginPath(), cx.moveTo(p[0], p[1]);
+      for (let k = 2; k < p.length; k += 2) cx.lineTo(p[k], p[k + 1]);
+      (cx.strokeStyle = "#ff4a12"), (cx.lineWidth = 8), cx.stroke(), (cx.strokeStyle = "#ffc84a"), (cx.lineWidth = 2.5), cx.stroke();
+    });
+
+    // ---- a border of jewels following the lancet: up the sides and over the pointed arch ----
+    const archPt = (t) => {
+      // t 0..1 from the bottom left, up, over the point, down to the bottom right
+      const side = 768 / 1024;
+      if (t < 0.3) return [0, H0 - (t / 0.3) * H0 * side];
+      if (t <= 0.5) {
+        const u = (t - 0.3) / 0.2,
+          a = [0, 256],
+          c = [0, 256 - 0.78 * 256],
+          b2 = [192, 0];
+        return [(1 - u) ** 2 * a[0] + 2 * (1 - u) * u * c[0] + u * u * b2[0], (1 - u) ** 2 * a[1] + 2 * (1 - u) * u * c[1] + u * u * b2[1]];
+      }
+      const [ax, ay] = archPt(1 - t);
+      return [W0 - ax, ay];
+    };
+    const IN = 15,
+      inset = (t) => {
+        const p0 = archPt(Math.max(0, t - 0.003)),
+          p1 = archPt(Math.min(1, t + 0.003)),
+          dx = p1[0] - p0[0],
+          dy = p1[1] - p0[1],
+          n = Math.hypot(dx, dy) || 1,
+          p = archPt(t);
+        return [p[0] - (dy / n) * IN, p[1] + (dx / n) * IN];
+      };
+    const JEWELS = ["#e8203a", "#2a5ae8", "#ffd23a", "#2ab85a", "#a83ae0"];
+    for (let k = 0; k < 64; k++) {
+      const t0 = k / 64,
+        t1 = (k + 1) / 64,
+        q0 = archPt(t0),
+        q1 = archPt(t1),
+        i1 = inset(t1),
+        i0 = inset(t0);
+      glass([q0, q1, i1, i0], JEWELS[k % 5], 4);
+    }
+    glass([[0, H0 - 15], [W0, H0 - 15], [W0, H0], [0, H0]], "#ffd23a", 4);
+  };
+
   function buildGarden(o) {
     o.userData.jgpKeep = !0;
     const soil = KIT.surf("soil", "#5a3e26", { rep: 10, shine: 6, bump: 0.03 }),
@@ -14300,11 +14593,10 @@ const JGP = (() => {
       for (let k = -4; k <= 4; k++) Math.abs(k) > 1 && B.geo("plain", crownGeo(k & 3, 1), "#3a6e30", 3 * k, 0.7, 0.8, 1.3, 0.9, 0.9);
       return B;
     };
-    const CHURCH = (cx, cz) => {
-      const B = place(cx, cz, 0),
+    const CHURCH = (cx, cz, ry = 0, D = 22) => {
+      const B = place(cx, cz, ry),
         w = 12,
         h = 8.5,
-        D = 22,
         wh = "#f6f4ee",
         roof = "#4a4a52";
       B.box("stone", "#a89c8a", 0, 0.4, -D / 2, w + 0.4, 0.8, D + 0.4).box("siding", wh, 0, 0.8 + h / 2, -D / 2, w, h, D);
@@ -14320,7 +14612,38 @@ const JGP = (() => {
       // steeple: tower, louvred belfry, cornice, tall spire, gilded finial
       B.box("siding", wh, 0, 0.8 + 6.4, 1.0, 4.4, 12.8, 4.4);
       B.box("plain", "#8a1e24", 0, 2.3, 3.24, 2.0, 3.0, 0.1).box("plain", wh, 0, 2.4, 3.22, 2.4, 3.3, 0.06).box("plain", "#2a2a2e", 0, 2.3, 3.3, 0.04, 3.0, 0.02);
-      B.geo("lit", ucyl(16), "#7a2a3a", 0, 8.4, 3.22, 1.2, 0.08, 1.2, Math.PI / 2, 0, 0).geo("plain", ucyl(16), wh, 0, 8.4, 3.2, 1.45, 0.06, 1.45, Math.PI / 2, 0, 0);
+      // over the door, the tall lancet of THE TRAVELER SAVES THE ORIGINATOR (from the cathedral in
+      // Greeblis City) in a carved stone frame with a sill; the glass glows, brighter at night
+      {
+        const WW = 3.4,
+          WH = (WW * 12) / 6,
+          WN = (WW * 4) / 6,
+          Y0 = 4.15,
+          lancet = (w2, h2, n2) => {
+            const s2 = new THREE.Shape();
+            return s2.moveTo(-w2 / 2, 0), s2.lineTo(-w2 / 2, h2), s2.quadraticCurveTo(-w2 / 2, h2 + 0.78 * n2, 0, h2 + n2), s2.quadraticCurveTo(w2 / 2, h2 + 0.78 * n2, w2 / 2, h2), s2.lineTo(w2 / 2, 0), s2.lineTo(-w2 / 2, 0), s2;
+          };
+        const fr = lancet(WW + 0.44, WH, WN + 0.24);
+        fr.holes.push(new THREE.Path(lancet(WW, WH, WN).getPoints(40)));
+        B.geo("stone", new THREE.ExtrudeGeometry(fr, { depth: 0.16, bevelEnabled: !1, curveSegments: 20 }), "#e6dfcf", 0, Y0, 3.2);
+        B.box("stone", "#d8d0be", 0, Y0 - 0.12, 3.32, WW + 0.7, 0.24, 0.3);
+        const gg = new THREE.ShapeGeometry(lancet(WW, WH, WN), 24),
+          pa = gg.attributes.position,
+          uv = new Float32Array(2 * pa.count);
+        for (let k = 0; k < pa.count; k++) (uv[2 * k] = (pa.getX(k) + WW / 2) / WW), (uv[2 * k + 1] = pa.getY(k) / (WH + WN));
+        gg.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+        const tex = b(768, 2048, (c) => (c.scale(2, 2), paintTravelerWindow(c)), { smooth: !0 });
+        tex.anisotropy = Math.min(8, O.capabilities.getMaxAnisotropy ? O.capabilities.getMaxAnisotropy() : 1);
+        const gm = new THREE.MeshLambertMaterial({ map: tex, emissiveMap: tex, emissive: 16777215, emissiveIntensity: 0.32 }),
+          gw = new THREE.Group();
+        gw.position.set(cx, 0, cz), (gw.rotation.y = ry), (gw.userData.keepInFinale = !0), C.add(gw);
+        R(gg, gm, gw, [0, Y0, 3.23]), H(gw);
+        let nk = -1;
+        L.push(() => {
+          const k = I.nightK || 0;
+          Math.abs(k - nk) > 0.01 && ((nk = k), (gm.emissiveIntensity = 0.32 + 0.75 * k));
+        });
+      }
       B.box("siding", wh, 0, 0.8 + 14.4, 1.0, 3.8, 3.2, 3.8);
       [0, Math.PI / 2, Math.PI, -Math.PI / 2].forEach((a) => {
         const px = 1.92 * Math.sin(a),
@@ -14330,7 +14653,9 @@ const JGP = (() => {
         for (let k = 0; k < 5; k++) Sd.box("plain", wh, 0, 14.3 + 0.42 * k, 0.06, 1.6, 0.08, 0.1, 0.5);
       });
       B.box("plain", wh, 0, 16.6, 1.0, 4.6, 0.4, 4.6).geo("shingle", upyr, roof, 0, 16.8, 1.0, 3.6, 12, 3.6);
-      B.geo("plain", usph(8), "#d8b040", 0, 29.0, 1.0, 0.45, 0.45, 0.45).box("plain", "#2a2a2e", 0, 29.8, 1.0, 0.05, 1.4, 0.05);
+      // a gilded ball, and on it a gold cross
+      B.geo("plain", usph(8), "#d8b040", 0, 29.0, 1.0, 0.45, 0.45, 0.45);
+      B.box("plain", "#e8c040", 0, 30.25, 1.0, 0.2, 2.1, 0.2).box("plain", "#e8c040", 0, 30.75, 1.0, 1.2, 0.2, 0.2);
       for (let k = 0; k < 3; k++) B.box("concrete", "#c8c2b6", 0, 0.65 - 0.25 * k, 3.6 + 0.45 * k, 3.4 + 0.3 * k, 0.25, 0.5);
       return B;
     };
@@ -14881,8 +15206,9 @@ const JGP = (() => {
           len = Math.hypot(cx - x0, cz - z0);
         const ux = (cx - x0) / len,
           uz = (cz - z0) / len,
-          // the walks on the line-up's side stop short of it instead of running through its ends
-          wl = dx === Math.sign(LINEUP_X) ? (LINEUP_X - 2.6 * dx - x0) / ux : len + 0.53;
+          // the walks on the line-up's side stop short of it instead of running through its ends,
+          // and the south-west walk ends at the church steps
+          wl = dx === Math.sign(LINEUP_X) ? (LINEUP_X - 2.6 * dx - x0) / ux : dx < 0 && dz > 0 ? CHURCH_AT.sFront + 0.3 : len + 0.53;
         return { x0, z0, cx, cz, len, ux, uz, wl };
       };
     put("concrete", cached("ringwalk", () => new THREE.RingGeometry(GARDEN_R + 1.6, GARDEN_R + 3.4, 72).rotateX(-Math.PI / 2)), WALK, S(0, 0.02, 0));
@@ -14902,10 +15228,10 @@ const JGP = (() => {
     // furnishings on the square (kept clear of the line-ups, the stations and the spawn point)
     [-30, -15, 0, 15, 30].forEach((u) => (u && lampPost(u, 40.6 + ZS), lampPost(u, -40.6)));
     [-30, -15, 0, 15, 30, 45].forEach((u) => (lampPost(40.6, u), lampPost(-40.6, u)));
+    // benches along the walks to the kiosks (the church walk is left clear for its visitors)
     [
       [1, -1],
       [1, 1],
-      [-1, 1],
     ].forEach(([dx, dz]) => {
       const d = DIAG(dx, dz),
         ux = d.ux,
@@ -14919,9 +15245,8 @@ const JGP = (() => {
       });
     });
     gazebo(GAZEBO[0], GAZEBO[1]);
-    flowerBed(14, 26, 2.2), flowerBed(-16, 28, 2.2);
+    flowerBed(14, 26, 2.2);
     [
-      [-26, 34 + ZS, 1.25, 1],
       [22, 34 + ZS, 1.2, 0],
       [31, -33.5, 1.15, 0],
       [-17, -34, 1.2, 1],
@@ -14980,8 +15305,9 @@ const JGP = (() => {
       [11, 8, (X, Z, w, h) => FRONTIER(X, Z, Math.PI / 2, w, h, { col: "#9a3a2a", sign: "s_feed", front: "#5a2a20", trim: "#f2ece0" })],
       [9, 8.5, (X, Z, w, h) => STORE(X, Z, Math.PI / 2, w, h, { col: "#c4806a", sign: "s_icecream", awn: "aw_pink", front: "#2a6a6a" })],
     ].forEach(([w, h, mk]) => (mk(-52.6, ZS - (zc + (w * MK) / 2), w * MK, h), (zc += w * MK)));
-    // north: courthouse with a flagpole, church, fire station; a hotel on the corner
-    COURTHOUSE(0, -62), CHURCH(-27, -57), FIRE_STATION(29, -58);
+    // north: courthouse with a flagpole and the fire station; a hotel on the corner (the church is in
+    // the square now)
+    COURTHOUSE(0, -62), FIRE_STATION(29, -58);
     STORE(-70, -55, 0, 14, 12.5, { col: "#8a3a2c", sign: "s_hotel", awn: "aw_green", front: "#2a3a2a", crest: !0 });
     put("concrete", UB, WALK, S(0, -0.05, -53.6, 0, 0, 0, 3, 0.12, 3.2));
     put("plain", ucyl(8), "#d8dce0", S(-10, 6.6, -54.5, 0, 0, 0, 0.18, 13.2, 0.18)), put("plain", usph(8), "#d8b040", S(-10, 13.3, -54.5, 0, 0, 0, 0.3, 0.3, 0.3));
@@ -15214,18 +15540,35 @@ const JGP = (() => {
       put("plain", UB, "#c8a040", S(0, 0.6, FS + 0.04, 0, 0, 0, 0.08, 0.14, 0.06));
     }
 
-    // ---- kiosks in the other three corners of the square (the General Store has the fourth) ----
+    // ---- kiosks: the Post Office and the Sheriff's share the north-east corner (either side of its
+    // walk), Garden Supplies has the south-east; the General Store is in the north-west and the
+    // church in the south-west ----
     [
-      [1, -1, JGP_K.post],
-      [1, 1, JGP_K.garden],
-      [-1, 1, JGP_K.sheriff],
-    ].forEach(([dx, dz, build]) => {
+      [1, -1, JGP_K.post, 4.3],
+      [1, -1, JGP_K.sheriff, -4.3],
+      [1, 1, JGP_K.garden, 0],
+    ].forEach(([dx, dz, build, side]) => {
       const d = DIAG(dx, dz),
-        X = d.cx - 18.17 * d.ux,
-        Z = d.cz - 18.17 * d.uz;
+        X = d.cx - 18.17 * d.ux - side * d.uz,
+        Z = d.cz - 18.17 * d.uz + side * d.ux;
       const k0 = new THREE.Group();
       k0.position.set(X, 0, Z), (k0.rotation.y = A(X, Z)), (k0.userData.keepInFinale = !0), C.add(k0), build(k0), H(k0), E.add(X, Z, 4.4, "scenery"), keepAt.push([X, Z]);
     });
+
+    // ---- the church in the south-west corner with the Traveler window over its door ------------
+    {
+      const CA = CHURCH_AT;
+      CHURCH(CA.x, CA.z, CA.ry, CA.D);
+      // no pickups or lawn tufts in its footprint
+      for (let s = CA.sFront; s <= CA.sFront + CA.D + 5; s += 3) {
+        const [ex, ez] = CA.at(s);
+        E.add(ex, ez, 6.8, "scenery"), keepAt.push([ex, ez]);
+      }
+      // two little flowerbeds either side of the steps, and a tree beside the nave
+      [-1, 1].forEach((sd) => flowerBed(...CA.at(CA.sFront - 2.2, 4.4 * sd), 1.3));
+      const [tx, tz] = CA.at(CA.sFront + 18, -13.5);
+      tree(tx, tz, 1.2, 1, 2), E.add(tx, tz, 1.4, "scenery");
+    }
 
     // ---- the Juice Bar along the west side, facing the garden (FORTIZMO tends it) ---------------
     {

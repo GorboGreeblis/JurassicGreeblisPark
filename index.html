@@ -162,10 +162,10 @@ const t = {
 		cutebex: {},
 	},
 	r = [
-		{ id: "wateringcan", slot: null, name: "Watering Cans", cost: 5, reward: "wateringCan" },
 		{ id: "floppyhat", slot: "hat", name: "Floppy Disk Hat", cost: 3 },
 		{ id: "synthshoes", slot: "shoes", name: "Synthetic Shoes", cost: 3 },
 		{ id: "chargedress", slot: "dress", name: "Charge Dress", cost: 3 },
+		{ id: "seeds", slot: null, name: "Seeds", cost: 5, reward: "seeds" },
 	],
 	// the pizza courier: NEXTESSA, as she is in Greeblis City (her model is final)
 	s = {
@@ -179,12 +179,32 @@ const t = {
 		busy: "* The phone rings, but no one answers. *",
 		arrive: "Enjoy your pie!|I love my job!|(...but no one here can eat this.\n+ 0 Snacks)",
 	},
-	// the General Store's shopkeeper: SPARKAKUS
+	// the Library's librarian: SPARKAKUS (he hands out the Ancient Artifacts quest)
 	i = {
 		name: "SPARKAKUS",
 		greetR: 6,
-		shopLog: "Placeholder shop line",
-		campfire: "Placeholder 1",
+		ask: "Placeholder 1|Placeholder: find the 3 Ancient Artifacts hidden around town and bring them to me.",
+		progress: (n) => "Placeholder: you have found " + n + " of the 3 Ancient Artifacts.",
+		// the long speech when all three are brought in (the light bulb goes on over him)
+		finale:
+			"Placeholder: all three Ancient Artifacts!|Placeholder line 2|Placeholder line 3|Placeholder line 4|Placeholder line 5",
+		reward: "ANCIENT ARTIFACTS quest complete!",
+		done: "Placeholder: thank you again for the Ancient Artifacts.",
+		event: "Placeholder: off to the garden!",
+	},
+	// the one shop in town: Garden Supplies, paid for in flint
+	shopText = {
+		title: "GARDEN SUPPLIES",
+		label: "Shop at Garden Supplies",
+		welcome:
+			"Welcome to Garden Supplies! Everything here is paid for in flint. Try the clothes on in the mirror, and pick up some Seeds for the garden.",
+		need: (n, name) => "You need " + n + " more flint for the " + name + ".",
+		on: (name) => "You put on the " + name + ".",
+		off: (name) => "You take off the " + name + ".",
+		bought: (name) => "You bought the " + name + " and put it on. Take a look in the mirror!",
+		seedsHave: "You already have the Seeds. They'll go in at the next Garden Event.",
+		seedsBought:
+			"You bought the Seeds! A special batch of flowers will grow at the next Garden Event. SEEDS quest complete!",
 	},
 	l = 2 * Math.PI,
 	c = THREE.Vector3,
@@ -1769,30 +1789,7 @@ function it(t, e, o) {
 	const u = Math.hypot(p, f) || 1;
 	return new THREE.Vector3(p / u, 0, f / u);
 }
-const Mt = { core: null, tube: null, cap: null, halo: null, held: [] };
-function gt() {
-	return (
-		Mt.core ||
-			((Mt.core = new THREE.MeshBasicMaterial({ color: "#8dff6a" })),
-			(Mt.tube = new THREE.MeshBasicMaterial({
-				color: "#3cff4a",
-				transparent: !0,
-				opacity: 0.42,
-				blending: THREE.AdditiveBlending,
-				depthWrite: !1,
-			})),
-			(Mt.cap = x.clay("#1f6a24", { shininess: 60 })),
-			(Mt.halo = new THREE.MeshBasicMaterial({
-				color: "#3cff4a",
-				transparent: !0,
-				opacity: 0.14,
-				blending: THREE.AdditiveBlending,
-				depthWrite: !1,
-			}))),
-		Mt
-	);
-}
-const bt = { tg: new Map(), chips: [], live: !1 },
+const bt = { tg: new Map(), live: !1, seeds: !1 },
 	// where the gathering's open side faces (the old concert singer's stage)
 	gcSinger = { angle: Math.PI / 2 },
 	gcHorn = {
@@ -2397,95 +2394,7 @@ function Dt(t) {
 function Xt(t) {
 	return t.def && "cutebex" === t.def.__type ? t.def.__type : t.id;
 }
-const Zt = {
-	gorbo: { g: [-1.357, 1.903, 0.67], c: [1.117, 0.945, 0.83] },
-	gratelet: { g: [-2.429, 1.861, 1.229], c: [1.417, 1.108, 0.514] },
-	orbiter: { g: [-1.258, 1.606, 0.628], c: [0.958, 1.36, 0.548] },
-	drifter: { g: [-1.038, 1.358, 0.28], c: [1.038, 0.89, 0.28] },
-	blinker: { g: [-1.008, 1.884, 0.333], c: [1.068, 1.507, 0.333] },
-	cutebex: { g: [-1.248, 1.025, 0.333], c: [1.188, 0.735, 0.333] },
-	larry: { g: [-0.785, 1.984, 0.066], c: [0.945, 1.411, 0.226] },
-};
-function $t(t, e, o, a, n) {
-	const r = n && Zt[n],
-		{ R: s, k: i } = (function (t) {
-			let e = t.children.find((t) => !t.userData.gcProp) || t;
-			for (; 1 === e.children.length && "Group" === e.children[0].type; ) e = e.children[0];
-			t.updateMatrixWorld(!0);
-			const o = new THREE.Vector3(),
-				a = new THREE.Vector3();
-			return e.getWorldScale(o), t.getWorldScale(a), { R: e, k: o.x / a.x };
-		})(t),
-		l = (t, e) => {
-			t.position.set(e[0] / i, e[1] / i, e[2] / i), t.scale.setScalar(1 / i), s.add(t);
-		},
-		c = Math.max(0.45, 0.95 * o),
-		h = Math.min(1.6, Math.max(0.7, e / 2.8));
-	if (Kt.rewards.wateringCan) {
-		const t = new THREE.Group();
-		l(t, r ? r.g : [-1.05 * c, 0.62 * e, 0.35 * o]);
-		const n = JGP.wateringCan(1.5 * h);
-		(n.position.y = -0.3 * h),
-			t.add(n),
-			(t.userData.ph = 6 * Math.random()),
-			(t.userData.gcProp = !0),
-			JGP.addCan(t),
-			a.push(t);
-	}
-	if (Kt.rewards.snacks) {
-		const t = new THREE.Group();
-		l(t, r ? r.c : [1.05 * c, 0.5 * e, 0.35 * o]);
-		const n = (function (t) {
-			const e = new THREE.Group(),
-				o = new THREE.BoxGeometry(1, 1, 1, 8, 12, 2),
-				a = o.attributes.position;
-			for (let t = 0; t < a.count; t++) {
-				const e = a.getX(t),
-					o = a.getY(t),
-					n = a.getZ(t),
-					r = Math.max(0.08, (1 - Math.pow(2 * o, 4)) * (1 - 0.35 * Math.pow(2 * e, 6)));
-				a.setXYZ(t, e * (1 - 0.06 * Math.pow(2 * o, 2)), o, n * r);
-			}
-			o.computeVertexNormals(),
-				o.scale(0.27 * t, 0.36 * t, 0.13 * t),
-				R(o, x.clay("#e8402e", { shininess: 90, specular: 11184810 }), e, [0, 0.2 * t, 0]);
-			const n = new THREE.BoxGeometry(1, 1, 1, 8, 2, 2),
-				r = n.attributes.position;
-			for (let t = 0; t < r.count; t++) {
-				const e = r.getX(t),
-					o = r.getZ(t);
-				r.setXYZ(t, 0.98 * e, r.getY(t), o * (1 - 0.35 * Math.pow(2 * e, 6)) * 1.05);
-			}
-			n.computeVertexNormals(),
-				n.scale(0.27 * t, 0.08 * t, 0.13 * t),
-				R(n, x.clay("#ffd23a", { shininess: 80 }), e, [0, 0.17 * t, 0]);
-			const s = x.clay("#d8dde4", { shininess: 120, specular: 16777215 });
-			R(T.box(0.28 * t, 0.04 * t, 0.022 * t), s, e, [0, 0.025 * t, 0]);
-			for (let o = 0; o < 9; o++)
-				R(T.box(0.008 * t, 0.04 * t, 0.026 * t), x.clay("#9aa1ac"), e, [(0.03 * o - 0.12) * t, 0.025 * t, 0]);
-			R(T.box(0.25 * t, 0.012 * t, 0.03 * t), x.clay("#3a1e10"), e, [0, 0.38 * t, 0]);
-			const i = x.clay("#f2c24a", { shininess: 30 });
-			return (
-				[
-					[-0.07, 0.41, 0.005, 0.5, 0.3],
-					[0.02, 0.43, -0.004, -0.4, 0.6],
-					[0.08, 0.4, 0.006, 0.7, -0.4],
-					[-0.02, 0.45, 0, 0.15, 1.1],
-				].forEach(([o, a, n, r, s]) =>
-					R(T.sphere(1, 10, 6), i, e, [o * t, a * t, n * t], [r, 0, s], [0.05 * t, 0.009 * t, 0.038 * t]),
-				),
-				e
-			);
-		})(1.15 * h);
-		(n.position.y = -0.3 * h),
-			t.add(n),
-			(t.userData.ph = 6 * Math.random()),
-			(t.userData.gcProp = !0),
-			bt.chips.push(t),
-			a.push(t);
-	}
-}
-const st = { join() {}, leave() {}, away: () => !1, pos: () => ({ x: 0, z: 0 }) },
+const st = { join() {}, leave() {}, away: () => !1, pos: () => ({ x: 0, z: 0 }), talking: !1 },
 	eo = ["Welcome to", "Greeblis Town USA!"];
 function to(
 	t,
@@ -2953,7 +2862,7 @@ function fo(t, e) {
 		Math.random() < 0.7)
 	) {
 		let e = (t.def && t.def.emotes) || ["!"];
-		"finale" !== t.busy || Kt.rewards.seeds || (e = e.filter((t) => "♪" !== t)), e.length && Ut.above(t, f(e), f(po()));
+		"finale" !== t.busy || bt.live || (e = e.filter((t) => "♪" !== t)), e.length && Ut.above(t, f(e), f(po()));
 	}
 	if (a.act) {
 		const t = (e - a.aT) / a.aDur;
@@ -3180,7 +3089,7 @@ const Ut = (() => {
 				r.mesh.scale.setScalar(0.01);
 		}
 		return {
-			// ground goo splat (used by the pulled Greeblis Woods GORBO's drips)
+			// ground goo splat (MAMA GORBO's goo drips land with one)
 			splat: (t, e, o = "#8ae8e0", a = 0.7) => s(t, e, o, a),
 			goo(t, e = 12, o = 1, a = null) {
 				for (let s = 0; s < e; s++) {
@@ -3459,7 +3368,10 @@ const Ut = (() => {
 	})(),
 	Kt = {
 		acorns: 0,
-		rewards: { snacks: !1, wateringCan: !1, seeds: !1 },
+		// quests: Seeds (bought at Garden Supplies), the Ancient Artifacts (3 found, then told to
+		// SPARKAKUS) and the Summoning Stone (owned from the start, for testing)
+		rewards: { seeds: !1, artifacts: !1, stone: !0 },
+		artifacts: 0,
 		blossoms: 0,
 		equip: { hat: null, shoes: null, dress: null },
 		owned: new Set(),
@@ -3871,15 +3783,14 @@ const ee = (function () {
 				e = Kt.rewards;
 			_t.open({
 				kind: "campfire",
-				title: "THE GARDENING EVENT",
+				title: "THE SUMMONING STONE",
 				log:
 					"Seeds " +
 					t(e.seeds) +
-					"\nWatering Cans " +
-					t(e.wateringCan) +
-					"\nSnacks " +
-					t(e.snacks) +
-					"\nStart the Gardening Event?",
+					"\nAncient Artifacts " +
+					(e.artifacts ? "☑" : Kt.artifacts + "/3") +
+					(e.seeds ? "" : "\nWithout Seeds nothing will grow.") +
+					"\nThe runes glow under your hand.\nStart the Garden Event?",
 				items: [
 					{ label: "Yes", onClick: () => this.yes() },
 					{ label: "No", onClick: () => _t.close() },
@@ -3913,8 +3824,8 @@ const ee = (function () {
 		open() {
 			_t.open({
 				kind: "shop",
-				title: "THE SHOP KIOSK",
-				log: i.shopLog,
+				title: shopText.title,
+				log: shopText.welcome,
 				items: this.items(),
 				done: { label: "LEAVE" },
 				sub: this.sub(),
@@ -3938,9 +3849,9 @@ const ee = (function () {
 			if (t.reward)
 				return (
 					Kt.owned.has(t.id)
-						? (e = "You already have the Watering Cans.")
+						? (e = shopText.seedsHave)
 						: Kt.acorns < t.cost
-							? ((e = "You need " + (t.cost - Kt.acorns) + " more flint for the " + t.name + "."), G.bump())
+							? ((e = shopText.need(t.cost - Kt.acorns, t.name)), G.bump())
 							: ((Kt.acorns -= t.cost),
 								Kt.owned.add(t.id),
 								(Kt.rewards[t.reward] = !0),
@@ -3950,21 +3861,20 @@ const ee = (function () {
 										G.jingle();
 									} catch (e) {}
 								}, 250),
-								(e =
-									"You bought the Watering Cans! Everyone will water the garden with them. WATERING CANS reward earned!")),
+								(e = shopText.seedsBought)),
 					void _t.update({ log: e, items: this.items(), sub: this.sub() })
 				);
 			Kt.owned.has(t.id)
 				? Kt.equip[t.slot] === t
-					? ((Kt.equip[t.slot] = null), (e = "You take off the " + t.name + "."))
-					: ((Kt.equip[t.slot] = t), (e = "You put on the " + t.name + "."))
+					? ((Kt.equip[t.slot] = null), (e = shopText.off(t.name)))
+					: ((Kt.equip[t.slot] = t), (e = shopText.on(t.name)))
 				: Kt.acorns < t.cost
-					? ((e = "You need " + (t.cost - Kt.acorns) + " more flint for the " + t.name + "."), G.bump())
+					? ((e = shopText.need(t.cost - Kt.acorns, t.name)), G.bump())
 					: ((Kt.acorns -= t.cost),
 						Kt.owned.add(t.id),
 						G.pickup(),
 						(Kt.equip[t.slot] = t),
-						(e = "You bought and put on the " + t.name + "!")),
+						(e = shopText.bought(t.name))),
 				Eo.apply(),
 				_t.update({ log: e, items: this.items(), sub: this.sub() });
 		},
@@ -4141,7 +4051,7 @@ const le = (() => {
 		return {
 			act: (e) => {
 				const o = a[c(e)] || { emote: "!" },
-					n = "finale" === e.busy && !Kt.rewards.seeds;
+					n = "finale" === e.busy && !bt.live;
 				e.onTalk && e.onTalk(e),
 					e.singing && !n && e.singing(1.4),
 					Ut.above(e, n && "♪" === o.emote ? "♥" : o.emote, f(po())),
@@ -4432,20 +4342,22 @@ const le = (() => {
 			},
 			tryStart(t) {
 				if (a) return;
-				// for testing, "The Garden" always runs the whole event: planting, BACKPACKA and the music
-				(Kt.rewards.seeds = !0),
-					(a = !0),
+				// without the Seeds nobody comes from home and FORTIZMO doesn't play: BACKPACKA still flies in
+				// and sprays the garden, but nothing grows and no rainbow comes out (bt.seeds holds for the
+				// whole Event, so Seeds bought during it count from the next one)
+				(a = !0),
 					(n = r),
 					(bt.t0 = r),
 					(E = 0),
-					(s = It.all.filter(
-						(t) => !("companion" !== t.kind && "npc" !== t.kind && "creature" !== t.kind) && !JGP.eventActor(t),
-					)),
+					(bt.seeds = !!Kt.rewards.seeds),
+					(s = bt.seeds
+						? It.all.filter((t) => !("companion" !== t.kind && "npc" !== t.kind && "creature" !== t.kind) && !JGP.eventActor(t))
+						: []),
 					s.forEach((t) => {
 						t.busy && It.release(t, t.busy), (t.busy = e), (t.group.visible = !0), (t.viaK = 0), (t.vbk = -1);
 					});
 				const o = Gt(s.concat([null]), gcSinger.angle);
-				st.join(o.larry),
+				bt.seeds && st.join(o.larry),
 					s.forEach((t) => {
 						(t.finaleSlot = o.get(t)), (t.ph = Math.random() * l);
 					}),
@@ -4459,6 +4371,7 @@ const le = (() => {
 			},
 			join(t) {
 				a &&
+					bt.seeds &&
 					!s.includes(t) &&
 					(t.busy && It.release(t, t.busy),
 					(t.busy = e),
@@ -4478,22 +4391,18 @@ const le = (() => {
 					(b = []),
 					(x = []),
 					(function (t, e) {
-						gt();
 						const o = t
 							.concat(It.all.filter((e) => e.def && e.def.stationary && !t.includes(e)))
 							.filter((t) => !t.kind || "courier" !== t.kind);
 						if (
 							(o.forEach((t) => {
 								const o = wt(t.group);
-								$t(o, t.height || 2.5, t.bodyR || 0.8, e, t.id && "creature" !== t.kind ? t.id : t.def && t.def.__type),
-									(o.userData.gcFP = null),
-									zt(t.group, o);
+								(o.userData.gcFP = null), zt(t.group, o);
 							}),
 							st.away() && st.group)
 						) {
-							const t = st.group.scale.x || 1,
-								o = wt(st.group);
-							$t(o, st.height / t, 0.55 / t, e, "larry"), (o.userData.gcFP = null), zt(st.group, o);
+							const o = wt(st.group);
+							(o.userData.gcFP = null), zt(st.group, o);
 						}
 					})(s, b);
 			},
@@ -4523,10 +4432,7 @@ const le = (() => {
 				if (!a) return;
 				const i = t - n;
 				if (!bt.live && JGP.garden.startAt && t > JGP.garden.startAt)
-					(JGP.garden.startAt = 0),
-						Kt.rewards.seeds
-							? ((bt.live = !0), (bt.t0 = t), JGP.beginPlanting(s, t))
-							: ((bt.t0 = t - (o.durationS - JGP.NO_SEEDS_S)), s.forEach((t) => Ut.above(t, "?", M.white)));
+					(JGP.garden.startAt = 0), (bt.live = !0), (bt.t0 = t), JGP.beginPlanting(s, t);
 				if (t - bt.t0 > o.durationS && "dialogue" !== jt.top && !JGP.backpacka.busy()) return void this.wrap();
 				s.forEach((o) => {
 					const a = o.finaleSlot;
@@ -4610,9 +4516,8 @@ const le = (() => {
 						1 === m.step && r > 1.8 && (yo.act(n), (m.step = 2)),
 						2 === m.step && r > 3)
 					) {
-						const e = Kt.rewards.seeds;
-						Ut.above(a, f(e ? ["♥", "✿", "!"] : ["♥", "!"]), f(po())),
-							Ut.above(n, f(e ? ["♥", "✿", "~"] : ["♥", "~"]), f(po())),
+						Ut.above(a, f(["♥", "✿", "!"]), f(po())),
+							Ut.above(n, f(["♥", "✿", "~"]), f(po())),
 							(m = null),
 							(d = t + h(o.chatEvery[0], o.chatEvery[1]));
 					}
@@ -4628,7 +4533,7 @@ const le = (() => {
 	},
 	xo = {
 		label: () => "Talk to " + i.name,
-		run: () => qt.open(i.name, M.orange, i.campfire),
+		run: () => qt.open(i.name, M.orange, i.event),
 		get x() {
 			return st.pos().x;
 		},
@@ -4639,6 +4544,190 @@ const le = (() => {
 			return st.height + 0.1;
 		},
 		solidR: 0.6,
+	},
+	// THE LIGHT BULB (from Greeblis City, where THE SCIENTIST had it over long speeches): a bulb with
+	// a screw base fades in over the speaker's head with a warm halo, a point light and a soft cone
+	// of light, while the rest of the town dims toward night. It follows the speaker (`at` gives a
+	// world position) and fades out a moment after the dialogue closes unless `hold` is set.
+	Bulb = (() => {
+		let t = null,
+			e = null,
+			o = null,
+			a = null,
+			n = null,
+			at = null,
+			top = 3.6,
+			r = 0,
+			s = 0,
+			i = 0,
+			l = 0;
+		const place = () => {
+			const p = at();
+			t.position.set(p.x, p.y + top + 1.5, p.z), a.position.set(p.x, p.y + top + 0.6, p.z), n.position.set(p.x, (p.y + top + 1.1) / 2, p.z);
+			n.scale.y = (p.y + top + 1.1) / 7;
+		};
+		return {
+			hold: !1,
+			prep() {
+				if (t) return;
+				(t = new THREE.Group()),
+					C.add(t),
+					(e = R(T.sphere(0.55, 24, 18), x.basic("#fff6d8", { unique: !0, transparent: !0, opacity: 0, fog: !1 }), t, [0, 0, 0], null, [1, 1.12, 1]));
+				const m = x.clay("#b8b8c0", { unique: !0, shininess: 90, specular: 16777215, transparent: !0, opacity: 0 });
+				R(T.cyl(0.26, 0.34, 0.3, 20), m, t, [0, 0.58, 0]);
+				for (let k = 0; k < 4; k++) R(T.torus(0.25, 0.035, 6, 20), m, t, [0, 0.8 + 0.09 * k, 0], [Math.PI / 2, 0, 0]);
+				R(T.cyl(0.22, 0.24, 0.36, 20), m, t, [0, 0.93, 0]), R(T.cyl(0.08, 0.12, 0.08, 12), x.clay("#3a3a40", { unique: !0, transparent: !0, opacity: 0 }), t, [0, 1.15, 0]);
+				R(T.torus(0.14, 0.018, 6, 16, Math.PI), x.basic("#ffb84a", { unique: !0, transparent: !0, opacity: 0, fog: !1 }), t, [0, 0.05, 0]);
+				(o = R(T.sphere(1.1, 20, 14), x.basic("#ffe7a0", { unique: !0, transparent: !0, opacity: 0, depthWrite: !1, blending: THREE.AdditiveBlending, fog: !1 }), t)),
+					(a = new THREE.PointLight(16773320, 0, 12, 1.4)),
+					C.add(a),
+					(n = R(new THREE.CylinderGeometry(0.45, 2, 7, 24, 1, !0), x.basic("#fff4d0", { unique: !0, transparent: !0, opacity: 0, depthWrite: !1, blending: THREE.AdditiveBlending, fog: !1 }), C)),
+					(n.renderOrder = 6),
+					(t.visible = n.visible = a.visible = !1);
+			},
+			start(get, height) {
+				this.prep(), (at = get), (top = height || 3.6), t.rotation.set(0, 0, 0), place(), 0 === s && (i = I.nightK || 0), (r = 1), (l = 0);
+			},
+			stop() {
+				r = 0;
+			},
+			update(c) {
+				if (!t || (0 === s && 0 === r)) return;
+				r && (qt.isOpen || Bulb.hold ? (l = 0) : (l += c) > 0.25 && (r = 0)), (s = u(s + (r ? c / 1.2 : -c / 1.5), 0, 1));
+				const h = s < 1 ? 0.6 + 0.4 * Math.sin((s * Math.PI) / 2) : 1;
+				place(),
+					t.scale.setScalar(h),
+					(t.visible = n.visible = s > 0),
+					t.traverse((k) => {
+						k.isMesh && (k.material.opacity = k === o ? 0.22 * s : s);
+					}),
+					(e.material.opacity = 0.92 * s),
+					(a.intensity = 3.5 * s),
+					(a.visible = s > 0),
+					(n.material.opacity = 0.13 * s),
+					I.setNight(Math.max(i, 0.7 * s)),
+					0 === s && 0 === r && I.setNight(i);
+			},
+			get level() {
+				return s;
+			},
+		};
+	})(),
+	// THE ANCIENT ARTIFACTS: three relics hidden around town (a carved stone tablet, a bronze sky
+	// disc and a crystal idol), each floating over a faint ring of light. Walk into one to pick it up;
+	// bring all three to SPARKAKUS at the Library.
+	ARTS = (() => {
+		const SPOTS = [
+				[-33, 33],
+				[30, -12],
+				[12, -31.5],
+			],
+			list = [],
+			shown = [];
+		function model(k) {
+			const g = new THREE.Group();
+			if (0 === k) {
+				// the tablet: a round-topped slab carved with rows of strokes (no letters)
+				const st0 = x.clay("#8a8274", { shininess: 10 }),
+					cut = x.clay("#4a443a", { shininess: 10 });
+				R(T.box(0.36, 0.4, 0.07), st0, g, [0, 0, 0]), R(new THREE.CylinderGeometry(0.18, 0.18, 0.07, 16, 1, !1, -Math.PI / 2, Math.PI), st0, g, [0, 0.2, 0], [Math.PI / 2, 0, 0]);
+				for (let j = 0; j < 5; j++)
+					for (let q = 0; q < 4; q++) R(T.box(0.05, 0.014, 0.012), cut, g, [-0.11 + 0.075 * q, 0.14 - 0.07 * j, 0.037], [0, 0, ((j * 7 + q * 3) % 5) * 0.4 - 0.8]);
+			} else if (1 === k) {
+				// the sky disc: bronze with a green patina, a sun and a crescent in gold, a toothed rim
+				const br = x.clay("#a8783a", { shininess: 70, specular: 6710886 }),
+					gold = x.clay("#f2c84a", { shininess: 90, specular: 16777215 });
+				R(T.cyl(0.26, 0.26, 0.04, 28), x.clay("#3f8a6a", { shininess: 30 }), g, [0, 0, 0], [Math.PI / 2, 0, 0]);
+				R(T.torus(0.26, 0.03, 6, 28), br, g);
+				for (let q = 0; q < 16; q++) {
+					const a = (q / 16) * Math.PI * 2;
+					R(T.box(0.05, 0.06, 0.05), br, g, [0.29 * Math.cos(a), 0.29 * Math.sin(a), 0], [0, 0, a]);
+				}
+				R(T.cyl(0.07, 0.07, 0.05, 18), gold, g, [-0.06, 0.05, 0], [Math.PI / 2, 0, 0]);
+				R(T.torus(0.07, 0.02, 5, 14, Math.PI), gold, g, [0.1, -0.06, 0.01], [0, 0, 2.2]);
+				for (let q = 0; q < 6; q++) R(T.sphere(0.014, 6, 4), gold, g, [0.12 * Math.cos(2.1 * q + 1), 0.12 * Math.sin(1.7 * q + 2), 0.025]);
+			} else {
+				// the idol: a violet crystal on a little carved stone base
+				R(T.cyl(0.13, 0.16, 0.12, 8), x.clay("#6f6a78", { shininess: 10 }), g, [0, -0.2, 0]);
+				R(new THREE.OctahedronGeometry(0.15, 0), x.clay("#9a6ae8", { shininess: 120, specular: 16777215, transparent: !0, opacity: 0.88 }), g, [0, 0.06, 0], null, [0.8, 1.9, 0.8]);
+				R(T.sphere(0.05, 10, 8), x.basic("#e8d8ff"), g, [0, 0.06, 0]);
+			}
+			return g;
+		}
+		const take = (it) => {
+			(it.taken = !0), (it.g.visible = it.ring.visible = !1), Kt.artifacts++, G.pickup();
+			setTimeout(() => {
+				try {
+					G.jingle();
+				} catch (e) {}
+			}, 250),
+				Ut.at(it.x, 1.6, it.z, "!", M.yellow),
+				qt.open("ANCIENT ARTIFACT", "#c8a040", "You found an Ancient Artifact! (" + Kt.artifacts + "/3)|Placeholder: take it to SPARKAKUS at the Library.");
+		};
+		return {
+			SPOTS,
+			list,
+			build() {
+				SPOTS.forEach(([px, pz], k) => {
+					const g = model(k),
+						ring = R(new THREE.RingGeometry(0.45, 0.62, 28), x.basic("#ffe7a0", { unique: !0, transparent: !0, opacity: 0.35, depthWrite: !1, fog: !1 }), C, [px, 0.04, pz], [-Math.PI / 2, 0, 0]);
+					g.position.set(px, 0.9, pz), (g.userData.keepInFinale = !0), C.add(g), E.add(px, pz, 1.4, "artifact");
+					list.push({ g, ring, x: px, z: pz, k, taken: !1 });
+				});
+				L.push((t2, dt) => {
+					for (const it of list) {
+						if (it.taken) continue;
+						(it.g.rotation.y += 0.9 * (dt || 0.016)), (it.g.position.y = 0.9 + 0.08 * Math.sin(1.6 * t2 + it.k)), (it.ring.material.opacity = 0.25 + 0.15 * Math.sin(2.2 * t2 + it.k));
+						"playing" === jt.top && Math.hypot(At.position.x - it.x, At.position.z - it.z) < 1.1 && take(it);
+					}
+					for (const m of shown) m.rotation.y += 0.3 * (dt || 0.016);
+				}),
+					L.push((t2, dt) => Bulb.update(dt || 0.016));
+			},
+			// once SPARKAKUS has them they sit on display on his left-hand crate
+			display(home) {
+				if (!home || shown.length) return;
+				[-0.85, -0.25, 0.3].forEach((pz, k) => {
+					const g = model(k);
+					g.position.set(-1.42, 1.0 + (2 === k ? 0.31 : 0.26), pz), g.scale.setScalar(0.7), home.add(g), shown.push(g);
+				});
+			},
+		};
+	})(),
+	// the librarian's talk: the Ancient Artifacts quest. With all three, SPARKAKUS steps out in
+	// front of the Library and the light bulb comes on over his head for his long speech.
+	LIB = {
+		home: null,
+		talk() {
+			const say = (txt, cb) => {
+				(st.talking = !0),
+					qt.open(i.name, M.orange, txt, () => {
+						(st.talking = !1), cb && cb();
+					});
+			};
+			if (Kt.rewards.artifacts) return say(i.done);
+			if (Kt.artifacts < 3) return say(Kt.artifacts ? i.progress(Kt.artifacts) : i.ask);
+			// (the bulb comes on once he is out from under the roof, or after a few seconds whatever happens)
+			const [fx, fz] = JGP.libFront(),
+				t0 = performance.now(),
+				lit = setInterval(() => {
+					const q = st.pos();
+					(Math.hypot(q.x - fx, q.z - fz) < 0.6 || performance.now() - t0 > 6e3) && (clearInterval(lit), Bulb.start(() => st.pos(), st.height));
+				}, 100);
+			st.join({ x: fx, z: fz }, !0), (Bulb.hold = !0);
+			say(i.finale, () => {
+				clearInterval(lit), Bulb.level || Bulb.start(() => st.pos(), st.height);
+				(Bulb.hold = !1), (Kt.rewards.artifacts = !0), ARTS.display(LIB.home);
+				setTimeout(() => {
+					try {
+						G.jingle();
+					} catch (e) {}
+				}, 300),
+					say("* " + i.reward + " *", () => {
+						Bulb.stop(), st.leave();
+					});
+			});
+		},
 	},
 	wo = ["finale"];
 const xe = (() => {
@@ -5124,9 +5213,9 @@ const xe = (() => {
 		function ve() {
 			const t = (function () {
 					const t = jt.has("panel") ? _t.state : null;
-					if (t && "shop" === t.kind && st.group) {
-						const t = st.group.getWorldPosition(new THREE.Vector3());
-						return { s: { x: t.x, z: t.z, top: t.y + st.height, r: 0.6 }, side: !0 };
+					if (t && "shop" === t.kind) {
+						const [x0, z0] = JGP.shopAt();
+						return { s: { x: x0, z: z0, top: 3.4, r: 1.2 }, side: !0 };
 					}
 					if (t && "campfire" === t.kind) return { s: { x: 0, z: 0, top: 6.3, r: 3.3 }, eye: !0 };
 					if (qt.isOpen) {
@@ -5890,7 +5979,7 @@ const xe = (() => {
 							null !== Ce.met && a > Ce.met && U(0.5, 70),
 							(Ce = { blossoms: Kt.blossoms, met: a });
 						const n = Kt.rewards,
-							r = [Kt.acorns, n.seeds, n.wateringCan, n.snacks, a].join("|");
+							r = [Kt.acorns, n.seeds, n.artifacts, Kt.artifacts, n.stone, a].join("|");
 						r !== o.sig &&
 							((o.sig = r),
 							o.draw((t) => {
@@ -5902,8 +5991,8 @@ const xe = (() => {
 									},
 									o = (t) => (t ? "☑" : "☐");
 								e(36, "SEEDS", o(n.seeds), M.lime),
-									e(88, "WATERING CANS", o(n.wateringCan), "#5ab4ff"),
-									e(140, "SNACKS", o(n.snacks), "#f2c42e");
+									e(88, "ANCIENT ARTIFACTS", n.artifacts ? "☑" : Kt.artifacts + "/3", "#f2c42e"),
+									e(140, "SUMMONING STONE", o(n.stone), "#5ab4ff");
 							}));
 					})(0, v);
 				const P = new Map();
@@ -6558,15 +6647,10 @@ __R["fortizmo"]=(t,e)=>{const o=new THREE.Group;t.add(o);const a=(t,e,o,a)=>{let
 return __R;})();
 // the bundled three.js has no OctahedronGeometry; this stand-in is what the props were made with
 THREE.OctahedronGeometry||(THREE.OctahedronGeometry=function(t=1){const n=[1,0,0,-1,0,0,0,1,0,0,-1,0,0,0,1,0,0,-1].map(n=>n*t),o=new THREE.BufferGeometry;o.setAttribute("position",new THREE.Float32BufferAttribute(n,3)),o.setIndex([0,2,4,0,4,3,0,3,5,0,5,2,1,2,5,1,5,3,1,3,4,1,4,2]);const e=o.toNonIndexed();return e.setAttribute("uv",new THREE.Float32BufferAttribute(new Float32Array(48),2)),e.computeVertexNormals(),e});
-/* MAMA GORBO (Park "leech") + GORBO (Woods), pulled from the Greeblis Park / Greeblis Woods
- * originals with only the helpers they reach. Engine services come from the top-level names
- * captured as $x aliases (locals in the original code shadow the one-letter engine names). */
-const JGP_WOODS=(()=>{const $C=C,$G=G,$Nt=Nt,$R=R,$S=S,$T=T,$ao=ao,$b=b,$c=c,$l=l,$t=t,$u=u,$v=v,$x=x,$Re=new THREE.Quaternion,$ve=new $c;
-function $Te({parent:e,base:t,strands:o,drips:a=[],material:n,dripColor:r="#f4f2ee",sides:s=8,sub:i=3}){const l=1/60,c=new $c(0,-9.8,0),h=new THREE.Matrix4,p=new THREE.Matrix4,u=new $c(0,1,0),f=new $c(1,0,0),d=new $c,m=new $c,g=new $c,y=[],b=o.map(((e,t)=>{const o=new THREE.CatmullRomCurve3(e.pts.map((e=>new $c(e[0],e[1],e[2])))),a=e.nodes||7,n=[];for(let e=0;e<a;e++)n.push(o.getPointAt(e/(a-1)));const r=n.slice(1).map(((e,t)=>e.distanceTo(n[t])));let s=null;if(void 0!==e.parent){let t=1e9;y[e.parent].rest.forEach(((e,o)=>{const a=e.distanceTo(n[0]);a<t&&(t=a,s=o)}))}const i={rest:n,lens:r,n:a,r0:e.r0,r1:e.r1,parent:e.parent,parentNode:s,pos:n.map((e=>e.clone())),prev:n.map((e=>e.clone())),k0:e.k0||.3,k1:e.k1||.05,flow:.7+.5*Math.random(),seed:2.3*t};return y[t]=i,i})),M=a.map((e=>({strand:e.strand,node:void 0===e.node?b[e.strand].n-1:e.node,load:.6*Math.random(),rate:e.rate||.1+.06*Math.random(),pos:[new $c,new $c,new $c],prev:[new $c,new $c,new $c]}))),w=b.map((e=>({st:e,rings:(e.n-1)*i+1}))).concat(M.map((e=>({drip:e,rings:10}))));let E=0,x=0;w.forEach((e=>{e.v0=E,E+=e.rings*(s+1),x+=(e.rings-1)*s*6}));const T=new THREE.BufferGeometry,R=new Float32Array(3*E),A=new Float32Array(3*E),H=new(E>65535?Uint32Array:Uint16Array)(x);let z=0;w.forEach((e=>{for(let t=0;t<e.rings-1;t++)for(let o=0;o<s;o++){const a=e.v0+t*(s+1)+o,n=a+s+1;H[z++]=a,H[z++]=n,H[z++]=a+1,H[z++]=n,H[z++]=n+1,H[z++]=a+1}})),T.setAttribute("position",new THREE.BufferAttribute(R,3).setUsage(35048)),T.setAttribute("normal",new THREE.BufferAttribute(A,3).setUsage(35048)),T.setIndex(new THREE.BufferAttribute(H,1));const B=new THREE.Mesh(T,n);B.frustumCulled=!1,B.matrixAutoUpdate=!1,e.add(B);const I=[],P=$x.clay(r,{shininess:70,specular:5592405});function G(e,t,o,a,n,r,s){let i=I.find((e=>!e.active));i||(i={mesh:$R($T.sphere(1,10,8),P,$C),vel:new $c,active:!1},i.mesh.frustumCulled=!1,I.push(i)),i.active=!0,i.mesh.visible=!0,i.size=s,i.mesh.position.set(e,t,o),i.vel.set(a,n,r)}let C=!1,O=0,F=new $c;const N=(e,o)=>o.copy(e).applyMatrix4(t.matrixWorld);function U(e){const t=new $c;for(const e of b){for(let o=0;o<e.n;o++){const a=e.pos[o],n=e.prev[o];if(N(e.rest[o],t),0===o){void 0!==e.parent?a.copy(b[e.parent].pos[e.parentNode]):a.copy(t),n.copy(a);continue}const r=e.k0+(e.k1-e.k0)*(o/(e.n-1));d.subVectors(a,n).multiplyScalar(.94),n.copy(a),a.add(d).addScaledVector(c,l*l*.35).addScaledVector(g.subVectors(t,a),r)}for(let t=0;t<2;t++)for(let t=1;t<e.n;t++){const o=e.pos[t-1],a=e.pos[t],n=e.lens[t-1];m.subVectors(a,o);const r=m.length()||1e-6,s=.88*n,i=1.18*n;(r>i||r<s)&&a.copy(o).addScaledVector(m,(r>i?i:s)/r)}}for(const e of M){const t=b[e.strand].pos[e.node];e.load=Math.min(1.25,e.load+e.rate*l);const o=.018+.05*Math.min(1,e.load);e.pos[0].copy(t),e.prev[0].copy(t);for(let t=1;t<3;t++){const o=e.pos[t],a=e.prev[t];d.subVectors(o,a).multiplyScalar(.97),a.copy(o),o.add(d).addScaledVector(c,l*l*(.5+.5*e.load))}for(let t=1;t<3;t++){const a=e.pos[t-1],n=e.pos[t];m.subVectors(n,a);const r=m.length()||1e-6,s=o*(1+.6*e.load),i=.6*o;(r>s||r<i)&&n.copy(a).addScaledVector(m,(r>s?s:i)/r)}if(e.load>=1&&e.pos[2].y<t.y-1.8*o){const o=e.pos[2];G(o.x,o.y,o.z,(o.x-e.prev[2].x)/l,(o.y-e.prev[2].y)/l,(o.z-e.prev[2].z)/l,.03+.02*Math.random()),e.load=.05;for(let o=1;o<3;o++)e.pos[o].copy(t),e.prev[o].copy(t).y-=.02*o}}}const V=(e,t,o,a,n,r)=>{const s=n*n,i=s*n;return r.set(.5*(2*t.x+(-e.x+o.x)*n+(2*e.x-5*t.x+4*o.x-a.x)*s+(-e.x+3*t.x-3*o.x+a.x)*i),.5*(2*t.y+(-e.y+o.y)*n+(2*e.y-5*t.y+4*o.y-a.y)*s+(-e.y+3*t.y-3*o.y+a.y)*i),.5*(2*t.z+(-e.z+o.z)*n+(2*e.z-5*t.z+4*o.z-a.z)*s+(-e.z+3*t.z-3*o.z+a.z)*i))},j=[],q=[],_=new $c,K=new $c,Z=new $c,$=new $c;for(let e=0;e<64;e++)j.push(new $c);function Q(e,t,o){const a=t.length,n=e.rings;for(let e=0;e<n;e++){const r=e/(n-1)*(a-1),s=Math.min(a-2,Math.floor(r)),i=r-s;V(t[Math.max(0,s-1)],t[s],t[s+1],t[Math.min(a-1,s+2)],i,j[e]),q[e]=o(e/(n-1))}for(let t=0;t<n;t++){_.subVectors(j[Math.min(n-1,t+1)],j[Math.max(0,t-1)]),_.lengthSq()<1e-12&&_.set(0,-1,0),_.normalize(),0===t?K.crossVectors(_,Math.abs(_.y)>.9?f:u).normalize():(K.addScaledVector(_,-K.dot(_)),K.lengthSq()<1e-8&&K.crossVectors(_,f),K.normalize()),Z.crossVectors(_,K);for(let o=0;o<=s;o++){const a=o/s*$l,n=Math.cos(a),r=Math.sin(a),i=3*(e.v0+t*(s+1)+o);$.set(K.x*n+Z.x*r,K.y*n+Z.y*r,K.z*n+Z.z*r),R[i]=j[t].x+$.x*q[t],R[i+1]=j[t].y+$.y*q[t],R[i+2]=j[t].z+$.z*q[t],A[i]=$.x,A[i+1]=$.y,A[i+2]=$.z}}}return{mesh:B,carry(e,t,o){let a=null,n=1e9;b.forEach(((e,o)=>e.rest.forEach(((e,r)=>{const s=e.distanceTo(t);s<n&&(n=s,a={si:o,ni:r})}))));const r=t.clone().sub(b[a.si].rest[a.ni]);e.matrixAutoUpdate=!1,(this.carried||(this.carried=[])).push({obj:e,best:a,offset:r,rot:(new THREE.Quaternion).setFromEuler(new THREE.Euler(...o))})},update(o,a,n=!0){if(t.updateWorldMatrix(!0,!1),t.getWorldPosition(d),(!C||d.distanceTo(F)>1.5)&&(b.forEach((e=>e.rest.forEach(((t,o)=>{N(t,e.pos[o]),e.prev[o].copy(e.pos[o])})))),M.forEach((e=>{const t=b[e.strand].pos[e.node];e.pos.forEach(((o,a)=>{o.set(t.x,t.y-.03*a,t.z),e.prev[a].copy(o)}))})),C=!0),F.copy(d),n)for(O=Math.min(O+o,.1);O>=l;)U(),O-=l;for(const e of I){if(!e.active)continue;e.vel.y-=9.8*o,e.mesh.position.addScaledVector(e.vel,o);const t=e.vel.length();e.mesh.scale.set(e.size,e.size*(1+Math.min(1.5,.12*t)),e.size),t>.01&&e.mesh.quaternion.setFromUnitVectors(u,g.copy(e.vel).normalize().negate()),e.mesh.position.y<=.02&&(e.active=!1,e.mesh.visible=!1,$Nt.splat(e.mesh.position.x,e.mesh.position.z,r,.1+3*e.size))}if(p.copy(e.matrixWorld).invert(),B.matrix.copy(p),B.matrixWorldNeedsUpdate=!0,w.forEach((e=>{if(e.st){const t=e.st;Q(e,t.pos,(e=>{let o=t.r0+(t.r1-t.r0)*e;return o*=1+.13*Math.sin(9*e-2.6*a*t.flow),o*=1+.2*Math.max(0,Math.sin(23*e+t.seed))-.06,e<.12&&(o*=1+.35*(1-e/.12)),e>.88&&(o*=.85*Math.sqrt(Math.max(0,(1-e)/.12))+.15*(e<.999?1:0)),o}))}else{const t=e.drip,o=b[t.strand],a=Math.max(o.r1,.02),n=Math.min(1,t.load);Q(e,t.pos,(e=>{if(e<.35)return a*(.9-e*(1.6-.6*n));const t=(e-.35)/.65;return(.014+.022*n)*Math.sin(Math.min(1,1.15*t)*Math.PI)+(t<.05?.35*a:0)}))}})),T.attributes.position.needsUpdate=!0,T.attributes.normal.needsUpdate=!0,this.carried)for(const e of this.carried){const o=b[e.best.si],a=o.pos[e.best.ni];N(o.rest[e.best.ni],g);const n=m.subVectors(a,g);t.matrixWorld.decompose(d,$Re,$ve);const r=(new THREE.Quaternion).setFromEuler(new THREE.Euler($u(2*n.z,-.5,.5),0,$u(2*-n.x,-.5,.5)));h.compose(Z.copy(e.offset).applyQuaternion($Re).multiplyScalar($ve.x).add(a),$Re.multiply(e.rot).premultiply(r),$ve),e.obj.matrix.multiplyMatrices(p,h),e.obj.matrixWorldNeedsUpdate=!0}}}};
-return{gorbo:function(t,o){const a=new $c(0,1.4,0),n=.72,r=.62,s=$x.clay("#ffffff",{vertexColors:!0,shininess:48,specular:3026478}),i=new THREE.Group;t.add(i);const l=new THREE.Group;l.rotation.z=-.14,l.position.copy(a),i.add(l);const c=(e,t,o,a)=>{const n=e.attributes.position,r=new $c;for(let e=0;e<n.count;e++){r.fromBufferAttribute(n,e);const s=1+t*(Math.sin(r.x*o+a)*Math.sin(r.y*o*.9+1.7*a)*Math.sin(r.z*o*1.1+.6*a)+.5*Math.sin((r.x+r.y)*o*2.3+a)*Math.sin(r.z*o*2.1));n.setXYZ(e,r.x*s,r.y*s,r.z*s)}return e.computeVertexNormals(),e},h=new THREE.SphereGeometry(1,42,32),p=h.attributes.position,u=new $c;for(let e=0;e<p.count;e++){u.fromBufferAttribute(p,e);const t=1+.22*Math.max(0,u.x)*Math.max(0,u.y);p.setXYZ(e,u.x*n*t,.9*u.y*(1+.06*Math.max(0,u.x)*Math.max(0,u.y)),u.z*r)}c(h,.045,7,1.3);const f=new Float32Array(3*p.count),d=new THREE.Color("#33b6ea");for(let e=0;e<p.count;e++)f[3*e]=d.r,f[3*e+1]=d.g,f[3*e+2]=d.b;h.setAttribute("color",new THREE.BufferAttribute(f,3)),$R(h,s,l);const m=[],g=[],y=new THREE.Object3D,b=(e,{out:t=0,scale:o=[1,1,1],spin:a=0}={})=>{const{p:s,n:i}=(e=>{const t=e.clone().normalize(),o=1+.22*Math.max(0,t.x)*Math.max(0,t.y);return{p:new $c(t.x*n*o,.9*t.y,t.z*r),n:new $c(t.x/(n*n),t.y/.81,t.z/(r*r)).normalize()}})(e);return y.position.copy(s).addScaledVector(i,t),y.up.set(0,1,0),y.lookAt(y.position.clone().add(i)),y.rotateZ(a),y.scale.set(o[0],o[1],o[2]),y.updateMatrix(),y.matrix.clone()},M=(e,t,o)=>g.push({geo:e,matrix:t,color:o});[[new $c(-.2,.42,.9),.3,.2],[new $c(-.46,-.4,.8),.22,-.1]].forEach((([e,t,o])=>{M(new THREE.CylinderGeometry(1.28*t,1.34*t,.08,8,1).rotateX(Math.PI/2).rotateZ(Math.PI/8),b(e,{out:0,spin:o}),"#e02fcb"),M(new THREE.TorusGeometry(1.12*t,.2*t,6,8).rotateZ(Math.PI/8),b(e,{out:.045,spin:o}),"#e838d2"),M(new THREE.SphereGeometry(t,8,8,0,$l,0,Math.PI/2).rotateX(Math.PI/2).rotateZ(Math.PI/8),b(e,{out:.03,scale:[1,1,.55],spin:o}),"#7b2fd2")})),M(c($T.sphere(1,14,10).clone(),.08,5,2),b(new $c(.92,-.15,.4),{out:-.05,scale:[.2,.15,.17],spin:.4}),"#33b6ea");const w=[[-.5,1.15,.28],[-.72,.72,.3],[-.62,.3,.3],[-.2,.12,.32],[.3,.16,.25],[.62,.45,.14],[.66,.95,.02],[.5,1.3,-.12]],E=(e,t,o,a,n,r)=>{const s=$ao(e.map((e=>[e[0]+a[0],e[1]+a[1],e[2]+a[2]])),t,o,60,10);((e,t,o)=>{m.push({geo:e,matrix:t,color:o})})(c(s,.05,9,r),new THREE.Matrix4,n)};E(w,.17,.15,[.03,-.03,-.1],"#d62fc2",4.1),E(w,.17,.15,[0,0,0],"#a6e633",2.7);const x=new THREE.Group;x.position.set(-.86,1.82,.12),i.add(x);const T=[];[[0,0,0,.09],[.07,.14,0,.06],[-.08,.2,.02,.05],[.02,-.14,.03,.07],[-.12,-.04,-.02,.05],[.12,.3,0,.04]].forEach((([e,t,o,a],n)=>T.push({geo:new THREE.TetrahedronGeometry(1,0),matrix:$S(e,t,o,n,.7*n,1.3*n,1.3*a,a,.8*a),color:n%2?"#ffe23a":"#f2cf1e"})));const R=$R($v(T),$x.clay("#ffffff",{vertexColors:!0,shininess:40,specular:3355443}),x),A=new $c(-.93,.12,.36);M(c($T.sphere(1,16,12).clone(),.03,4,5),b(A,{out:.02,scale:[.16,.17,.09]}),"#e8303c");const H=$b(128,128,(e=>{e.strokeStyle="#ffffff",e.lineCap="round",e.lineWidth=12,[44,30,16].forEach((t=>{e.beginPath(),e.arc(64,84,t,1.25*Math.PI,1.75*Math.PI),e.stroke()})),e.fillStyle="#ffffff",e.beginPath(),e.arc(64,84,7,0,$l),e.fill()})),z=$R($T.plane(.2,.2),$x.basic(16777215,{map:H,transparent:!0,depthWrite:!1}),l);b(A,{out:.115}).decompose(z.position,z.quaternion,z.scale);const S=$R($v(m),s,i);S.matrixAutoUpdate=!1,S.updateMatrix(),$R($v(g),s,l);const B=new THREE.Object3D;B.position.set(.55,1.05,-.08),i.add(B);const I=$x.clay("#f4f2ee",{shininess:70,specular:5592405,side:THREE.DoubleSide}),P=$Te({parent:i,base:B,material:I,strands:[{pts:[[0,0,0],[.12,.35,.08],[.2,.75,.16],[.18,1.1,.2],[.26,1.4,.2],[.34,1.52,.18]],r0:.15,r1:.085,nodes:8,k0:.25,k1:.06},{pts:[[.2,.62,.12],[.45,.6,.2],[.72,.62,.24],[.9,.7,.26],[.92,.82,.25],[.84,.86,.24]],r0:.1,r1:.06,nodes:7,parent:0,k0:.2,k1:.04},{pts:[[.12,.35,.08],[.35,.28,.24],[.42,.05,.32],[.4,-.25,.36],[.46,-.45,.38]],r0:.1,r1:.06,nodes:7,parent:0,k0:.18,k1:.03},{pts:[[.4,-.25,.36],[.28,-.4,.4],[.2,-.5,.4]],r0:.05,r1:.024,nodes:4,parent:2,k0:.1,k1:.02},{pts:[[.46,-.45,.38],[.6,-.52,.36],[.66,-.46,.34]],r0:.045,r1:.022,nodes:4,parent:2,k0:.1,k1:.02}],drips:[{strand:1},{strand:1,node:3,rate:.07},{strand:3},{strand:4,rate:.12},{strand:2,node:4,rate:.06}]}),G=(e,t,o,a,n)=>{const r=new THREE.Group;i.add(r),$R($v([{geo:new THREE.CylinderGeometry(a,a,.07,8,1).rotateX(Math.PI/2).rotateZ(Math.PI/8),matrix:new THREE.Matrix4,color:"#e8303c"},{geo:new THREE.TorusGeometry(.97*a,.02,4,8).rotateZ(Math.PI/8),matrix:$S(0,0,.02),color:"#c21f2c"}]),s,r);const l=$b(128,128,(e=>{e.font="bold 62px Arial, Helvetica, sans-serif",e.textAlign="center",e.textBaseline="middle",e.fillStyle="rgba(120,0,10,.35)",e.fillText(n,67,70),e.fillStyle="#ffffff",e.fillText(n,64,66)}));$R($T.plane(1.5*a,1.5*a),$x.basic(16777215,{map:l,transparent:!0,depthWrite:!1}),r,[0,0,.041]),P.carry(r,new $c(e,t,o),[0,-.25,0])};G(.66,.66,.36,.2,"AP"),G(.42,.12,.46,.18,"IP");const C=new THREE.Group;C.position.set(1.18,2.4,.1),C.rotation.set(.3,0,.75),i.add(C);const O=[{geo:$T.sphere(1,10,8),matrix:$S(0,0,0,0,0,0,.045,.045,.045),color:"#8b3be0"}];[.07,.11,.15].forEach(((e,t)=>O.push({geo:new THREE.TorusGeometry(e,.022,6,20,.9*Math.PI).rotateZ(.05*Math.PI),matrix:$S(0,.03+.035*t,.02*-t,-Math.PI/2+.5,0,0),color:1===t?"#9a48ec":"#8b3be0"})));const W=$R($v(O),s,C);let F=-1,U=!1,q=-1;const K=10*Math.random(),X=o.gooEvery||[4,8];let Z=1.5+Math.random()*X[1];return{height:2.65,onTalk(){F=0,U=!1,q=-1,t.scale.set(1,1,1)},anim(a,n,r){const s=1+.02*Math.sin(1.9*a+K);l.scale.set(s,1/s,s),C.position.y=2.4+.06*Math.sin(2*a+K),W.scale.setScalar(1+.08*Math.max(0,Math.sin(3.5*a+K))),x.rotation.z=.15*Math.sin(5*a+K),R.scale.setScalar(1+.1*Math.sin(7*a+K)),t.position.y=.04*Math.sin(1.3*a+K);const i=!r||r.group.visible&&Math.hypot(r.group.position.x-At.position.x,r.group.position.z-At.position.z)<45;if(F<0&&q<0&&a>Z&&(Z=a+X[0]+Math.random()*(X[1]-X[0]),i&&r&&(q=0)),q>=0){q+=n;const a=q/.35;if(a<.5){const e=a/.5;t.scale.set(1+.1*e,1-.14*e,1+.1*e)}else if(a<1){if(!r.spurted){r.spurted=!0;const t=r.group.position;$Nt.goo(new $c(t.x,t.y+1.9,t.z),6+Math.floor(4*Math.random()),.7+.25*Math.random(),o.goo),$G.near(t.x,t.z,$t.hearR.goo,"blorp")}const n=(a-.5)/.5;t.scale.set(1+.1*(1-n)-.04*Math.sin(n*Math.PI),1-.14*(1-n)+.08*Math.sin(n*Math.PI),1+.1*(1-n)-.04*Math.sin(n*Math.PI))}else q=-1,r.spurted=!1,t.scale.set(1,1,1)}if(F<0)return void P.update(n,a,i);F+=n;const c=.25;if(F<c){const e=F/c;t.scale.set(1+.12*e,1-.18*e,1+.12*e)}else if(F<.95){const e=(F-c)/.7,o=1-2*Math.abs(e-.5);t.position.y=6.4*e*(1-e),t.scale.set(1-.06*o,1+.12*o,1-.06*o)}else if(F<1.15){if(!U&&r){U=!0;const t=r.group.position;$Nt.goo(new $c(t.x,t.y+1.1,t.z),12,1,o.goo),$G.near(t.x,t.z,$t.hearR.ambient,"blorp")}const a=(F-c-.7)/.2;t.scale.set(1+.15*(1-a),1-.2*(1-a),1+.15*(1-a))}else F=-1,t.scale.set(1,1,1);P.update(n,a,i)}}}};})();
-const JGP_PARK=(()=>{const n=THREE.Mesh,o=THREE.SphereGeometry,i=THREE.CylinderGeometry,a=THREE.Vector3,c=THREE.Group,r=THREE.MeshBasicMaterial,d=THREE.TorusGeometry,l=THREE.PlaneGeometry,tt=(t,n)=>new THREE.MeshPhongMaterial(Object.assign({color:t,vertexColors:!0,shininess:24,specular:2500134},n)),ot=(t,o,e)=>new n(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(t),16,o,6,!0),tt(e,{side:THREE.DoubleSide})),sh=g=>{const t=g.attributes.position,n=t.count;let a=1/0,o=-1/0;for(let e=0;e<n;e++)a=Math.min(a,t.getY(e)),o=Math.max(o,t.getY(e));const s=o-a||1,i=new Float32Array(3*n);for(let e=0;e<n;e++){const r=(t.getY(e)-a)/s,o=.8+.2*r*r*(3-2*r);i[3*e]=i[3*e+1]=o,i[3*e+2]=Math.min(1,o+.03)}g.setAttribute("color",new THREE.BufferAttribute(i,3))},
-L=t=>{const e=tt(15900778),s=new n(new o(.95,24,16),e);s.position.y=1.75,s.scale.set(1,1.18,.92);const w=new n(new o(.4,24,16),e);w.position.set(.55,2.55,0);const p=new n(new o(.3,24,16),e);function h(o,e,s,a){const c=new n(new i(s,s,.12,s<.3?14:20),tt(15224784));c.rotation.x=Math.PI/2,c.position.set(o,e,.78);const r=new n(new i(a,a,.14,14),tt(9060348));return r.rotation.x=Math.PI/2,r.position.set(o,e,.79),t.add(c,r),r}p.position.set(-.6,1.05,.15);const f=h(.3,2.25,.38,.27),M=h(-.32,1.5,.25,.17),m=new n(new d(.14,.055,8,24,1.2*Math.PI),e);m.position.set(.1,.85,.75),m.rotation.z=.8*Math.PI;const y=new n(new d(.95,.17,8,24,.95*Math.PI),tt(9095226));y.position.set(-.05,1.35,.25),y.rotation.z=1.05*Math.PI;const u=new n(new d(.72,.1,8,24,.9*Math.PI),tt(15913006));function E(o){const e=new c,s=new n(new i(.24,.24,.07,14),tt(15223354));s.rotation.x=Math.PI/2;const a=document.createElement("canvas");a.width=64,a.height=64;const w=a.getContext("2d");w.fillStyle="#fff",w.font="bold 30px monospace",w.textAlign="center",w.textBaseline="middle",w.fillText(o,32,34);const d=new n(new l(.34,.34),new r({map:new THREE.CanvasTexture(a),transparent:!0}));return d.position.z=.05,e.add(s,d),t.add(e),e}u.position.set(-.05,1.35,.32),u.rotation.z=1.05*Math.PI,t.add(ot([new a(.8,1,.1),new a(1.25,1.5,.2),new a(1.05,2.05,.1),new a(1.5,2.5,0)],.11,15920610)),t.add(ot([new a(.7,.7,-.1),new a(1.35,.9,-.2),new a(1.6,1.4,0)],.09,15920610));const x=[E("AP"),E("IP"),E("~")];return t.add(s,w,p,m,y,u),(n,o)=>{t.position.y=.18*Math.sin(.9*n),x.forEach((t,o)=>{const e=.6*n+o*(2*Math.PI/3);t.position.set(1.4*Math.cos(e),1.7+.55*Math.sin(1.3*e),.9*Math.sin(e)),t.rotation.y=.4*Math.sin(n+o)}),f.scale.setScalar(1+.08*Math.sin(1.7*n)),M.scale.setScalar(1+.1*Math.sin(2.3*n+2)),m.rotation.z=.8*Math.PI+.12*Math.sin(1.1*n)}};
-return{leech(G){const g=new c;G.add(g);const f=L(g);g.traverse(m=>m.isMesh&&m.material.isMeshPhongMaterial&&sh(m.geometry));return{height:2.95,anim(t){f(t)}}}};})();
+/* MONTGUMMERY (Greeblis Woods "mont"), pulled with only the helpers it reaches. Engine services
+ * come from the top-level names captured as $x aliases (locals in the original code shadow the one-letter engine names). */
+const JGP_WOODS=(()=>{const $R=R,$S=S,$T=T,$ao=ao,$b=b,$c=c,$l=l,$u=u,$v=v,$x=x;
+return{mont:function(e,t){const o="#1d2a23",a="#3db2d6",n="#e2521f",r=(e,t,o,a,n,r,s,i,l)=>{let c=l;const h=()=>(c=16807*c%2147483647)/2147483647;e.font="bold "+r+"px 'Courier New', monospace",e.textBaseline="top";for(let l=o;l<o+n;l+=1.05*r){let o="";const n=Math.floor(a/(.6*r));for(let e=0;e<n;e++)o+=h()<.12?" ":"{}[]()<>;:'\"=,._/\\|abcdeforstuvgxinpl0123456789"[Math.floor(47*h())];e.globalAlpha=i*(.6+.4*h()),e.fillStyle=s[Math.floor(h()*s.length)],e.fillText(o,t,l)}e.globalAlpha=1},s=$b(512,512,(e=>{r(e,4,0,508,512,22,["#8fdcec","#d8f4ff","#6cc8e0"],.9,7)}));s.wrapS=s.wrapT=THREE.RepeatWrapping,s.repeat.set(2.5,1.6);const i=$b(512,512,(e=>{e.fillStyle=o,e.fillRect(0,0,512,512),r(e,4,0,508,512,22,["#8fdcec","#d8f4ff","#6cc8e0"],.85,11)}));i.wrapS=i.wrapT=THREE.RepeatWrapping,i.repeat.set(1.5,1.5);const l=new THREE.MeshPhongMaterial({color:o,specular:3355443,shininess:40}),c=new THREE.MeshPhongMaterial({map:i,specular:2763306,shininess:36}),h=new THREE.MeshPhongMaterial({map:s,transparent:!0,depthWrite:!1,specular:0,shininess:1}),p=new THREE.SphereGeometry(1,40,30);{const e=p.attributes.position,t=new $c;for(let o=0;o<e.count;o++){t.fromBufferAttribute(e,o);const a=t.y,n=Math.hypot(t.x,t.z),r=a>0?6:2.4,s=Math.pow(Math.max(0,1-Math.pow(Math.abs(a),r)),1/r),i=n>1e-6?s/n:0;e.setXYZ(o,t.x*i,a,t.z*i)}p.computeVertexNormals()}const u=(()=>{const e=p.attributes.position,t=p.attributes.uv;let o=-1,a=-9;for(let t=0;t<e.count;t++){const n=e.getY(t),r=e.getZ(t);Math.abs(n+.25)<.08&&r>a&&(a=r,o=t)}return{u:t.getX(o),v:t.getY(o)}})(),f=$b(512,256,(e=>{e.fillStyle=o,e.fillRect(0,0,512,256);const t=512*u.u,a=256*(1-u.v);e.fillStyle="#4cb6e0",e.beginPath(),e.ellipse(t,a,52,50,0,0,$l),e.fill()})),d=new THREE.Group;e.add(d);const m=$R(p,new THREE.MeshPhongMaterial({map:f,specular:3355443,shininess:40}),d,[0,1.5,0],null,[.7,.8,.54]);$R(p.clone().scale(1.012,1.012,1.012),h,m).renderOrder=1;const g=[-1,1].map((e=>{const t=new THREE.Group;t.position.set(.29*e,.86,.02),t.scale.setScalar(1.15),d.add(t),$R($T.cyl(.1,.1,.28,12),c,t,[0,-.1,0]);const o=[],r=(e,t,a)=>o.push({geo:e,matrix:t,color:a});r(new THREE.CylinderGeometry(.162,.15,.42,16),$S(0,-.42,0),a),r(new THREE.TorusGeometry(.158,.018,6,18),$S(0,-.21,0,Math.PI/2,0,0),"#46bede"),r($T.sphere(1,16,12),$S(0,-.62,.07,0,0,0,.16,.11,.25),a),r($T.sphere(1,14,10),$S(0,-.63,.24,0,0,0,.15,.1,.12),n),r($T.sphere(1,14,10),$S(0,-.72,.07,0,0,0,.175,.035,.3),"#c9441a"),r($T.sphere(1,12,8),$S(0,-.7,-.12,0,0,0,.15,.055,.11),n),[-1,1].forEach((e=>r($T.box(.016,.36,.012),$S(.04*e,-.42,.163),"#f0c23a")));for(let e=0;e<7;e++)r($T.box(.08,.014,.012),$S(0,-.27-.05*e,.165),"#f0c23a");return[-1,1].forEach((e=>r($T.box(.014,.012,.16),$S(.04*e,-.585,.2,-.75,0,0),"#f0c23a"))),$R($v(o),$x.clay("#ffffff",{vertexColors:!0,shininess:30,specular:2236962}),t),t})),y=new THREE.Group;y.position.set(-.22,1,-.36),d.add(y),$R($ao([[0,0,0],[-.25,-.25,-.12],[-.6,-.6,-.05],[-.92,-.84,.12],[-1.15,-.92,.3]],.085,.006,40,10),c,y);const b=$x.clay("#ffffff",{vertexColors:!0,shininess:30,specular:2236962}),M=(e,t,o,a,n,r)=>{const s=(new $c).subVectors(o,t),i=s.length(),l=(new $c).addVectors(t,o).multiplyScalar(.5),c=(new THREE.Quaternion).setFromUnitVectors(new $c(0,1,0),s.clone().normalize());e.push({geo:new THREE.CylinderGeometry(n,a,i,10),matrix:(new THREE.Matrix4).compose(l,c,new $c(1,1,1)),color:r}),e.push({geo:$T.sphere(1,10,8),matrix:(new THREE.Matrix4).compose(t,c,new $c(a,a,a)),color:r}),e.push({geo:$T.sphere(1,10,8),matrix:(new THREE.Matrix4).compose(o,c,new $c(n,n,n)),color:r})},w=(e,t)=>{const o=new THREE.Group;o.position.copy(t),d.add(o);const a=new $c(.12*e,-.34,.03),n=new $c(.14*e,-.66,.09);return $R($ao([[0,0,0],[.08*e,-.18,0],[a.x,a.y,a.z],[.14*e,-.5,.06],[n.x,n.y,n.z]],.13,.085,20,10),c,o),$R((e=>{const t=[],o="#7cc6ea",a="#6db8dc";t.push({geo:$T.box(.034,.1,.1),matrix:$S(0,-.08,0),color:o}),t.push({geo:$T.sphere(1,14,10),matrix:$S(0,-.08,0,0,0,0,.022,.055,.055),color:o}),[[-1,-1],[-1,1],[1,-1],[1,1]].forEach((([e,a])=>t.push({geo:$T.sphere(1,8,6),matrix:$S(0,.045*e-.08,.045*a,0,0,0,.017,.012,.012),color:o}))),t.push({geo:$T.sphere(1,12,10),matrix:$S(0,-.015,0,0,0,0,.022,.03,.04),color:o}),[[.036,.078,.0125],[.012,.088,.013],[-.012,.083,.0125],[-.035,.066,.0112]].forEach((([n,r,s],i)=>{const l=new $c(0,-.13-(3===i?-.006:0),n),c=l.clone().add(new $c(.012*e,.5*-r,.006+.001*i)),h=c.clone().add(new $c(.03*e,.45*-r,.004));M(t,l,c,s,.92*s,o),M(t,c,h,.92*s,.8*s,a)}));const n=new $c(.006*e,-.06,.05),r=n.clone().add(new $c(.012*e,-.04,.028)),s=r.clone().add(new $c(.016*e,-.036,.01));return M(t,n,r,.017,.015,o),M(t,r,s,.015,.012,a),$v(t)})(e),b,o,[n.x,n.y+.03,n.z],[.1,.25*e,-.08*e],[2.1,2.1,2.1]),o},E=w(-1,new $c(-.64,1.9,.02)),x=w(1,new $c(.66,1.9,.02)),T=new THREE.Group;T.position.set(0,2.62,.3),T.scale.setScalar(1.32),d.add(T);const R=(e,t,o,a,n=0)=>(a.moveTo(-e/2+o,n-t/2),a.lineTo(e/2-o,n-t/2),a.quadraticCurveTo(e/2,n-t/2,e/2,n-t/2+o),a.lineTo(e/2,n+t/2-o),a.quadraticCurveTo(e/2,n+t/2,e/2-o,n+t/2),a.lineTo(-e/2+o,n+t/2),a.quadraticCurveTo(-e/2,n+t/2,-e/2,n+t/2-o),a.lineTo(-e/2,n-t/2+o),a.quadraticCurveTo(-e/2,n-t/2,-e/2+o,n-t/2),a),A=new THREE.ExtrudeGeometry(R(1,.78,.12,new THREE.Shape),{depth:.52,bevelEnabled:!0,bevelThickness:.08,bevelSize:.06,bevelSegments:5,curveSegments:10,steps:6});A.translate(0,0,-.6);{const e=A.attributes.position,t=new $c;for(let o=0;o<e.count;o++){t.fromBufferAttribute(e,o);const a=$u(-t.z/.68,0,1),n=1-.42*Math.pow(a,1.3),r=Math.max(0,1-(t.x*t.x/.3+t.y*t.y/.2));e.setXYZ(o,t.x*n,t.y*n+.04*a,t.z-.26*a*a*r)}A.computeVertexNormals()}$R(A,l,T,[0,0,.2]),$R(new THREE.TorusGeometry(.035,.012,6,12),l,T,[0,.42,-.25]);const H=R(1.12,.9,.12,new THREE.Shape);H.holes.push(R(.9,.58,.06,new THREE.Path,.07)),$R(new THREE.ExtrudeGeometry(H,{depth:.05,bevelEnabled:!0,bevelThickness:.025,bevelSize:.012,bevelSegments:3,curveSegments:8}),new THREE.MeshPhongMaterial({color:"#55b8c6",specular:3355443,shininess:40}),T,[0,0,.2]);const z=$b(512,512,(e=>{const t=e.createRadialGradient(256,240,40,256,256,360);t.addColorStop(0,"#7f52c8"),t.addColorStop(1,"#5a33a0"),e.fillStyle=t,e.fillRect(0,0,512,512),e.save(),e.scale(.66,1),e.font="500 86px 'Segoe UI', Calibri, Arial, sans-serif",e.fillStyle="#f29043",e.textBaseline="top",e.fillText("gfxinfo gfxinfo",60,22),e.restore(),e.save(),e.scale(.66,1),r(e,50,130,330,290,17,["#c6d2ff","#e6ecff","#9fb4f0"],.85,3),r(e,50,425,690,70,17,["#c6d2ff","#e6ecff"],.85,5),e.restore(),e.fillStyle="#ffffff";const o=e=>256+.72*(e-346);e.fillRect(o(290),150,24,1.9*24),e.fillRect(o(398),150,24,1.9*24),[[298,322],[322,322],[346,322],[370,322],[394,322]].forEach((([t,a])=>e.fillRect(o(t),a,17.28,24)));const a=e.createLinearGradient(0,0,512,512);a.addColorStop(0,"rgba(255,255,255,0.14)"),a.addColorStop(.45,"rgba(255,255,255,0)"),a.addColorStop(1,"rgba(0,0,0,0.12)"),e.fillStyle=a,e.fillRect(0,0,512,512)}));$R($T.plane(.91,.6),$x.basic(16777215,{map:z}),T,[0,.07,.225]);const B=[];B.push({geo:$T.box(.3,.06,.02),matrix:$S(.03,-.335,.28),color:"#14201b"});for(let e=0;e<10;e++)B.push({geo:$T.box(.012,.04,.01),matrix:$S(.028*e-.1,-.335,.292),color:"#2c4a44"});B.push({geo:new THREE.CylinderGeometry(.035,.035,.03,16).rotateX(Math.PI/2),matrix:$S(-.32,-.335,.285),color:"#2a3a36"}),B.push({geo:new THREE.CylinderGeometry(.02,.02,.02,12).rotateX(Math.PI/2),matrix:$S(-.32,-.335,.3),color:"#08100e"}),B.push({geo:$T.box(.09,.016,.01),matrix:$S(-.02,-.265,.282),color:"#1c3a36"}),B.push({geo:$T.box(.03,.03,.01),matrix:$S(.24,-.265,.282),color:"#1c3a36"}),B.push({geo:new THREE.CylinderGeometry(.01,.01,.01,8).rotateX(Math.PI/2),matrix:$S(.33,-.265,.282),color:"#1c3a36"}),$R($v(B),$x.clay("#ffffff",{vertexColors:!0,shininess:30,specular:2236962}),T);let I=-1,P=0;const G=10*Math.random();return{height:3.3,onTalk(){I=0},anim(e,t,o){s.offset.y+=.05*t,i.offset.y+=.04*t;const a=o&&o.moving;P+=t*(a?7:0);const n=a?Math.sin(P):0;g[0].rotation.x=.45*n,g[1].rotation.x=-.45*n,d.position.y=a?.03*Math.abs(Math.sin(P)):0,m.scale.y=.8*(1+.01*Math.sin(1.7*e+G)),y.rotation.y=.18*Math.sin(1.1*e+G)+.1*n,y.rotation.z=.05*Math.sin(.8*e+G),x.rotation.x=.04*Math.sin(1.2*e+G)-.1*n,E.rotation.x=.1*n;let r=.03*Math.sin(.9*e+G),l=.04*Math.sin(.7*e+G);I>=0&&(I+=t,r+=.18*Math.sin(Math.min(1,I/.9)*Math.PI*2)*(1-I/.9),I>=.9&&(I=-1)),T.rotation.set(r,0,l)}}}};})();
 /* PULLED-MODELS-END */
 /* =========================================================================
  * GREEBLIS TOWN USA LAYER
@@ -6587,7 +6671,7 @@ const JGP = (() => {
 		// every creature stands in one of two rows along the east side of the square, facing in. The back
 		// row (along the fence, behind the duck pond) holds the creatures still being worked on; the front
 		// row, on the lawn between the pond and Garden Supplies, holds the ones whose models are final.
-		// (SPARKAKUS also keeps the General Store; the one in the row is his stand-in, away during the
+		// (SPARKAKUS also keeps the Library; the one in the row is his stand-in, away during the
 		// Garden event while the shopkeeper comes to it.)
 		lineup: {
 			face: -Math.PI / 2,
@@ -6598,7 +6682,7 @@ const JGP = (() => {
 				["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [34, 8.2]],
 				["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [34, 14.93]],
 				["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [34, 21.67]],
-				["p_gorton", "GORTON", "born_gorton", {"color": "#2fa6a2", "bodyR": 1.0, "talkR": 3.8}, [34, 28.4]],
+				["w_mont", "MONTGUMMERY", "woods_mont", {"color": "#55b8c6", "bodyR": 0.86, "modelScale": 0.9, "talkR": 3.8}, [34, 28.4]],
 			],
 		},
 		final: {
@@ -6618,16 +6702,13 @@ const JGP = (() => {
 		// KING DINO plays his drum set on the Juice Bar's patio (he stands behind the kit, facing the garden)
 		drums: {
 			face: Math.PI / 2,
-			list: [["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1, "talkR": 4.2}, [-24.25, 0.4]]],
+			list: [["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1, "talkR": 4.2}, [-30.25, 0.4]]],
 		},
-		// GORBO (from Greeblis Woods) and MAMA GORBO (from Greeblis Park) in a row of their own on the
-		// west side, south of the Juice Bar, facing the garden (placeholder lines for now)
+		// MAMA GORBO (rebuilt from her artwork, with GORBO's ports and drips) in a row of her own
+		// on the west side, south of the Juice Bar, facing the garden (placeholder lines for now)
 		gorbos: {
 			face: Math.PI / 2,
-			list: [
-				["w_gorbo", "GORBO", "woods_gorbo", {"color": "#37b3e8", "bodyR": 1.0, "talkR": 3.8}, [-30, 15]],
-				["p_leech", "MAMA GORBO", "park_leech", {"color": "#f2a06a", "bodyR": 1.1, "talkR": 3.8}, [-30, 19.75]],
-			],
+			list: [["p_mamagorbo", "MAMA GORBO", "born_mamagorbo", {"color": "#f2a06a", "bodyR": 1.1, "talkR": 3.8}, [-30, 17.4]]],
 		},
 	};
 
@@ -7123,7 +7204,7 @@ const JGP = (() => {
 
 	// ---- models pulled from Greeblis City, Woods and Park: registered as city_*, woods_*, park_* ----
 	// A model that throws while building never stops the game from booting; it is reported and left empty.
-	const PULLED = { city: JGP_CITY, woods: JGP_WOODS, park: JGP_PARK };
+	const PULLED = { city: JGP_CITY, woods: JGP_WOODS };
 	for (const g in PULLED)
 		for (const k in PULLED[g]) {
 			const id = g + "_" + k.replace(/^park_/, ""),
@@ -7547,7 +7628,7 @@ const JGP = (() => {
 		return R(geo, mat, parent);
 	}
 
-	// SPARKAKUS = SPARKAKUS + SHOPSTAR, the General Store's shopkeeper, standing on two legs: a royal-
+	// SPARKAKUS = SPARKAKUS + SHOPSTAR, the Library's librarian, standing on two legs: a royal-
 	// blue wolf painted all over like an alebrije (winding vines, little flowers and dots in gold,
 	// green, magenta, orange and teal) with SHOPSTAR's orange for his paws and socks; a fluffy cream ruff
 	// down his throat and chest, tall ears lined in purple with two little purple horn nubs, yellow
@@ -7997,7 +8078,7 @@ const JGP = (() => {
 			R(ao(pts, 0.012, 0.012, 40, 4), cream2, puff);
 		});
 		// a mail carrier's peaked cap: navy band, flared crown with white piping, black visor and
-		// a gold badge with a little envelope on it
+		// a little gold envelope for a badge
 		const cap = new THREE.Group();
 		(cap.position.y = 0.7), (cap.rotation.x = -0.08), puff.add(cap);
 		const navy = KIT.surf("felt", "#2a3a6a", { rep: 2, bump: 0.02, shine: 15 }),
@@ -8007,13 +8088,21 @@ const JGP = (() => {
 		R(T.cyl(0.6, 0.5, 0.2, 28), navy, cap, [0, 0.27, 0]), R(T.cyl(0.6, 0.6, 0.05, 28), navy, cap, [0, 0.39, 0]);
 		R(T.torus(0.6, 0.018, 6, 32), x.clay("#f6f4ee"), cap, [0, 0.37, 0], [Math.PI / 2, 0, 0]);
 		R(T.torus(0.495, 0.015, 6, 32), x.clay("#f6f4ee"), cap, [0, 0.17, 0], [Math.PI / 2, 0, 0]);
-		R(new THREE.CircleGeometry(0.5, 24, Math.PI, Math.PI), blackM, cap, [0, 0.0, 0.42], [-Math.PI / 2 + 0.38, 0, 0], [1, 0.75, 1]);
+		// (the visor is a thin solid half-disc, so it shows from every side, above and below)
+		R(new THREE.CylinderGeometry(0.5, 0.5, 0.03, 24, 1, !1, -Math.PI / 2, Math.PI), blackM, cap, [0, 0.0, 0.42], [0.38, 0, 0], [1, 1, 0.75]);
 		R(T.box(0.62, 0.035, 0.03), blackM, cap, [0, 0.0, 0.48], [0, 0, 0]);
 		const badge = new THREE.Group();
 		badge.position.set(0, 0.24, 0.53), (badge.rotation.x = -0.25), cap.add(badge);
-		R(T.cyl(0.11, 0.11, 0.025, 6), goldM, badge, [0, 0, 0], [Math.PI / 2, 0, Math.PI / 6]);
-		R(T.box(0.11, 0.07, 0.01), x.clay("#fbf8ee"), badge, [0, 0, 0.016]);
-		[-1, 1].forEach((sx) => R(T.box(0.07, 0.008, 0.012), x.clay("#c8a040"), badge, [0.026 * sx, 0.013, 0.02], [0, 0, -0.55 * sx]));
+		// the badge: a little gold envelope, its flap folded down over the front and the bottom folds
+		// pressed in as darker gold lines
+		R(T.box(0.2, 0.13, 0.024), goldM, badge);
+		const flap = new THREE.Shape([new THREE.Vector2(-0.1, 0.065), new THREE.Vector2(0.1, 0.065), new THREE.Vector2(0, -0.012)]),
+			fold = x.clay("#c8962a", { shininess: 70, specular: 16777215 });
+		R(new THREE.ExtrudeGeometry(flap, { depth: 0.008, bevelEnabled: !1 }), goldM, badge, [0, 0, 0.012]);
+		[-1, 1].forEach((sx) => {
+			R(T.box(0.112, 0.007, 0.006), fold, badge, [0.05 * sx, 0.027, 0.022], [0, 0, 0.66 * sx]);
+			R(T.box(0.1, 0.007, 0.004), fold, badge, [0.052 * sx, -0.038, 0.014], [0, 0, -0.5 * sx]);
+		});
 		// GRATELET's cream-puff hands
 		const hands = [-1, 1].map((sx) => {
 			const h = new THREE.Group();
@@ -8028,8 +8117,18 @@ const JGP = (() => {
 			const a = (k / 7) * l,
 				tg = new THREE.Group();
 			tg.position.set(0.32 * Math.cos(a), -0.68, 0.28 * Math.sin(a)), fl.add(tg), tents.push(tg);
-			R(ao([[0, 0, 0], [0.06 * Math.cos(a), -0.3, 0.06 * Math.sin(a)], [0.02, -0.6, 0], [0.12 * Math.cos(a + 1), -0.82, 0.1 * Math.sin(a + 1)]], 0.07, 0.015, 14, 6), plum, tg);
-			R(ao([[0.02, -0.55, 0], [0.12 * Math.cos(a - 1), -0.68, 0.12 * Math.sin(a - 1)]], 0.025, 0.008, 6, 4), plum, tg);
+			const main = [[0, 0, 0], [0.06 * Math.cos(a), -0.3, 0.06 * Math.sin(a)], [0.02, -0.6, 0], [0.12 * Math.cos(a + 1), -0.82, 0.1 * Math.sin(a + 1)]],
+				twig = [[0.02, -0.55, 0], [0.12 * Math.cos(a - 1), -0.68, 0.12 * Math.sin(a - 1)]];
+			const m1 = R(ao(main, 0.07, 0.015, 14, 6), plum, tg),
+				m2 = R(ao(twig, 0.025, 0.008, 6, 4), plum, tg),
+				pts = [];
+			// (the skin points that must stay above the ground: the lowest of each ring round the tubes,
+			// and the axis that splays the tentacle outward)
+			[m1, m2].forEach((m) => {
+				const P = m.geometry.attributes.position;
+				for (let k = 0; k < P.count; k += 2) pts.push(new c0().fromBufferAttribute(P, k));
+			});
+			(tg.userData.pts = pts.filter((q) => q.y < -0.25)), (tg.userData.ax = new c0(-Math.sin(a), 0, Math.cos(a)));
 		}
 		// Zs drifting up and away beside the cap, each fading in, growing and fading out
 		const zTex =
@@ -8047,6 +8146,9 @@ const JGP = (() => {
 				const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: zTex, transparent: !0, depthWrite: !1, opacity: 0 }));
 				return (sp.userData.keep = !0), fl.add(sp), sp;
 			});
+		const tq = new THREE.Quaternion(),
+			te = new THREE.Euler(),
+			tv = new c0();
 		return born(g, {
 			height: 3.0,
 			step(t, dt, tk) {
@@ -8060,7 +8162,20 @@ const JGP = (() => {
 					sp.position.set(0.62 + 0.5 * u + 0.06 * Math.sin(5 * u + k), 0.75 + 1.0 * u, 0.45 - 0.1 * u);
 					sp.scale.set(sz, sz, 1), (sp.material.rotation = 0.25 - 0.3 * u), (sp.material.opacity = Math.min(1, u / 0.15) * Math.min(1, (1 - u) / 0.4) * 0.9);
 				});
-				tents.forEach((tg, k) => ((tg.rotation.x = 0.18 * Math.sin(1.4 * t + k)), (tg.rotation.z = 0.12 * Math.sin(1.1 * t + 2 * k))));
+				// the tentacles sway, and as she sinks toward the ground they splay outward just enough to
+				// keep clear of it (rather than pushing into it)
+				const room = fl.position.y - 0.68 - 0.02;
+				tents.forEach((tg, k) => {
+					const ud = tg.userData;
+					tq.setFromEuler(te.set(0.18 * Math.sin(1.4 * t + k), 0, 0.12 * Math.sin(1.1 * t + 2 * k)));
+					// (searching on from just under last frame's angle, it takes only a step or two)
+					let th = Math.max(0, (ud.th || 0) - 0.06);
+					for (; th < 1.5; th += 0.02) {
+						tg.quaternion.setFromAxisAngle(ud.ax, th).multiply(tq);
+						if (ud.pts.every((q) => tv.copy(q).applyQuaternion(tg.quaternion).y >= -room)) break;
+					}
+					ud.th = th;
+				});
 				hands.forEach((h, k) => (h.position.y = -0.18 + 0.05 * Math.sin(1.8 * t + k * 2) + 0.1 * tk));
 			},
 		});
@@ -8635,6 +8750,7 @@ const JGP = (() => {
 	// overlapping scales from the ground into a long neck, a lizard's head with golden eyes and a row
 	// of little purple knobs, a green gem set into the chest, two stubby clawed front feet, and long
 	// segmented purple tentacle tails spreading out across the ground around him.
+	// (ETCHER's model is final: keep it as it is.)
 	BORN.etcher = (g) => {
 		const root = new THREE.Group(),
 			body = new THREE.Group();
@@ -8967,7 +9083,7 @@ const JGP = (() => {
 	// with little bumps, two gold coiled horns, short clawed arms held up in front, thick clawed legs;
 	// overlapping armour plates (dark blue, gold and teal filigree, tiny inset gems) over his back and
 	// down his heavy tail; and a gold shield on his flank bearing a red glyph. From the pixel-art
-	// Glyph: a bright cyan glaze, GIGGLYPH's two purple tiles with glowing power coins set into his
+	// Glyph: a bright cyan glaze, GIGGLYPH's two purple tiles with glowing trident coins set into his
 	// back among the plates, two ribbed tubes (orange and grey) coming out of his back and coiling on
 	// the ground, and an excited little shake every few seconds. Nothing of him floats.
 	BORN.glyph = (g) => {
@@ -9128,12 +9244,15 @@ const JGP = (() => {
 			pg.position.copy(p).addScaledVector(n, lift), parent.add(pg);
 			R(plate, plateM, pg, [0, 0, 0], [tilt, 0, twist], [sz, sz, sz * 0.45]);
 		};
+		// (where the gold shield goes: low on his left flank, behind the arm; no plate lies under it)
+		const SHIELD_DIR = [-1, -0.38, 0.2],
+			shieldAt = hit(C, SHIELD_DIR).p.clone();
 		for (let row = 0; row < 4; row++)
 			for (let j = 0; j < 5 - (row % 2); j++) {
 				const th = 0.28 + 0.15 * row,
 					ph = Math.PI + (j - (4 - (row % 2)) / 2) * 0.68,
 					{ p, n } = hit(C, [Math.sin(th * Math.PI) * Math.sin(ph), Math.cos(th * Math.PI), Math.sin(th * Math.PI) * Math.cos(ph)]);
-				if (p.y < 0.45) continue;
+				if (p.y < 0.45 || p.distanceTo(shieldAt) < 0.52) continue;
 				putPlate(p, n, 0.235 - 0.01 * row, -0.2, 0.1 * (rs() - 0.5), body, 0.035 + 0.04 * (3 - row));
 			}
 		for (let k = 0; k < 7; k++) {
@@ -9153,7 +9272,7 @@ const JGP = (() => {
 		}
 		// the gold shield on his left flank, bearing his red glyph
 		{
-			const { p, n } = hit(C, [-0.9, -0.05, 0.42]),
+			const { p, n } = hit(C, SHIELD_DIR),
 				sg = faceTo(new THREE.Group(), n);
 			sg.position.copy(p).addScaledVector(n, 0.07), body.add(sg);
 			const s = new THREE.Shape();
@@ -9180,7 +9299,7 @@ const JGP = (() => {
 			R(sh, new THREE.MeshPhongMaterial({ map: face, shininess: 90, specular: 10066329 }), sg, [0, 0, 0.026]);
 			[[-0.2, 0.2], [0.2, 0.2], [-0.21, -0.03], [0.21, -0.03], [0, -0.24]].forEach(([gx, gy]) => R(T.sphere(0.028, 10, 8), x.clay("#3ad0d8", { shininess: 150, specular: 16777215 }), sg, [gx, gy, 0.035], null, [1, 1, 0.6]));
 		}
-		// GIGGLYPH's two purple tiles, each with a glowing power coin
+		// GIGGLYPH's two purple tiles, each with a glowing coin bearing his trident symbol
 		const tileTex = b(
 				128,
 				128,
@@ -9189,8 +9308,12 @@ const JGP = (() => {
 					const gr = c.createRadialGradient(64, 64, 6, 64, 64, 34);
 					gr.addColorStop(0, "#fff6a0"), gr.addColorStop(0.7, "#ffc030"), gr.addColorStop(1, "#e86a1a"), (c.fillStyle = gr), c.beginPath(), c.arc(64, 64, 32, 0, l), c.fill();
 					(c.strokeStyle = "#7ad8ff"), (c.lineWidth = 4), c.beginPath(), c.arc(64, 64, 38, 0, l), c.stroke();
-					(c.strokeStyle = "#c8202a"), (c.lineWidth = 6), (c.lineCap = "round"), c.beginPath(), c.arc(64, 67, 17, -0.3 * Math.PI, 1.3 * Math.PI), c.stroke();
-					c.beginPath(), c.moveTo(64, 42), c.lineTo(64, 66), c.stroke();
+					// his symbol from the artwork: a red trident, the stem through a cup of two curved prongs
+					(c.strokeStyle = "#c8202a"), (c.lineWidth = 6), (c.lineCap = "round"), (c.lineJoin = "round");
+					c.beginPath(), c.moveTo(64, 42), c.lineTo(64, 88), c.stroke();
+					c.beginPath(), c.moveTo(47, 49), c.quadraticCurveTo(46, 71, 64, 73), c.quadraticCurveTo(82, 71, 81, 49), c.stroke();
+					c.beginPath(), c.moveTo(42, 55), c.lineTo(47, 47), c.lineTo(52, 55), c.moveTo(76, 55), c.lineTo(81, 47), c.lineTo(86, 55), c.moveTo(59, 49), c.lineTo(64, 41), c.lineTo(69, 49), c.stroke();
+					(c.lineWidth = 5), c.beginPath(), c.moveTo(57, 86), c.lineTo(71, 86), c.stroke();
 				},
 				{ smooth: !0 },
 			),
@@ -9246,277 +9369,226 @@ const JGP = (() => {
 		});
 	};
 
-	// GORTON, after the Gorton artwork: a round, egg-shaped creature glazed like old painted pottery,
-	// teal at the crown running into coral pink and mustard low down, speckled all over with gold and
-	// dark flecks. A pale cream face mask with two small glossy eyes and a quiet mouth; antennae with
-	// ball tips, a branching twig with yellow buds and little knobs sprouting from his head. He is
-	// fitted out like a little machine: a brass
-	// porthole with a glowing green grid, a small screen with a doodle on it fed by a coiled ribbed hose,
-	// a pipe vent, rings, gauges and knobs, a cluster of coral bumps, and on his back a leather harness
-	// holding a pack of coiled pink tubes with a pouch and a hanging gourd. Two stubby coral legs.
-	BORN.gorton = (g) => {
+
+	// MAMA GORBO, after the Mama Gorbo artwork, in her own peach and at her old size: a great glossy
+	// balloon of a head leaning back over a narrowing chin that drips goo; two octagon ports set
+	// into her face (magenta rims round glassy purple lenses), the big one high and the small one
+	// low; a thick lime goo tail that runs down her left side, under her chin and curls up on
+	// her right; white smoke wisps trailing off her right side, yellow sparks crackling off her left,
+	// and her red tags (AP, IP and wifi) with a purple wifi sign floating round her. From GORBO she
+	// keeps the ports and the goo drips that splat on the ground.
+	BORN.mamagorbo = (g) => {
 		const root = new THREE.Group(),
 			body = new THREE.Group();
 		g.add(root), root.add(body);
-		const rs = srand(4711),
-			teal = new THREE.Color("#2fa6a2"),
-			teal2 = new THREE.Color("#4ab8a8"),
-			pink = new THREE.Color("#e2687a"),
-			mustard = new THREE.Color("#dca63a"),
-			coral = new THREE.Color("#e27a6a"),
-			cream = new THREE.Color("#f0e2c6"),
-			tmp = new THREE.Color(),
-			C = [0, 1.2, 0],
-			faceDir = new c0(0.08, 0.5, 0.86).normalize(),
-			nz = (x0, y0, z0) => Math.sin(3.1 * x0 + 1.7 * y0) * Math.cos(2.3 * z0 - 1.1 * x0) + 0.5 * Math.sin(5.3 * y0 + 2.9 * z0),
+		// a round goo drop of a body: a big round head softly melting into a rounder, squatter base,
+		// with runs of goo sliding down her sides (each ending in a bead that drips)
+		const PEACH = "#f2a06a",
+			C = [0.02, 1.6, 0.02],
+			RUNS = [0.75, 1.75, 2.6, -1.3, -2.2, 3.05].map((ph, k) => {
+				const el = -0.45 - 0.12 * (k % 2),
+					r0 = 1.06;
+				return [r0 * Math.sin(ph) * Math.cos(el), 1.9 + r0 * Math.sin(el), r0 * Math.cos(ph) * Math.cos(el), 0.14, 0.36 + 0.05 * (k % 3), 0.14];
+			}),
 			bb = blobBody(
-				[
-					[0, 1.18, 0, 0.84, 0.92, 0.8],
-					[0, 0.82, 0.04, 0.9, 0.62, 0.84],
-					[0, 1.72, -0.02, 0.6, 0.5, 0.58],
-					[-0.36, 0.25, 0.06, 0.21, 0.3, 0.23],
-					[0.36, 0.25, 0.06, 0.21, 0.3, 0.23],
-				],
+				// (head, the body melting down into a foot of goo spread on the ground, a soft crown bump)
+				[[0, 1.9, 0, 1.13, 1.0, 1.08], [0.04, 0.72, 0.04, 0.84, 0.62, 0.82], [0, 0.12, 0.02, 1.06, 0.15, 1.02], [-0.5, 2.52, 0.12, 0.34, 0.28, 0.32]].concat(RUNS),
 				C,
 				{
-					k: 0.2,
+					k: 0.3,
 					uvLen: 1.6,
+					// the runs of goo are paler and glossier than the rest of her
 					col: (p, fold, cc) => {
-						// teal above, coral and mustard patches below, coral legs, the cream face mask
-						const up = Math.max(0, Math.min(1, (p.y - 0.7) / 0.9)),
-							n0 = nz(p.x, p.y, p.z);
-						const n1 = Math.sin(6.1 * p.x - 2.3 * p.z + 1.3) * Math.sin(4.7 * p.y + 3.1 * p.x);
-						cc.copy(n0 + 0.6 * n1 > -0.15 ? pink : mustard).lerp(tmp.copy(n1 > 0.4 ? mustard : coral), 0.25);
-						cc.lerp(n0 > 0.3 ? teal2 : teal, Math.max(0, Math.min(1, up * 1.5 - 0.25 + 0.25 * n0)));
-						p.y < 0.5 && cc.lerp(coral, Math.max(0, Math.min(1, (0.5 - p.y) / 0.15)));
-						const d = new c0(p.x - C[0], p.y - C[1], p.z - C[2]).normalize().dot(faceDir);
-						cc.lerp(cream, Math.max(0, Math.min(1, (d - 0.88) / 0.04))).multiplyScalar(1 - 0.12 * fold);
+						let near = 9;
+						for (const [rx, ry, rz, ra, rb] of RUNS) near = Math.min(near, Math.hypot((p.x - rx) / ra, (p.y - ry) / rb, (p.z - rz) / ra));
+						const run = Math.max(0, Math.min(1, 1.6 - near));
+						cc.set(PEACH).offsetHSL(0, 0.04 * run, 0.05 * Math.min(1, Math.max(-1, p.y - 1.9)) - 0.05 * fold + 0.09 * run);
 					},
 				},
 			),
-			hit = bb.hit;
-		// speckles: gold and dark flecks over the glaze
-		const speck = b(
-			256,
-			256,
-			(c) => {
-				const r = srand(77);
-				(c.fillStyle = "#f2f2f2"), c.fillRect(0, 0, 256, 256);
-				for (let k = 0; k < 900; k++) {
-					const v = r();
-					(c.fillStyle = v < 0.45 ? "#e8c040" : v < 0.8 ? "#5a3a2a" : "#ffffff"), c.beginPath(), c.arc(256 * r(), 256 * r(), 0.6 + 1.6 * r() * r(), 0, l), c.fill();
+			hit = bb.hit,
+			gooM = KIT.surf("goo", PEACH, { rep: 2, bump: 0.01, shine: 110 });
+		keepR(bb.geo, gradMat("goo", { rep: 2, bump: 0.008, shine: 110, spec: 10066329 }), body);
+		// the wet shine high on her head (as in the artwork)
+		const shineM = new THREE.MeshBasicMaterial({ color: "#fff6ee", transparent: !0, opacity: 0.75, depthWrite: !1 });
+		[[[-0.45, 0.8, 0.4], 0.22, 0.1], [[-0.25, 0.92, 0.3], 0.07, 0.05]].forEach(([d, sx, sy]) => {
+			const { p, n } = hit(C, d),
+				m = R(T.circle(1, 24), shineM, body);
+			m.position.copy(p).addScaledVector(n, 0.012), faceTo(m, n), m.rotateZ(0.6), m.scale.set(sx, sy, 1), (m.userData.keep = !0);
+		});
+		// a glossy puddle of goo under her
+		const puddle = R(T.circle(1, 32), new THREE.MeshPhongMaterial({ color: "#d8844e", transparent: !0, opacity: 0.55, shininess: 120, specular: 16777215, depthWrite: !1 }), root, [0.05, 0.016, 0.06], [-Math.PI / 2, 0, 0], [1.45, 1.35, 1]);
+		puddle.userData.keep = !0;
+		// her two eyes, octagon ports: a raised magenta rim with a dark edge, a domed purple lens with a glint
+		const oct = (r) => {
+				const s = new THREE.Shape();
+				for (let k = 0; k <= 8; k++) {
+					const a = Math.PI / 8 + (k * Math.PI) / 4;
+					k ? s.lineTo(r * Math.cos(a), r * Math.sin(a)) : s.moveTo(r * Math.cos(a), r * Math.sin(a));
 				}
+				return s;
 			},
-			{ smooth: !0 },
-		);
-		(speck.wrapS = speck.wrapT = THREE.RepeatWrapping), speck.repeat.set(3, 3);
-		keepR(bb.geo, new THREE.MeshPhongMaterial({ map: speck, bumpMap: speck, bumpScale: 0.012, vertexColors: !0, shininess: 35, specular: 3355443 }), body);
-		const brass = KIT.surf("metal", "#b88a4a", { rep: 1, bump: 0.02, shine: 70, spec: 13421772 }),
-			rust = KIT.surf("metal", "#a8643a", { rep: 1, bump: 0.025, shine: 40 }),
-			tealM = KIT.surf("skin", "#2fa6a2", { rep: 2, bump: 0.02, shine: 40 }),
-			coralM = KIT.surf("skin", "#e27a6a", { rep: 2, bump: 0.02, shine: 30 }),
-			leather = KIT.surf("felt", "#8a5a30", { rep: 2, bump: 0.035, shine: 22 }),
-			darkM = x.clay("#1a1410", { shininess: 60 }),
-			place = (dir, out, from = C) => {
-				const { p, n } = hit(from, dir),
-					o = faceTo(new THREE.Group(), n);
-				return o.position.copy(p).addScaledVector(n, out), body.add(o), o;
-			};
-		// the face: two small glossy eyes with amber rims, lids for the blink, and a quiet mouth
-		const lids = [];
-		[-1, 1].forEach((sx) => {
-			const e = place([sx * 0.2, 0.42, 0.88], -0.03);
-			R(T.sphere(0.068, 16, 12), x.clay("#1a120c", { shininess: 160, specular: 16777215 }), e);
-			R(T.torus(0.07, 0.018, 8, 22), x.clay("#c8823a", { shininess: 60 }), e, [0, 0, 0.012]);
-			R(T.sphere(0.016, 8, 6), x.basic("#ffffff"), e, [-0.02 * sx, 0.025, 0.06]);
-			const lid = new THREE.Group();
-			e.add(lid), R(new THREE.SphereGeometry(0.076, 14, 8, 0, l, 0, Math.PI / 2), KIT.surf("skin", "#e8d8b8", { rep: 1, bump: 0.01, shine: 20 }), lid);
-			(lid.userData.open = -0.35), (lid.rotation.x = -0.35), lids.push(lid);
+			rimM = x.clay("#d8338a", { shininess: 70, specular: 6710886 }),
+			edgeM = x.clay("#6a1444", { shininess: 30 }),
+			lensM = new THREE.MeshPhongMaterial({ color: "#8a3ad8", emissive: "#2a0a4a", shininess: 120, specular: 16777215 });
+		const port = (dir, r) => {
+			const { p, n } = hit(C, dir),
+				pg = faceTo(new THREE.Group(), n);
+			// (sunk so the rim's edge meets the curve of her skin)
+			pg.position.copy(p).addScaledVector(n, -((r * r) / 1.8) * 0.75), body.add(pg);
+			const ring = oct(r);
+			ring.holes.push(oct(0.74 * r));
+			R(new THREE.ExtrudeGeometry(ring, { depth: 0.08, bevelEnabled: !0, bevelThickness: 0.025, bevelSize: 0.025, bevelSegments: 2, curveSegments: 1 }), rimM, pg);
+			R(new THREE.ExtrudeGeometry(oct(1.1 * r), { depth: 0.05, bevelEnabled: !1 }), edgeM, pg, [0, 0, -0.012]);
+			const lens = new THREE.Group();
+			pg.add(lens);
+			R(new THREE.CylinderGeometry(0.76 * r, 0.76 * r, 0.06, 8), lensM, lens, [0, 0, 0.04], [Math.PI / 2, Math.PI / 8, 0]);
+			R(new THREE.SphereGeometry(0.75 * r, 18, 8, 0, l, 0, Math.PI / 2), lensM, lens, [0, 0, 0.07], [Math.PI / 2, 0, 0], [1, 0.32, 1]);
+			R(T.sphere(0.12 * r, 8, 6), x.basic("#f6ecff"), lens, [-0.3 * r, 0.3 * r, 0.07 + 0.22 * r]);
+			return lens;
+		};
+		// (the ports are her eyes: they blink together now and then)
+		const ports = [port([0.42, 0.5, 0.8], 0.44), port([-0.4, -0.12, 0.9], 0.32)];
+		let blinkAt = 2.5,
+			blinkT = -1;
+		// a goo bead at the foot of each run (the drips form there)
+		const beadM = x.clay("#f8b47e", { shininess: 120, specular: 16777215 }),
+			beads = RUNS.map(([rx, ry, rz, , rb]) => {
+			const { p, n } = hit(C, [rx - C[0], ry - rb * 0.85 - C[1], rz - C[2]]);
+			// a hanging drop: round below, drawn to a point where it leaves the run
+			R(T.sphere(0.08, 12, 10), beadM, body, [p.x + 0.02 * n.x, p.y - 0.06, p.z + 0.02 * n.z], null, [1, 1.25, 1]);
+			R(T.cone(0.055, 0.12, 10), beadM, body, [p.x + 0.01 * n.x, p.y + 0.03, p.z + 0.01 * n.z]);
+			return p.clone().addScaledVector(n, 0.03).add(new c0(0, -0.16, 0));
 		});
+		// the lime goo tail: down her left side, under her chin and curling up on her right, lit pale
+		// yellow along its top and front
 		{
-			const ml = [];
-			for (let k = 0; k <= 8; k++) {
-				const u = k / 8 - 0.5,
-					q = hit(C, [0.42 * u, 0.24 - 0.02 * Math.abs(u), 0.95]);
-				ml.push(q.p.addScaledVector(q.n, 0.002));
+			const pts = [
+					[-0.62, 2.0, -0.12],
+					[-1.02, 1.55, 0.12],
+					[-1.02, 1.0, 0.32],
+					[-0.94, 0.45, 0.52],
+					[-0.55, 0.2, 0.88],
+					[0.05, 0.17, 1.02],
+					[0.62, 0.24, 0.84],
+					[1.0, 0.5, 0.48],
+					[1.12, 0.86, 0.16],
+					[1.02, 1.12, -0.04],
+				],
+				geo = ridgedTube(pts, 0.2, 0.08, 90, 0, 0, 12),
+				N = geo.attributes.normal,
+				col = new Float32Array(3 * N.count),
+				A = new THREE.Color("#a8cc22"),
+				B2 = new THREE.Color("#f4ff9a"),
+				cc = new THREE.Color();
+			for (let k = 0; k < N.count; k++) {
+				const u = Math.min(1, Math.max(0, 0.55 * N.getY(k) + 0.55 * N.getZ(k)));
+				cc.copy(A).lerp(B2, u * u), (col[3 * k] = cc.r), (col[3 * k + 1] = cc.g), (col[3 * k + 2] = cc.b);
 			}
-			R(ao(ml, 0.008, 0.008, 12, 5), x.clay("#6a4a2a", { shininess: 20 }), body);
+			geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+			keepR(geo, gradMat("goo", { rep: 2, bump: 0.01, shine: 100 }), body);
+			const e = pts[pts.length - 1];
+			R(T.sphere(0.085, 12, 10), x.clay("#c8e43a", { shininess: 100 }), body, [e[0], e[1], e[2]]);
 		}
-		// the crown: antennae with ball tips, a branching twig with yellow buds, mushrooms and knobs
-		const sway = [],
-			stalk = (dir, h, bend, col, tipCol, r0 = 0.05) => {
-				// (the stalk is turned on an outer group and swayed on an inner one, so the sway keeps the tilt)
-				const { p, n } = hit(C, dir),
-					og = new THREE.Group(),
-					sg = new THREE.Group();
-				og.position.copy(p).addScaledVector(n, -0.04), og.quaternion.setFromUnitVectors(new c0(0, 1, 0), n.clone().lerp(new c0(0, 1, 0), 0.6).normalize()), body.add(og), og.add(sg), sway.push(sg);
-				R(ao([[0, 0, 0], [bend * 0.3, h * 0.45, 0], [bend, h, bend * 0.3]], r0 * 1.8, r0 * 0.5, 14, 8), KIT.surf("skin", col, { rep: 1, bump: 0.02, shine: 40 }), sg);
-				R(T.sphere(r0 * 1.7, 12, 10), x.clay(tipCol, { shininess: 50 }), sg, [bend, h + r0 * 0.8, bend * 0.3]);
-				R(T.torus(r0 * 1.05, r0 * 0.3, 6, 14), x.clay("#7a4a2a"), sg, [bend, h - r0 * 0.6, bend * 0.3], [Math.PI / 2, 0, 0]);
-				return sg;
-			};
-		stalk([-0.1, 1, 0.15], 0.75, 0.08, "#d86a7a", "#e8707a");
-		stalk([0.18, 1, -0.05], 0.85, -0.05, "#2fa6a2", "#d8607a");
-		stalk([-0.5, 1, 0.1], 0.38, -0.12, "#2a98b0", "#3ab0a0", 0.04);
-		stalk([0.35, 0.9, 0.35], 0.28, 0.06, "#d8a040", "#c87a3a", 0.035);
-		stalk([-0.32, 0.9, -0.3], 0.3, -0.05, "#4ab8a8", "#e8a83a", 0.035);
-		{
-			const { p, n } = hit(C, [0.28, 1, -0.32]),
-				ow = new THREE.Group(),
-				tw = new THREE.Group(),
-				twig = KIT.surf("wood", "#c8823a", { rep: 1, bump: 0.02, shine: 20 }),
-				bud = x.clay("#f2d23a", { shininess: 60 });
-			ow.position.copy(p), ow.quaternion.setFromUnitVectors(new c0(0, 1, 0), n.clone().lerp(new c0(0, 1, 0), 0.7).normalize()), body.add(ow), ow.add(tw), sway.push(tw);
-			R(ao([[0, -0.03, 0], [0, 0.3, 0], [0.02, 0.55, 0]], 0.03, 0.015, 8, 6), twig, tw);
-			[[0.0, 0.3, -0.18, 0.62, 0.05], [0.02, 0.4, 0.2, 0.75, -0.05], [0.0, 0.48, -0.1, 0.82, 0.1], [0.02, 0.55, 0.08, 0.86, 0.0], [0.0, 0.2, 0.22, 0.48, 0.12]].forEach(([bx, by, ex, ey, ez]) => {
-				R(ao([[bx, by, 0], [(bx + ex) / 2, (by + ey) / 2, ez / 2], [ex, ey, ez]], 0.012, 0.008, 6, 5), twig, tw);
-				R(T.sphere(0.035, 10, 8), bud, tw, [ex, ey + 0.02, ez]);
-			});
-		}
-		const knobCols = ["#e8a83a", "#2fa6a2", "#d8607a", "#3a8a7a", "#e8c050", "#7a4a2a"];
-		for (let k = 0; k < 30; k++) {
-			const a = l * rs(),
-				e = 0.35 + 0.6 * rs(),
-				d = [Math.cos(e) * Math.sin(a), Math.sin(e) + 0.15, Math.cos(e) * Math.cos(a)];
-			if (new c0(...d).normalize().dot(faceDir) > 0.82) continue;
-			const kn = place(d, -0.005);
-			k % 3 ? R(T.sphere(0.022 + 0.022 * rs(), 8, 6), x.clay(knobCols[k % knobCols.length], { shininess: 40 }), kn) : R(T.cone(0.03, 0.08, 8), x.clay(knobCols[k % knobCols.length], { shininess: 40 }), kn, [0, 0, 0.03], [Math.PI / 2, 0, 0]);
-		}
-		// the brass porthole with its glowing green grid, low on his front
-		const gridTex = b(
-			128,
-			128,
-			(c) => {
-				const gr = c.createRadialGradient(64, 64, 10, 64, 64, 64);
-				gr.addColorStop(0, "#9af0c8"), gr.addColorStop(1, "#2a9a7a"), (c.fillStyle = gr), c.fillRect(0, 0, 128, 128), (c.strokeStyle = "rgba(20,80,60,0.6)"), (c.lineWidth = 3);
-				for (let k = 12; k < 128; k += 16) c.beginPath(), c.moveTo(k, 0), c.lineTo(k, 128), c.moveTo(0, k), c.lineTo(128, k), c.stroke();
-			},
-			{ smooth: !0 },
-		);
-		const glassM = new THREE.MeshPhongMaterial({ map: gridTex, emissive: 16777215, emissiveMap: gridTex, emissiveIntensity: 0.55, shininess: 120, specular: 16777215 });
-		{
-			const ph = place([-0.4, -0.38, 0.85], 0.0);
-			R(T.torus(0.2, 0.06, 12, 32), brass, ph, [0, 0, 0.02]);
-			R(T.torus(0.15, 0.02, 8, 28), rust, ph, [0, 0, 0.05]);
-			R(new THREE.SphereGeometry(0.17, 20, 8, 0, l, 0, 0.5), glassM, ph, [0, 0, -0.08], [Math.PI / 2, 0, 0]);
-			for (let k = 0; k < 10; k++) R(T.sphere(0.014, 6, 4), brass, ph, [0.2 * Math.cos((k / 10) * l), 0.2 * Math.sin((k / 10) * l), 0.08]);
-		}
-		// the little screen with a doodle on it, a coiled ribbed hose from a pipe fitting into it, knobs
-		const doodle = b(
-			128,
-			112,
-			(c) => {
-				(c.fillStyle = "#a8e8a0"), c.fillRect(0, 0, 128, 112), (c.strokeStyle = "#2a4a2a"), (c.lineWidth = 2.5), (c.lineCap = "round");
-				c.beginPath(), c.arc(64, 50, 16, 0, l), c.stroke();
-				c.beginPath(), c.moveTo(54, 37), c.lineTo(50, 18), c.moveTo(74, 37), c.lineTo(78, 18), c.stroke();
-				c.beginPath(), c.arc(58, 48, 2, 0, l), c.arc(70, 48, 2, 0, l), c.stroke();
-				c.beginPath(), c.moveTo(56, 66), c.lineTo(50, 90), c.moveTo(72, 66), c.lineTo(78, 90), c.moveTo(48, 78), c.lineTo(80, 78), c.stroke();
-				(c.fillStyle = "rgba(255,255,255,0.18)"), c.fillRect(0, 0, 128, 40);
-			},
-			{ smooth: !0 },
-		);
-		const screenM = new THREE.MeshPhongMaterial({ map: doodle, emissive: 16777215, emissiveMap: doodle, emissiveIntensity: 0.45, shininess: 90 });
-		{
-			const sc = place([-0.88, -0.05, 0.42], 0.06),
-				s = new THREE.Shape(),
-				w = 0.19,
-				h = 0.17,
-				r = 0.05;
-			s.moveTo(-w + r, -h), s.lineTo(w - r, -h), s.quadraticCurveTo(w, -h, w, -h + r), s.lineTo(w, h - r), s.quadraticCurveTo(w, h, w - r, h), s.lineTo(-w + r, h), s.quadraticCurveTo(-w, h, -w, h - r), s.lineTo(-w, -h + r), s.quadraticCurveTo(-w, -h, -w + r, -h);
-			R(new THREE.ExtrudeGeometry(s, { depth: 0.1, bevelEnabled: !0, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 2, curveSegments: 4 }), KIT.surf("plastic", "#4a6a5a", { rep: 1, bump: 0.02, shine: 40 }), sc, [0, 0, -0.12]);
-			R(new THREE.PlaneGeometry(0.3, 0.26), screenM, sc, [0, 0, 0.012]);
-			[[-0.12, "#8a2a2a"], [0, "#2a2a2e"], [0.12, "#8a2a2a"]].forEach(([kx, kc]) => R(T.cyl(0.025, 0.025, 0.03, 12), x.clay(kc, { shininess: 60 }), sc, [kx, -0.25, -0.01], [Math.PI / 2, 0, 0]));
-			// the pipe fitting the hose comes from, and the hose coiling round into the screen
-			const fit = place([-0.55, 0.12, 0.85], 0.02);
-			R(T.cyl(0.07, 0.08, 0.1, 14), brass, fit, [0, 0, 0.03], [Math.PI / 2, 0, 0]), R(T.torus(0.075, 0.018, 6, 16), rust, fit, [0, 0, 0.08]);
-			const a = new c0(),
-				bpt = new c0();
-			body.updateWorldMatrix(!0, !0), fit.localToWorld(a.set(0, 0, 0.09)), sc.localToWorld(bpt.set(0.2, 0.05, -0.02));
-			body.worldToLocal(a), body.worldToLocal(bpt);
-			const mid = a.clone().lerp(bpt, 0.5),
-				out = mid.clone().sub(new c0(C[0], mid.y, C[2])).normalize();
-			R(ridgedTube([[a.x, a.y, a.z], [a.x + out.x * 0.2, a.y + 0.05, a.z + out.z * 0.2], [mid.x + out.x * 0.28, mid.y - 0.18, mid.z + out.z * 0.28], [bpt.x + out.x * 0.12, bpt.y - 0.12, bpt.z + out.z * 0.12], [bpt.x, bpt.y, bpt.z]], 0.045, 0.045, 60, 26, 0.22, 10), KIT.surf("rubber", "#d8705a", { rep: 1, bump: 0.02, shine: 40 }), body);
-		}
-		// a pipe vent, a gauge eye, small rings and rivets on his sides
-		{
-			const v1 = place([-0.62, 0.42, 0.62], 0.02);
-			R(T.cyl(0.11, 0.12, 0.16, 18, 1, !0), Object.assign(KIT.surf("skin", "#2a8a86", { rep: 1, bump: 0.02, shine: 40 }).clone(), { side: THREE.DoubleSide }), v1, [0, 0, 0.06], [Math.PI / 2, 0, 0]);
-			R(T.torus(0.115, 0.03, 8, 20), x.clay("#c8823a", { shininess: 50 }), v1, [0, 0, 0.14]);
-			R(T.cyl(0.1, 0.1, 0.02, 16), darkM, v1, [0, 0, 0.02], [Math.PI / 2, 0, 0]);
-			const ge = place([-0.8, 0.35, 0.05], 0.0);
-			R(T.torus(0.08, 0.03, 8, 20), tealM, ge, [0, 0, 0.02]), R(T.sphere(0.06, 14, 10), x.clay("#141418", { shininess: 160, specular: 16777215 }), ge, [0, 0, 0.0]);
-			[[-0.95, -0.2, 0.15], [-0.7, -0.62, 0.5], [0.85, -0.3, 0.45], [0.6, 0.0, 0.8]].forEach((d, k) => {
-				const rg = place(d, 0.0);
-				R(T.torus(0.07 - 0.01 * (k % 2), 0.025, 8, 20), k % 2 ? coralM : rust, rg, [0, 0, 0.015]), R(T.sphere(0.035, 10, 8), darkM, rg, [0, 0, -0.01]);
-			});
-			for (let k = 0; k < 12; k++) {
-				const a = l * rs(),
-					d = [Math.sin(a), -0.6 + 1.3 * rs(), Math.cos(a)],
-					rv = place(d, 0.0);
-				R(T.sphere(0.018, 6, 4), k % 2 ? brass : x.clay("#3a7a6a"), rv);
-			}
-		}
-		// a cluster of coral bumps low on his left side
-		{
-			const bc = ["#e8687a", "#f08a5a", "#d8506a", "#e8a050"];
-			for (let k = 0; k < 18; k++) {
-				const a = -1.0 - 0.7 * rs(),
-					d = [Math.sin(a), -0.55 - 0.35 * rs(), Math.cos(a) + 0.2],
-					cb = place(d, 0.0),
-					r0 = 0.03 + 0.03 * rs();
-				R(T.torus(r0, r0 * 0.55, 8, 14), x.clay(bc[k % 4], { shininess: 30 }), cb, [0, 0, 0.01]);
-			}
-		}
-		// the harness: a strap over each shoulder and a belt round the back, with brass buckles, and the
-		// pack on his back: coiled pink tubes, a pouch with a buckle and a little gourd hanging off it
-		const strapM = Object.assign(leather.clone(), { side: THREE.DoubleSide });
-		[-1, 1].forEach((sx) => apronBib(hit, C, sx > 0 ? 1.62 : -1.82, sx > 0 ? 1.82 : -1.62, 0.55, 1.85, strapM, body, 0.035));
-		apronBib(hit, C, Math.PI - 1.9, Math.PI + 1.9, 1.02, 1.14, strapM, body, 0.04);
-		[-1, 1].forEach((sx) => {
-			const bk = place([sx * Math.sin(1.72), 0.0, Math.cos(1.72)], 0.05);
-			R(T.box(0.12, 0.13, 0.02), brass, bk), R(T.box(0.07, 0.08, 0.025), darkM, bk);
-		});
-		const pack = new THREE.Group();
-		{
-			const { p, n } = hit(C, [0, 0.05, -1]);
-			pack.position.copy(p).addScaledVector(n, 0.12), faceTo(pack, n.clone().negate()), body.add(pack);
-			R(T.box(0.8, 0.7, 0.26), leather, pack, [0, 0, 0.0]);
-			R(T.box(0.82, 0.08, 0.28), KIT.surf("felt", "#6a4020", { rep: 1, bump: 0.03, shine: 20 }), pack, [0, 0.34, 0.0]);
-			const tubeM = KIT.surf("rubber", "#e26a8a", { rep: 1, bump: 0.02, shine: 40 }),
-				tubeM2 = KIT.surf("rubber", "#d8885a", { rep: 1, bump: 0.02, shine: 40 });
-			[[-0.22, 0.48, tubeM], [0.0, 0.52, tubeM2], [0.22, 0.47, tubeM]].forEach(([tx, ty, tm]) => {
+		// white smoke wisps trailing off her right side
+		const wispM = new THREE.MeshBasicMaterial({ color: "#f4f8fc", transparent: !0, opacity: 0.6, depthWrite: !1, side: THREE.DoubleSide }),
+			wisps = [0, 1, 2].map((k) => {
+				// (each starts just off her skin on her right side)
+				const wg = new THREE.Group(),
+					{ p, n } = hit(C, [1, 1.35 + 0.32 * k - C[1], -0.25 + 0.12 * k - C[2]]);
+				wg.position.copy(p).addScaledVector(n, 0.1), (wg.userData.x0 = wg.position.x), body.add(wg);
 				const pts = [];
-				for (let k = 0; k <= 30; k++) {
-					const a = (k / 30) * 2.5 * l;
-					pts.push([tx + 0.09 * Math.cos(a), ty + 0.035 * Math.sin(a) + 0.02 * (k / 30), -0.05 + 0.09 * Math.sin(a)]);
-				}
-				R(ao(pts, 0.032, 0.032, 80, 8), tm, pack);
+				for (let j = 0; j <= 7; j++) pts.push([0.17 * j, 0.1 * j + 0.08 * Math.sin(1.6 * j + k), 0.1 * Math.sin(1.1 * j + 2 * k)]);
+				const m = R(ridgedTube(pts, 0.05 - 0.008 * k, 0.012, 40, 0, 0, 6), wispM, wg);
+				return (m.userData.keep = !0), wg;
 			});
-			R(T.box(0.34, 0.26, 0.12), KIT.surf("felt", "#c8a070", { rep: 1, bump: 0.03, shine: 10 }), pack, [0.12, -0.12, -0.18]);
-			R(T.box(0.08, 0.1, 0.02), brass, pack, [0.12, -0.08, -0.25]);
-			R(T.cyl(0.06, 0.06, 0.06, 14), darkM, pack, [-0.22, -0.1, -0.16], [Math.PI / 2, 0, 0]), R(T.torus(0.065, 0.015, 6, 16), brass, pack, [-0.22, -0.1, -0.19]);
-			const gourd = new THREE.Group();
-			gourd.position.set(-0.42, -0.2, -0.05), pack.add(gourd), sway.push(gourd);
-			R(ao([[0, 0, 0], [-0.03, -0.12, 0], [0, -0.22, 0]], 0.012, 0.012, 6, 4), leather, gourd);
-			R(T.sphere(1, 14, 10), KIT.surf("skin", "#d8a840", { rep: 1, bump: 0.02, shine: 40 }), gourd, [0, -0.33, 0], null, [0.09, 0.12, 0.09]);
-			R(T.sphere(1, 12, 8), KIT.surf("skin", "#d8a840", { rep: 1, bump: 0.02, shine: 40 }), gourd, [0, -0.2, 0], null, [0.055, 0.06, 0.055]);
-		}
-		// stubby coral feet with three round toes
-		const feet = [-1, 1].map((sx) => {
-			const f = new THREE.Group();
-			f.position.set(0.36 * sx, 0.0, 0.08), (f.userData.keep = !0), body.add(f);
-			R(T.sphere(1, 16, 10), coralM, f, [0, 0.07, 0.04], null, [0.22, 0.09, 0.25]);
-			[-1, 0, 1].forEach((k) => R(T.sphere(1, 10, 8), coralM, f, [0.1 * k, 0.05, 0.25 - 0.03 * Math.abs(k)], null, [0.06, 0.05, 0.07]));
-			return f;
-		});
+		// yellow sparks crackling off her upper left
+		const sparkM = x.basic("#ffe23a"),
+			sparks = [0, 1, 2, 3].map((k) => {
+				const a = 2.3 + 0.28 * k,
+					m = R(T.box(0.04, 0.2 - 0.03 * (k % 2), 0.04), sparkM, body, [-0.15 + 1.3 * Math.cos(a), 2.25 + 0.75 * Math.sin(a), 0.25], [0, 0, a - Math.PI / 2]);
+				return (m.userData.keep = !0), m;
+			});
+		// her tags: red pin-shaped badges (AP, IP, wifi) and a purple wifi sign, floating round her
+		const pin = (() => {
+				const s = new THREE.Shape();
+				s.moveTo(0, -0.26), s.lineTo(-0.15, -0.1), s.lineTo(-0.2, 0.05), s.quadraticCurveTo(-0.2, 0.2, 0, 0.21), s.quadraticCurveTo(0.2, 0.2, 0.2, 0.05), s.lineTo(0.15, -0.1), s.lineTo(0, -0.26);
+				return new THREE.ExtrudeGeometry(s, { depth: 0.05, bevelEnabled: !0, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 1, curveSegments: 4 });
+			})(),
+			pinM = x.clay("#e8423a", { shininess: 60 }),
+			wifi = (cv, cx, cy, s, colr) => {
+				(cv.strokeStyle = cv.fillStyle = colr), (cv.lineWidth = 5 * s), (cv.lineCap = "round");
+				[10, 19, 28].forEach((rr) => (cv.beginPath(), cv.arc(cx, cy, rr * s, 1.25 * Math.PI, 1.75 * Math.PI), cv.stroke()));
+				cv.beginPath(), cv.arc(cx, cy, 4 * s, 0, l), cv.fill();
+			},
+			tag = (txt) => {
+				const tg = new THREE.Group();
+				body.add(tg), R(pin, pinM, tg, [0, 0, -0.025]);
+				const tex = b(64, 64, (cv) => {
+					"wifi" === txt
+						? wifi(cv, 32, 44, 0.9, "#ffffff")
+						: ((cv.fillStyle = "#ffffff"), (cv.font = "bold 28px monospace"), (cv.textAlign = "center"), (cv.textBaseline = "middle"), cv.fillText(txt, 32, 34));
+				});
+				const face = R(T.plane(0.3, 0.3), new THREE.MeshBasicMaterial({ map: tex, transparent: !0 }), tg, [0, 0.02, 0.05]);
+				return (face.userData.keep = !0), tg;
+			},
+			signTex = b(64, 64, (cv) => wifi(cv, 32, 48, 1, "#b04ae8")),
+			sign = new THREE.Group();
+		body.add(sign);
+		const signFace = R(T.plane(0.42, 0.42), new THREE.MeshBasicMaterial({ map: signTex, transparent: !0, side: THREE.DoubleSide }), sign);
+		signFace.userData.keep = !0;
+		const tags = [tag("AP"), tag("IP"), tag("wifi"), sign];
+		// goo drips: each swells under a bead, stretches, falls and splats on the ground
+		const wp = new c0(),
+			D = [0, 1, 2].map((k) => {
+				const at = beads[(2 * k) % beads.length],
+					m = R(T.sphere(0.06, 10, 8), gooM, body, [at.x, at.y, at.z]);
+				return (m.userData.keep = !0), { m, at, t: -1.6 * k, v: 0 };
+			});
 		return born(g, {
-			height: 2.85,
-			lids,
+			height: 2.95,
 			step(t, dt, tk, wk) {
-				(body.position.y = 0.015 * Math.sin(1.8 * t) + 0.05 * wk * Math.abs(Math.sin(7 * t))), (body.rotation.z = 0.02 * Math.sin(1.2 * t) + 0.05 * wk * Math.sin(7 * t));
-				sway.forEach((sg, k) => (sg.rotation.x = 0.06 * Math.sin(1.6 * t + 1.3 * k)));
-				(glassM.emissiveIntensity = 0.5 + 0.08 * Math.sin(3 * t)), (screenM.emissiveIntensity = 0.42 + 0.05 * Math.sin(9 * t) * Math.sin(1.3 * t));
-				feet.forEach((f, k) => (f.position.y = 0.08 * wk * Math.max(0, Math.sin(7 * t + k * Math.PI))));
+				dt = Math.min(0.1, dt || 0.016);
+				// she breathes and jiggles like a jelly (a slow squash, a quicker wobble on top), and bobs
+				// as she talks
+				const br = Math.sin(1.4 * t) + 0.35 * Math.sin(4.1 * t) * (0.6 + 0.4 * Math.sin(0.5 * t));
+				body.scale.set(1 - 0.018 * br, 1 + 0.035 * br, 1 - 0.018 * br), puddle.scale.set(1.45 + 0.03 * br, 1.35 + 0.03 * br, 1);
+				// blink
+				blinkT < 0 && t > blinkAt && ((blinkT = 0), (blinkAt = t + 2.5 + 3.5 * Math.random()));
+				let bk = 1;
+				blinkT >= 0 && ((blinkT += dt), (bk = Math.abs(1 - blinkT / 0.09)), blinkT > 0.18 && ((blinkT = -1), (bk = 1)));
+				(body.position.y = 0.04 * tk * Math.abs(Math.sin(5 * t)) + 0.03 * wk * Math.abs(Math.sin(6 * t))), (body.rotation.z = 0.035 * Math.sin(0.7 * t)), (body.rotation.x = -0.03 * tk * Math.sin(4 * t));
+				ports.forEach((ln, k) => ln.scale.set(1 + 0.04 * Math.sin(1.7 * t + 2 * k), Math.max(0.06, bk) * (1 + 0.04 * Math.sin(1.7 * t + 2 * k)), 1));
+				tags.forEach((tg, k) => {
+					const a = 0.55 * t + (k * Math.PI) / 2;
+					// (a round orbit well clear of her: her head is 1.13 across at its widest)
+					tg.position.set(1.78 * Math.cos(a), 1.9 + 0.35 * Math.sin(1.3 * a), 1.78 * Math.sin(a)), (tg.rotation.y = 0.4 * Math.sin(t + k));
+				});
+				wisps.forEach((wg, k) => {
+					const u = (0.25 * t + k / 3) % 1;
+					wg.scale.set(0.6 + 0.6 * u, 0.6 + 0.6 * u, 1), (wg.rotation.z = 0.15 * Math.sin(0.8 * t + k)), (wg.position.x = wg.userData.x0 + 0.25 * u);
+				});
+				wispM.opacity = 0.45 + 0.15 * Math.sin(0.9 * t);
+				sparks.forEach((m, k) => m.scale.setScalar(Math.sin(9 * t + 2.1 * k) > 0.2 ? 1 : 0.01));
+				for (const d of D) {
+					if ((d.t += dt) < 0) {
+						d.m.scale.setScalar(0.01);
+						continue;
+					}
+					if (d.t < 2.4) {
+						const q = d.t / 2.4;
+						d.m.position.set(d.at.x, d.at.y - 0.05 * q, d.at.z), d.m.scale.set(0.5 + 0.5 * q, 0.5 + 1.1 * q, 0.5 + 0.5 * q);
+						continue;
+					}
+					(d.v += 9.8 * dt), (d.m.position.y -= d.v * dt), d.m.scale.set(0.8, 1.5, 0.8);
+					if (d.m.position.y < 0.06) {
+						d.m.getWorldPosition(wp);
+						try {
+							Nt.splat(wp.x, wp.z, PEACH, 0.3 + 0.12 * Math.random());
+						} catch (e) {}
+						(d.at = beads[Math.floor(Math.random() * beads.length)]), (d.t = -1.5 - 2 * Math.random()), (d.v = 0), d.m.position.copy(d.at);
+					}
+				}
 			},
 		});
 	};
@@ -9630,7 +9702,7 @@ const JGP = (() => {
 			row.list.forEach(([id, name, builder, extra, at0]) => {
 				const at = "function" == typeof at0 ? at0() : "string" == typeof at0 && /^kiosk:/.test(at0) ? KIOSK_AT.spot(at0.slice(6)) : "string" == typeof at0 && /^kiosk-desk:/.test(at0) ? KIOSK_AT.desk(at0.slice(11)) : at0;
 				let d = all[id];
-				if (!d) (d = o[id] = { emotes: ["!", "♥", "✿"] }), (Zt[id] = { g: [-0.8, 1.2, 0.45], c: [0.8, 1.0, 0.45] });
+				if (!d) d = o[id] = { emotes: ["!", "♥", "✿"] };
 				Object.assign(d, extra, {
 					name,
 					builder,
@@ -9727,68 +9799,81 @@ const JGP = (() => {
 		});
 		return { white, crate, wall, wall2 };
 	}
-	// The General Store: red walls, green tin roof, and a counter of Midwest produce (sweet corn,
-	// apples, pumpkins, tomatoes, honey) beside the Watering Cans for sale. The shopkeeper stands at
-	// (0, 0.2, -0.45) behind the counter.
-	function buildShop(o) {
-		kioskFrame(o, { sign: "GENERAL STORE", ink: "#a8382c", wall: "#a8382c", wall2: "#8e2e24", tin: [70, 120, 84] });
-		const wicker = KIT.surf("thatch", "#b88a4a", { rep: 1, bump: 0.03, shine: 8 });
-		// produce
-		const fr = (c, sh = 45) => x.clay(c, { shininess: sh }),
-			basket = (px, py, pz, r) => R(T.cyl(r, 0.85 * r, 0.22, 12), wicker, o, [px, py + 0.11, pz]),
-			pile = (px, py, pz, r0, n, cols, spread) => {
-				for (let k = 0; k < n; k++) {
-					const a = 2.4 * k,
-						rr2 = k ? spread * Math.sqrt(k / n) : 0;
-					R(T.sphere(r0, 10, 8), fr(cols[k % cols.length]), o, [px + rr2 * Math.cos(a), py + r0 + (k > n - 3 ? 0.7 * r0 : 0), pz + rr2 * Math.sin(a)]);
+	// The Library: deep blue walls, a brick-red roof, bookcases full of books along the back wall,
+	// stacks of books on the crates, and on the counter an open book, a reading lamp and a globe.
+	// The librarian SPARKAKUS stands at (0, 0.2, -0.45) behind the counter. The aisles inside the side
+	// walls (x = +-2.7) and the front corners stay clear: he walks out that way.
+	function buildLibrary(o) {
+		kioskFrame(o, { sign: "LIBRARY", ink: "#2a3e6a", wall: "#3e5a8a", wall2: "#304a74", tin: [150, 64, 52] });
+		const G = goods(),
+			rs = srand(4242),
+			SPINE = ["#8a2a2a", "#2a4a8a", "#2f6a3a", "#c8a040", "#6a3a8a", "#a85a2a", "#1f2f4a", "#d8c8a0", "#4a2a1a", "#8a6a3a"],
+			wood = "#6a4424",
+			dark = "#4a2e18";
+		// a row of upright books from x0 to x1 standing on y, leaning now and then
+		const row = (x0, x1, y, z, hMax) => {
+			for (let px = x0; px < x1 - 0.05; ) {
+				const w = 0.05 + 0.07 * rs(),
+					h = (0.6 + 0.4 * rs()) * hMax,
+					c = SPINE[(rs() * SPINE.length) | 0];
+				if (rs() < 0.07 && px + 0.25 < x1) {
+					// a gap with a book leaning into it
+					G.box(c, px + 0.1, y + 0.45 * h, z, w, h, 0.24, 0, 0, -0.35);
+					px += 0.26;
+					continue;
 				}
-			},
-			pumpkin = (px, py, pz, s) => {
-				R(T.sphere(1, 14, 10), fr("#e8801e", 30), o, [px, py + 0.14 * s, pz], null, [0.2 * s, 0.15 * s, 0.2 * s]);
-				for (let k = 0; k < 6; k++) R(T.sphere(1, 8, 6), fr("#d06a14", 30), o, [px + 0.15 * s * Math.cos(k), py + 0.14 * s, pz + 0.15 * s * Math.sin(k)], [0, -k, 0], [0.07 * s, 0.14 * s, 0.07 * s]);
-				R(T.cyl(0.025 * s, 0.035 * s, 0.1 * s, 6), fr("#4a5a22"), o, [px, py + 0.32 * s, pz], [0.2, 0, 0.2]);
-			},
-			corn = (px, py, pz) => {
-				basket(px, py, pz, 0.3);
-				for (let k = 0; k < 6; k++) {
-					const a = (k / 6) * l;
-					R(T.cyl(0.045, 0.04, 0.3, 8), fr("#f2d04a", 30), o, [px + 0.1 * Math.cos(a), py + 0.3, pz + 0.1 * Math.sin(a)], [Math.PI / 2 - 0.3, a, 0]);
-					R(T.cone(0.05, 0.18, 5), fr("#7a9a3a", 20), o, [px + 0.17 * Math.cos(a), py + 0.27, pz + 0.17 * Math.sin(a)], [0.2, a, 0.6]);
-				}
-			};
+				G.box(c, px + w / 2, y + h / 2, z + 0.02 * (rs() - 0.5), w, h, 0.22 + 0.04 * rs());
+				// a pale band across the spine of some
+				rs() < 0.4 && G.box(rs() < 0.5 ? "#e8d8a0" : "#c8a040", px + w / 2, y + 0.75 * h, z + 0.125, w + 0.004, 0.025, 0.01);
+				px += w + 0.004;
+			}
+		};
+		// a flat stack of books
+		const stack = (px, py, pz, n, ry) => {
+			let yy = py;
+			for (let k = 0; k < n; k++) {
+				const t = 0.05 + 0.03 * rs();
+				G.box(SPINE[(rs() * SPINE.length) | 0], px + 0.02 * (rs() - 0.5), yy + t / 2, pz + 0.02 * (rs() - 0.5), 0.3 + 0.1 * rs(), t, 0.22 + 0.06 * rs(), 0, ry + 0.3 * (rs() - 0.5), 0);
+				G.box("#f4ecd8", px, yy + t / 2, pz, 0.27, t * 0.8, 0.2, 0, ry, 0);
+				yy += t;
+			}
+		};
+		// the bookcases along the back wall: three bays, six shelves
+		const BZ = -2.15,
+			SH = [0.25, 0.8, 1.35, 1.9, 2.45, 3.0];
+		G.box(dark, 0, 1.75, BZ - 0.13, 5.6, 3.1, 0.03);
+		[-2.78, -0.93, 0.93, 2.78].forEach((px) => G.box(wood, px, 1.75, BZ, 0.07, 3.1, 0.32));
+		SH.forEach((y) => G.box(wood, 0, y - 0.025, BZ, 5.6, 0.05, 0.32));
+		G.box(wood, 0, 3.32, BZ + 0.02, 5.72, 0.08, 0.38);
+		[[-2.74, -0.97], [-0.89, 0.89], [0.97, 2.74]].forEach(([a, b2]) => SH.slice(0, 5).forEach((y) => row(a, b2, y, BZ, 0.48)));
+		// the rug behind the counter
+		G.box("#7a2a3a", 0, 0.205, -0.7, 2.4, 0.01, 1.6), G.box("#c8a040", 0, 0.207, -0.7, 2.2, 0.01, 1.4), G.box("#7a2a3a", 0, 0.209, -0.7, 2.0, 0.01, 1.2);
+		// books stacked on the crates, and a globe on its stand
+		stack(-1.42, 1.0, -0.85, 5, 0.1), stack(-1.42, 1.0, -0.2, 3, -0.2), row(-1.7, -1.14, 1.0, 0.25, 0.3);
+		G.add(T.cyl(0.12, 0.15, 0.05, 14), "#c8a040", G.m(1.42, 1.025, -0.6)), G.add(T.cyl(0.015, 0.015, 0.16, 6), "#c8a040", G.m(1.42, 1.13, -0.6));
+		G.add(T.sphere(0.2, 18, 12), "#3a6ab8", G.m(1.42, 1.38, -0.6, 0.41, 0, 0));
+		for (let k = 0; k < 6; k++) G.add(T.sphere(1, 8, 6), k % 2 ? "#5a9a3a" : "#c8a85a", G.m(1.42 + 0.17 * Math.cos(1.9 * k), 1.38 + 0.12 * Math.sin(2.6 * k), -0.6 + 0.17 * Math.sin(1.9 * k), 0, k, 0, 0.07, 0.05, 0.05));
+		G.add(T.torus(0.23, 0.012, 5, 24, Math.PI), "#c8a040", G.m(1.42, 1.38, -0.6, 0, 0, Math.PI / 2 + 0.41));
+		stack(1.42, 1.0, 0.05, 4, 0.4);
+		// on the counter: an open book, a short stack, the reading lamp and a bell
 		const top = 1.12;
-		corn(-1.3, top, 0.62);
-		basket(-0.72, top, 0.62, 0.27), pile(-0.72, top + 0.12, 0.62, 0.06, 10, ["#c8202a", "#e0302a", "#a81a24"], 0.18);
-		pumpkin(-0.18, top, 0.6, 1.1), pumpkin(0.1, top, 0.72, 0.7);
-		basket(0.42, top, 0.6, 0.22), pile(0.42, top + 0.12, 0.6, 0.05, 8, ["#e8301e", "#d82818"], 0.14);
-		for (let k = 0; k < 3; k++) R(T.cyl(0.05, 0.05, 0.12, 10), fr("#d89a1a", 80), o, [0.72 + 0.11 * k, top + 0.06, 0.85]), R(T.cyl(0.052, 0.052, 0.025, 10), fr("#c8a040", 60), o, [0.72 + 0.11 * k, top + 0.13, 0.85]);
-		const shelf = 1.0;
-		pumpkin(-1.42, shelf, -0.9, 1.4), pumpkin(-1.42, shelf, -0.35, 1.0);
-		R(T.sphere(0.2, 14, 10), fr("#2f7a2a"), o, [-1.42, shelf + 0.17, 0.12], null, [1.25, 1, 1]);
-		basket(1.42, shelf, -0.75, 0.3), pile(1.42, shelf + 0.12, -0.75, 0.06, 11, ["#8ac83a", "#a8d84a"], 0.2);
-		basket(1.42, shelf, -0.05, 0.26), pile(1.42, shelf + 0.12, -0.05, 0.06, 9, ["#c8202a", "#e8a020"], 0.17);
-		// the Watering Cans for sale sit on the counter
-		const can = wateringCan(1.6);
-		can.position.set(1.15, 1.12, 0.5), (can.rotation.y = -0.6), o.add(can);
-		const can2 = wateringCan(1.3);
-		can2.position.set(1.45, 1.12, 0.25), (can2.rotation.y = 0.9), o.add(can2);
-		// on the deck: a hay bale with a pumpkin, a bucket of sunflowers, milk cans
-		R(T.box(1.1, 0.55, 0.6), KIT.surf("thatch", "#d8b860", { rep: 1, bump: 0.04, shine: 6 }), o, [-2.45, 0.48, 1.7], [0, 0.2, 0]), pumpkin(-2.45, 0.75, 1.7, 1.3);
-		const steel = x.clay("#c8ccd0", { shininess: 90, specular: 8947848 });
-		R(T.cyl(0.22, 0.17, 0.4, 14), steel, o, [2.45, 0.4, 1.75]);
-		for (let k = 0; k < 5; k++) {
-			const a = (k / 5) * l,
-				hh = 0.9 + 0.12 * (k % 3),
-				hx = 2.45 + 0.12 * Math.cos(a),
-				hz = 1.75 + 0.12 * Math.sin(a);
-			R(T.cyl(0.015, 0.02, hh, 5), fr("#4a8a2a", 20), o, [hx, 0.4 + hh / 2, hz], [0.15 * Math.sin(a), 0, -0.15 * Math.cos(a)]);
-			const head = new THREE.Group();
-			head.position.set(hx + 0.08 * Math.cos(a), 0.4 + hh, hz + 0.08 * Math.sin(a)), (head.rotation.x = 1.1), (head.rotation.z = -0.3 * Math.cos(a)), o.add(head);
-			R(T.cyl(0.17, 0.17, 0.02, 14), fr("#f2c21a", 30), head), R(T.cyl(0.08, 0.08, 0.04, 12), fr("#5a3a1a", 20), head, [0, 0.015, 0]);
-		}
-		[-1.75, -2.2].forEach((pz, k) => {
-			R(T.cyl(0.18, 0.2, 0.5, 14), steel, o, [2.5 - 0.35 * k, 0.45, pz]), R(T.cyl(0.1, 0.18, 0.12, 14), steel, o, [2.5 - 0.35 * k, 0.76, pz]), R(T.cyl(0.11, 0.11, 0.08, 14), steel, o, [2.5 - 0.35 * k, 0.86, pz]);
+		[-1, 1].forEach((sd) => {
+			G.box("#7a2a2a", -0.35 + 0.17 * sd, top + 0.01, 0.62, 0.34, 0.02, 0.44, 0, 0, -0.06 * sd);
+			G.box("#f8f2e0", -0.35 + 0.16 * sd, top + 0.035, 0.62, 0.31, 0.03, 0.4, 0, 0, -0.08 * sd);
+			for (let k = 0; k < 5; k++) G.box("#8a8a90", -0.35 + 0.16 * sd, top + 0.052, 0.5 + 0.06 * k, 0.24, 0.004, 0.012, 0, 0, -0.08 * sd);
 		});
+		stack(0.45, top, 0.55, 3, 0.2);
+		G.add(T.cyl(0.09, 0.11, 0.03, 12), "#c8a040", G.m(1.2, top + 0.015, 0.5)), G.add(T.cyl(0.012, 0.012, 0.36, 6), "#c8a040", G.m(1.2, top + 0.2, 0.5));
+		G.add(new THREE.CylinderGeometry(0.06, 0.2, 0.14, 14, 1, !0), "#2a7a4a", G.m(1.2, top + 0.42, 0.42, 0.5, 0, 0));
+		G.add(T.sphere(0.05, 8, 6), "#fff2c0", G.m(1.2, top + 0.38, 0.4));
+		G.add(T.sphere(0.06, 12, 8), "#c8a040", G.m(-1.2, top + 0.04, 0.8, 0, 0, 0, 1, 0.7, 1)), G.add(T.cyl(0.07, 0.07, 0.015, 12), "#3a3a40", G.m(-1.2, top + 0.008, 0.8));
+		// a few books on the half walls' rails
+		[-1, 1].forEach((sd) => {
+			stack(3.0 * sd, 1.28, -1.6, 2, Math.PI / 2), stack(3.0 * sd, 1.28, 0.9, 3, Math.PI / 2 + 0.2);
+		});
+		G.done(o);
+		// the lamp's light: a small warm glow over the open book
+		R(T.sphere(0.035, 8, 6), x.basic("#fff4c8", { fog: !1 }), o, [1.2, top + 0.37, 0.41]);
 	}
 
 	// small goods are collected per kiosk and merged into one vertex-coloured mesh
@@ -9808,14 +9893,16 @@ const JGP = (() => {
 		kioskGeo = {},
 		cachedGeo = (key, mk) => kioskGeo[key] || (kioskGeo[key] = mk());
 
-	// The Post Office: navy walls, red roof, and a busy day's mail: short neat stacks on the counter
-	// and the crates, low scattered piles on the deck, large round piles of mail at the back, stuffed
-	// sorting cubbies, parcels and a blue collection box.
+	// The Post Office: navy walls, red roof, and from the front a tidy kiosk: bundles of letters tied
+	// on the counter, stuffed sorting cubbies, parcels and a blue collection box. Round the back, out
+	// of sight of the square behind the kiosk itself, is the joke: a mountain of undelivered mail
+	// nearly as tall as the roof, with parcels half buried in it and letters sliding off.
 	function buildPostOffice(o) {
 		kioskFrame(o, { sign: "POST OFFICE", ink: "#22325a", wall: "#33508f", wall2: "#26407a", tin: [150, 42, 38] });
 		const G = goods(),
 			rs = srand(707),
-			ENV = ["#fbf8f0", "#f4ecd8", "#e8dcc0", "#d8c49a", "#ffffff", "#e6eef6", "#f6e6ea"];
+			ENV = ["#fbf8f0", "#f4ecd8", "#e8dcc0", "#d8c49a", "#ffffff", "#e6eef6", "#f6e6ea"],
+			PAPER_SH = ["#cfc2a2", "#c4b694", "#d8ccae"];
 		// one envelope (with a stamp now and then) lying at (px, py, pz), turned by ry and tipped a
 		// little; th is its thickness (stacks use thick slabs that read as a couple of letters each)
 		const letter = (px, py, pz, ry, tip = 0.05, th = 0.012, Q = G, stampP = 0.45) => {
@@ -9837,28 +9924,13 @@ const JGP = (() => {
 					letter(px + off * Math.cos(dir) + 0.01 * (rs() - 0.5), py + SLAB / 2 + SLAB * k, pz + off * Math.sin(dir) + 0.01 * (rs() - 0.5), rs() * l, 0.04, SLAB - 0.001, Q, 0.2);
 				}
 			};
-		// a heap: letters thrown into a mound of radius r0
-		const heap = (px, py, pz, r0, n, h = 0.45, Q = G) => {
-			for (let k = 0; k < n; k++) {
-				const u = k / n,
-					a = rs() * l,
-					rd = r0 * Math.sqrt(rs()) * (1 - 0.8 * u);
-				letter(px + rd * Math.cos(a), py + 0.01 + h * u * (1 - rd / r0), pz + rd * Math.sin(a), rs() * l, 0.6, 0.012, Q);
-			}
-		};
-		// short stacks on the counter
-		stack(-1.32, 1.12, 0.62, 0.22, 0.02), stack(0.12, 1.12, 0.6, 0.3, 0.02), stack(1.4, 1.12, 0.6, 0.16, 0.02);
 		// bundles tied with string at the front of the counter
 		[-1.0, 0.5].forEach((px) => {
 			for (let k = 0; k < 10; k++) letter(px, 1.127 + 0.0125 * k, 0.36, 0.02 * (k % 3), 0.01);
 			G.box("#c8a060", px, 1.19, 0.36, 0.3, 0.13, 0.012), G.box("#c8a060", px, 1.19, 0.36, 0.012, 0.13, 0.17);
 		});
-		// a stack on each crate
-		[-1, 1].forEach((sx) => stack(1.42 * sx, 1.0, -0.6, 0.18, 0.02));
-		// low scattered piles on the deck
-		heap(-2.2, 0.2, 1.5, 0.6, 70, 0.14), heap(2.15, 0.2, 1.65, 0.5, 50, 0.12), heap(0, 0.2, -1.6, 0.7, 70, 0.16);
-		// large round piles of mail at the back of the kiosk
-		heap(-2.12, 0.2, -1.62, 0.72, 320, 1.05), heap(2.12, 0.2, -1.66, 0.7, 300, 0.95), heap(-0.95, 0.2, -1.9, 0.5, 170, 0.7), heap(0.7, 0.2, -1.95, 0.45, 140, 0.6);
+		// one neat short stack on each crate
+		[-1, 1].forEach((sx) => stack(1.42 * sx, 1.0, -0.6, 0.12, 0.01));
 		// sorting cubbies on the back wall, every slot stuffed
 		const cw = 2.6,
 			ch = 1.4;
@@ -9877,9 +9949,90 @@ const JGP = (() => {
 		].forEach(([px, py, pz, w, h, d, ry]) => {
 			G.box("#b88a52", px, py, pz, w, h, d, 0, ry), G.box("#e8dcb0", px, py, pz, w + 0.01, h + 0.01, 0.02, 0, ry), G.box("#e8dcb0", px, py, pz, 0.02, h + 0.01, d + 0.01, 0, ry);
 		});
-		// more mail spilling out round the outside of the kiosk, on the grass along its sides and back
-		heap(-3.85, 0, -0.9, 0.7, 150, 0.75), heap(-3.75, 0, 1.0, 0.5, 90, 0.45), heap(3.9, 0, -1.1, 0.65, 140, 0.7);
-		heap(-1.7, 0, -3.35, 0.6, 120, 0.6), heap(1.5, 0, -3.3, 0.55, 110, 0.55), heap(3.7, 0, 0.45, 0.32, 40, 0.25);
+		// THE MAIL MOUNTAIN behind the back wall (local x -3.3 to 3.3, z -2.7 to -6.6, up to about 3.4 m:
+		// under the line of the roof seen from the square). A rough heap of many slumped cones of paper,
+		// faceted rather than smooth, buried under loose envelopes lying every which way and some
+		// standing up on edge, tied bundles and parcels stuck in its slopes, tall stacks
+		// leaning on its sides, and an avalanche of letters fanned out round its foot
+		{
+			const inFoot = (px, pz) => Math.abs(px) < 3.3 && pz < -2.74 && pz > -6.6,
+				LUMPS = [[0, -4.65, 2.0, 3.35]];
+			for (let k = 0; k < 18; k++) {
+				const a = rs() * l,
+					r = Math.sqrt(rs());
+				LUMPS.push([2.3 * r * Math.cos(a), -4.65 + 1.3 * r * Math.sin(a), 0.8 + 0.7 * rs(), (3.2 - 2.0 * r) * (0.75 + 0.3 * rs())]);
+			}
+			// the heap's height at (px, pz): the highest of the cones there
+			const mound = (px, pz) => {
+				if (!inFoot(px, pz)) return 0;
+				let h = 0;
+				for (const [hx, hz, hr, hh] of LUMPS) {
+					const d = Math.hypot(px - hx, 1.2 * (pz - hz)) / hr;
+					d < 1 && (h = Math.max(h, hh * (1 - d)));
+				}
+				return h;
+			};
+			// the faceted paper core under it all (only glimpsed between the envelopes)
+			LUMPS.forEach(([hx, hz, hr, hh]) => G.add(T.cone(1, 1, 7), PAPER_SH[(rs() * 3) | 0], G.m(hx, hh / 2 - 0.05, hz, 0, rs() * l, 0, 0.92 * hr, hh, 0.77 * hr)));
+			// loose envelopes over every slope, lying along it but tossed about, some on edge
+			const lean = (px, pz, lift = 0.01) => {
+				const py = mound(px, pz),
+					e = 0.06,
+					gx = (mound(px + e, pz) - mound(px - e, pz)) / (2 * e),
+					gz = (mound(px, pz + e) - mound(px, pz - e)) / (2 * e);
+				return new THREE.Matrix4()
+					.makeTranslation(px, py + lift, pz)
+					.multiply(new THREE.Matrix4().makeRotationY(Math.atan2(-gx, -gz)))
+					.multiply(new THREE.Matrix4().makeRotationX(-Math.min(1.25, Math.atan(Math.hypot(gx, gz)))));
+			};
+			const NL = window.__jgpMobile ? 1300 : 2300;
+			for (let k = 0; k < NL; k++) {
+				const a = rs() * l,
+					r = Math.sqrt(rs()),
+					px = 3.25 * r * Math.cos(a),
+					pz = -4.67 + 1.92 * r * Math.sin(a);
+				if (!inFoot(px, pz)) continue;
+				const w = 0.24 + 0.1 * rs(),
+					d = 0.12 + 0.08 * rs(),
+					up = rs() < 0.12,
+					mm = lean(px, pz, up ? 0.05 : 0.01)
+						.multiply(new THREE.Matrix4().makeRotationY(rs() * l))
+						.multiply(new THREE.Matrix4().makeRotationX(up ? 1.1 + 0.4 * rs() : 0.6 * (rs() - 0.5)));
+				G.add(G.UBX, ENV[(rs() * ENV.length) | 0], mm.clone().multiply(S(0, 0, 0, 0, 0, 0, w, 0.014, d)));
+				rs() < 0.3 && G.add(G.UBX, rs() < 0.5 ? "#c8282a" : "#2a5aa8", mm.clone().multiply(S(0.36 * w, 0.009, -0.28 * d, 0, 0, 0, 0.035, 0.004, 0.04)));
+				rs() < 0.15 && G.add(G.UBX, "#c8a868", mm.clone().multiply(S(0.08 * w, 0.012, 0.05 * d, 0, 0.3, 0, 1.25 * w, 0.012, 1.3 * d)));
+			}
+			// tied bundles stuck in the slopes
+			for (let k = 0; k < 34; k++) {
+				const a = rs() * l,
+					r = 0.35 + 0.6 * rs(),
+					px = 3.1 * r * Math.cos(a),
+					pz = -4.67 + 1.8 * r * Math.sin(a);
+				if (!inFoot(px, pz) || mound(px, pz) > 2.9) continue;
+				const h = 0.1 + 0.12 * rs(),
+					mm = lean(px, pz, h / 2 - 0.02)
+						.multiply(new THREE.Matrix4().makeRotationY(rs() * l))
+						.multiply(new THREE.Matrix4().makeRotationX(0.7 * (rs() - 0.5)));
+				G.add(G.UBX, ENV[(rs() * ENV.length) | 0], mm.clone().multiply(S(0, 0, 0, 0, 0, 0, 0.3, h, 0.15)));
+				G.add(G.UBX, "#c8a060", mm.clone().multiply(S(0, 0, 0, 0, 0, 0, 0.31, h + 0.01, 0.012))), G.add(G.UBX, "#c8a060", mm.clone().multiply(S(0, 0, 0, 0, 0, 0, 0.012, h + 0.01, 0.16)));
+			}
+			// parcels half buried at odd angles
+			[[-1.7, -3.5, 0.55], [1.9, -4.0, 0.6], [0.5, -5.8, 0.5], [-0.9, -4.0, 0.42], [2.6, -5.4, 0.45], [-2.6, -5.2, 0.5], [1.1, -3.3, 0.38], [-0.2, -6.1, 0.4]].forEach(([px, pz, sz]) => {
+				const mm = lean(px, pz, 0.12 * sz).multiply(new THREE.Matrix4().makeRotationY(rs() * l)).multiply(new THREE.Matrix4().makeRotationZ(0.5 * (rs() - 0.5)));
+				G.add(G.UBX, "#b88a52", mm.clone().multiply(S(0, 0, 0, 0, 0, 0, sz, 0.65 * sz, 0.8 * sz)));
+				G.add(G.UBX, "#e8dcb0", mm.clone().multiply(S(0, 0, 0, 0, 0, 0, sz + 0.012, 0.65 * sz + 0.012, 0.025))), G.add(G.UBX, "#e8dcb0", mm.clone().multiply(S(0, 0, 0, 0, 0, 0, 0.025, 0.65 * sz + 0.012, 0.8 * sz + 0.012)));
+			});
+			// tall stacks leaning on its sides
+			[[-3.0, -3.3, 0.9], [3.05, -3.6, 1.1], [-3.05, -5.9, 0.8], [2.9, -6.1, 0.7]].forEach(([px, pz, h]) => stack(px, 0, pz, h, 0.3));
+			// the avalanche round its foot
+			for (let k = 0; k < (window.__jgpMobile ? 140 : 260); k++) {
+				const a = rs() * l,
+					f = 1 + 0.35 * Math.sqrt(rs()),
+					px = 3.3 * f * Math.cos(a),
+					pz = -4.67 + 1.95 * f * Math.sin(a);
+				pz < -2.75 && letter(px, 0.01 + 0.02 * rs(), pz, rs() * l, 0.4, 0.012);
+			}
+		}
 		// a blue collection box by the front corner
 		G.box("#2a4a8a", 3.6, 0.75, 1.9, 0.6, 0.9, 0.5), G.add(T.cyl(0.25, 0.25, 0.6, 14), "#2a4a8a", G.m(3.6, 1.2, 1.9, 0, 0, Math.PI / 2));
 		G.box("#1a2a4a", 3.6, 1.05, 2.16, 0.36, 0.05, 0.02);
@@ -10381,29 +10534,25 @@ const JGP = (() => {
 	// this block provides the garden, the plants and the planting behaviour.
 	const GARDEN_R = 15,
 		GATHER_S = 0.5, // seconds before planting starts (everyone walks straight into the garden)
-		NO_SEEDS_S = 20, // without Seeds the gathering ends after this long
-		garden = { slots: [], plants: [], cans: [], startAt: 0 };
-	// The church stands in the square's south-west corner on the walk from the garden: its back
-	// to the corner, its steps (and the Traveler window over the door) facing the garden.
-	// s runs along the walk from the garden's ring toward the corner, p across it.
+		garden = { slots: [], plants: [], startAt: 0 };
+	// The church stands at the end of the south walk (behind the Welcome sign as you come from the
+	// garden): its back to the south fence, its steps (and the Traveler window over the door) facing
+	// the garden. s runs along the walk from the garden's ring toward the fence, p across it.
 	const CHURCH_AT = (() => {
-		const r0 = GARDEN_R + 3.2,
-			x0 = -r0 / Math.SQRT2,
-			z0 = r0 / Math.SQRT2,
-			cx0 = -t.parkHalf,
-			cz0 = t.parkSouth,
-			len = Math.hypot(cx0 - x0, cz0 - z0),
-			ux = (cx0 - x0) / len,
-			uz = (cz0 - z0) / len,
+		const x0 = 0,
+			z0 = GARDEN_R + 3.2,
+			ux = 0,
+			uz = 1,
 			D = 18, // the nave's length
-			sFront = len - 11 - (D + 4.9),
+			// (its back, sFront + D + 4.9 along the walk, stands 1 m inside the fence)
+			sFront = t.parkSouth - z0 - 1 - (D + 4.9),
 			at = (s, p = 0) => [x0 + ux * s - uz * p, z0 + uz * s + ux * p];
 		const [x, z] = at(sFront + 4.7);
 		return { ux, uz, D, sFront, at, x, z, ry: Math.atan2(-ux, -uz), tower: at(sFront + 1.5) };
 	})();
 	// THE KIOSKS: where each one stands (x, z) and its turn (ry, local +z faces the customer). The Post
 	// Office and the Sheriff's share the north-east corner, either side of its walk, Garden Supplies has
-	// the south-east and the General Store the north-west. Every kiosk has room for a worker behind its
+	// the south-east and the Library the north-west. Every kiosk has room for a worker behind its
 	// counter (spot) and a way out for them (exit): back past the crates, along the inside of a side
 	// wall and out through the gap between the counter and that wall. A worker in the ROWS takes
 	// "kiosk:<name>" as its position and its "via", and then leaves for the Garden event that way and
@@ -10436,6 +10585,7 @@ const JGP = (() => {
 			// on top of the desk, and the way down off its front
 			desk: (name) => W(K[name], 0, 0.72),
 			front: (name) => [[0, 2.0], [0, 3.4]].map(([lx, lz]) => W(K[name], lx, lz)),
+			at: (name, lx, lz) => W(K[name], lx, lz),
 			exit: (name, sd = 1) => [[0, -1.75], [2.4 * sd, -1.75], [2.4 * sd, 1.85], [2.4 * sd, 3.4]].map(([lx, lz]) => W(K[name], lx, lz)),
 			// the walls, counter and crates of the shared kiosk frame, and the box over all of it
 			hull: [-3.15, -2.62, 3.15, 2.45],
@@ -10734,10 +10884,8 @@ const JGP = (() => {
 				const a = (q / 4) * l + l / 8;
 				R(T.cyl(0.42, 0.46, 0.08, 7), stone, o, [r * Math.cos(a), 0.06, r * Math.sin(a)], [0, r, 0]);
 			}
-		// centre mound with a seed bowl
-		R(T.sphere(0.9, 14, 8), x.world("#6e4c2e"), o, [0, -0.45, 0], null, [1, 1, 1]);
-		R(T.cyl(0.42, 0.3, 0.3, 10), stone, o, [0, 0.55, 0]);
-		for (let k = 0; k < 9; k++) R(T.sphere(0.06, 6, 4), x.world(k % 2 ? "#e8c070" : "#a8642a"), o, [0.2 * Math.cos(k), 0.72, 0.2 * Math.sin(k)]);
+		// the SUMMONING STONE in the centre (using it starts the Garden Event)
+		summoningStone(o, stone, moss);
 		// seed sacks and a few stakes around the edge
 		for (let k = 0; k < 8; k++) {
 			const a = (k / 8) * l + l / 16,
@@ -10746,6 +10894,88 @@ const JGP = (() => {
 			R(T.cyl(0.1, 0.18, 0.18, 8), sack, o, [r * Math.cos(a), 0.68, r * Math.sin(a)]);
 			R(T.torus(0.11, 0.025, 5, 12), KIT.surf("fabric", "#8a6a3a", { rep: 1 }), o, [r * Math.cos(a), 0.62, r * Math.sin(a)], [Math.PI / 2, 0, 0]);
 			R(T.cyl(0.04, 0.05, 1.3, 6), wood, o, [(GARDEN_R - 0.4) * Math.cos(a + 0.35), 0.65, (GARDEN_R - 0.4) * Math.sin(a + 0.35)]);
+		}
+	}
+	// THE SUMMONING STONE: a six-sided standing stone on a round plinth, carved on three faces with
+	// rows of glowing rune strokes (shapes, no letters), five pebbles floating round it. The runes
+	// breathe softly while it can be used and blaze while the Event runs.
+	function summoningStone(o, stone, moss) {
+		const g = new THREE.Group(),
+			H0 = 2.3,
+			rb = 0.62,
+			rt = 0.4,
+			slope = Math.atan2(rb - rt, H0),
+			ap = ((rb + rt) / 2) * Math.cos(Math.PI / 6);
+		o.add(g);
+		R(T.cyl(1.05, 1.2, 0.22, 10), stone, g, [0, 0.11, 0]);
+		R(T.cyl(0.85, 0.95, 0.14, 10), moss, g, [0, 0.27, 0]);
+		R(new THREE.CylinderGeometry(rt, rb, H0, 6, 1), KIT.surf("stone", "#6f6a78", { rep: 1, bump: 0.06, shine: 10 }), g, [0, 0.34 + H0 / 2, 0]);
+		R(T.cone(rt * 1.02, 0.34, 6), KIT.surf("stone", "#5f5a68", { rep: 1, bump: 0.05, shine: 10 }), g, [0, 0.34 + H0 + 0.17, 0]);
+		// rune strokes: a column of glyphs on every other face, one merged glowing mesh
+		const parts = [],
+			bar = T.box(1, 1, 1);
+		let seed = 11;
+		const r1 = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+		[0, 1, 2].forEach((fi) => {
+			const ph = Math.PI / 6 + (fi * 2 * Math.PI) / 3,
+				face = new THREE.Matrix4().makeRotationY(ph).multiply(S(0, 0.34 + H0 / 2, ap + 0.012)).multiply(new THREE.Matrix4().makeRotationX(-slope));
+			for (let j = 0; j < 5; j++) {
+				const y = 0.78 - 0.36 * j,
+					n = 2 + Math.floor(3 * r1());
+				for (let k = 0; k < n; k++) {
+					const vert = r1() < 0.5,
+						len = 0.12 + 0.12 * r1(),
+						ang = vert ? (r1() - 0.5) * 0.9 : Math.PI / 2 + (r1() - 0.5) * 0.9;
+					parts.push({ geo: bar, color: "#ffffff", matrix: face.clone().multiply(S((r1() - 0.5) * 0.22, y + (r1() - 0.5) * 0.16, 0, 0, 0, ang, 0.03, len, 0.02)) });
+				}
+				parts.push({ geo: bar, color: "#ffffff", matrix: face.clone().multiply(S(0, y - 0.17, 0, 0, 0, 0, 0.3, 0.02, 0.02)) });
+			}
+		});
+		const runeMat = new THREE.MeshBasicMaterial({ vertexColors: !0, color: new THREE.Color("#7ff0ff") });
+		R(v(parts), runeMat, g);
+		// the floating pebbles
+		const ring = new THREE.Group();
+		g.add(ring);
+		const peb = [];
+		for (let k = 0; k < 5; k++) {
+			const a = (k / 5) * l,
+				m = R(T.dodeca(0.13 + 0.03 * (k % 2), 0), stone, ring, [1.15 * Math.cos(a), 1.3, 1.15 * Math.sin(a)], [k, 2 * k, 0]);
+			peb.push(m);
+		}
+		const base = new THREE.Color("#7ff0ff"),
+			hot = new THREE.Color("#d8fbff");
+		L.push((tt, dt) => {
+			const on = me.active;
+			ring.rotation.y += (dt || 0.016) * (on ? 0.9 : 0.25);
+			peb.forEach((m, k) => (m.position.y += ((on ? 1.8 : 1.3) + 0.12 * Math.sin(1.3 * tt + 1.7 * k) - m.position.y) * Math.min(1, 3 * (dt || 0.016))));
+			const k = on ? 1 : Kt.rewards.stone ? 0.55 + 0.25 * Math.sin(2 * tt) : 0.2;
+			runeMat.color.copy(base).lerp(hot, on ? 0.6 : 0).multiplyScalar(k);
+		});
+		garden.stone = g;
+	}
+	// the special batch of flowers that the Seeds from Garden Supplies grow (placeholder: tall stems
+	// with pale star blooms in a ring just inside the border stones). They come up during the first
+	// Event after the Seeds are bought and stay for the rest of the session.
+	function growSpecial() {
+		if (garden.special || !bt.seeds) return;
+		garden.special = !0;
+		for (let k = 0; k < 16; k++) {
+			const a = ((k + 0.5) / 16) * l,
+				r = GARDEN_R - 1.1,
+				parts = [],
+				add = (geo, color, m) => parts.push({ geo, color, matrix: m }),
+				h2 = 1.1 + 0.25 * (k % 3),
+				pc = k % 2 ? "#bff2ff" : "#fff1a8";
+			add(T.cyl(0.025, 0.035, h2, 5), "#3f8a2a", S(0, h2 / 2, 0));
+			for (let j = 0; j < 2; j++) add(T.cone(0.07, 0.4, 4), "#4f9a2a", S(0.05 * (j ? 1 : -1), 0.35 + 0.2 * j, 0, 0, j * 2.2, (j ? -1 : 1) * 0.9, 1, 1, 0.3));
+			for (let j = 0; j < 8; j++) add(T.cone(0.06, 0.3, 4), pc, S(0, h2, 0, 0, (j / 8) * l, 0).multiply(S(0, 0, 0.12, Math.PI / 2 - 0.25, 0, 0)));
+			add(T.sphere(0.08, 8, 6), "#ffffff", S(0, h2 + 0.02, 0));
+			const g = new THREE.Group();
+			g.position.set(r * Math.cos(a), 0.05, r * Math.sin(a)), (g.rotation.y = a), g.scale.setScalar(0.01);
+			R(v(parts), garden.mat || (garden.mat = new THREE.MeshLambertMaterial({ vertexColors: !0 })), g);
+			(g.userData.keepInFinale = !0), C.add(g), gcEB.ready && _e(g);
+			// they come up one after another
+			garden.plants.push({ g, grow: -0.12 * k, water: 0, special: !0 });
 		}
 	}
 	const PLANT_COLS = ["#e8301e", "#ffd23a", "#ff5fb0", "#9a6bff", "#ff8a1a"];
@@ -10782,19 +11012,6 @@ const JGP = (() => {
 		const p = { g, grow: 0, water: 0 };
 		return (slot.plant = p), garden.plants.push(p), p;
 	}
-	// watering can held by creatures once the Watering Cans quest is done
-	function wateringCan(h) {
-		const g = new THREE.Group(),
-			clay = x.clay("#b0643a", { shininess: 30 }),
-			dark = x.clay("#7a4422", { shininess: 20 }),
-			band = x.clay("#5aa83a", { shininess: 30 });
-		R(T.cyl(0.13 * h, 0.15 * h, 0.26 * h, 12), clay, g, [0, 0.13 * h, 0]);
-		R(T.torus(0.137 * h, 0.016 * h, 5, 14), band, g, [0, 0.19 * h, 0], [Math.PI / 2, 0, 0]);
-		R(T.cyl(0.02 * h, 0.032 * h, 0.34 * h, 6), clay, g, [0.21 * h, 0.21 * h, 0], [0, 0, -0.95]);
-		R(T.cone(0.055 * h, 0.07 * h, 8), dark, g, [0.355 * h, 0.315 * h, 0], [0, 0, -0.95 + Math.PI]);
-		R(T.torus(0.09 * h, 0.018 * h, 5, 12, Math.PI), dark, g, [-0.02 * h, 0.26 * h, 0]);
-		return g;
-	}
 	// unique planting animation per creature (same transform format as the old concert dances)
 	const MOVES = {
 		// the current cast all garden: digging, patting the soil down, or scattering seeds
@@ -10804,7 +11021,7 @@ const JGP = (() => {
 		p_etcher: ["pat", 2.1, 0.9],
 		p_gemtoe: ["scatter", 2.4, 1],
 		p_glyph: ["dig", 2.3, 1],
-		p_gorton: ["pat", 1.9, 1],
+		w_mont: ["pat", 1.9, 1],
 		gorbo: ["pat", 1.6, 1.1],
 		gratelet: ["pat", 1.4, 1.2],
 		orbiter: ["dig", 1.2, 0.7, 0.12],
@@ -10847,11 +11064,12 @@ const JGP = (() => {
 		list.forEach((ent, k) => {
 			(ent.finaleSlot = spots[k]), (ent.plantNext = now + rr(2, 5)), (ent.watching = !1);
 		});
+		growSpecial();
 	}
 	// FORTIZMO and the shopkeeper SPARKAKUS come into the garden but don't plant. Three row models are
 	// away for the whole event: BACKPACKA (the event's own BACKPACKA flies in), NEXTESSA (she is not at
 	// the event; she only comes through the portal for the separate pizza delivery) and SPARKAKUS's
-	// stand-in (the shopkeeper SPARKAKUS leaves the General Store for the event instead)
+	// stand-in (the librarian SPARKAKUS leaves the Library for the event instead)
 	const NO_PLANT = ["frog", "t_backpacka"],
 		NOT_AT_EVENT = ["t_backpacka", "t_nextessa", "orbiter"],
 		// KING DINO stays at his drum set at the Juice Bar and keeps playing all through the event
@@ -10877,29 +11095,17 @@ const JGP = (() => {
 			d < bd && ((bd = d), (best = sl));
 		}
 		if (best) makePlant(best), Ut.at(best.x, 0.7, best.z, "✿", f(PLANT_COLS));
-		Kt.rewards.wateringCan && Ut.above(ent, "~", M.teal);
 	}
 	L.push((tt, dt) => {
 		dt = dt || 0.016;
-		const live = me.active && bt.live;
-		// plants grow; watering cans speed up plants near a creature holding one
+		// plants grow
 		for (const pl of garden.plants) {
 			if (pl.grow >= 1) continue;
-			let k = 1;
-			if (live && Kt.rewards.wateringCan)
-				for (const e of It.all)
-					if ("finale" === e.busy && Math.hypot(e.group.position.x - pl.g.position.x, e.group.position.z - pl.g.position.z) < 2.6) {
-						k = 2.2;
-						break;
-					}
-			pl.grow = Math.min(1, pl.grow + (dt * k) / 24);
+			pl.grow = Math.min(1, pl.grow + dt / 24);
 			const u = pl.grow,
 				sc = u < 1 ? 1 + 2.7 * Math.pow(u - 1, 3) + 1.7 * Math.pow(u - 1, 2) : 1;
 			pl.g.scale.setScalar(Math.max(0.01, sc));
 		}
-		garden.cans = garden.cans.filter((c) => c.parent);
-		for (const c of garden.cans)
-			c.rotation.z = live ? 0.7 * Math.max(0, Math.sin(1.3 * tt + c.userData.ph)) : 0.06 * Math.sin(1.4 * tt + c.userData.ph);
 	});
 
 	// ---- BACKPACKA: the garden event's climax -------------------------------------------------
@@ -10921,6 +11127,7 @@ const JGP = (() => {
 			t0 = 0,
 			lastE = -1,
 			plantedAt = 0,
+			plantedN = 0,
 			ending = 0,
 			flags = {};
 		const V = (a = 0, b2 = 0, c = 0) => new THREE.Vector3(a, b2, c),
@@ -11377,15 +11584,16 @@ const JGP = (() => {
 						P.spawn(pp.x, pp.y, pp.z, hz.x * reach * 0.45 + 0.8 * (Math.random() - 0.5), 0.6 * Math.random(), hz.z * reach * 0.45 + 0.8 * (Math.random() - 0.5), 0.8);
 					}
 					for (let n = 0; n < 3; n++) P.spawn(J.land.x, 0.05, J.land.z, 2.2 * (Math.random() - 0.5), 1.2 + 2 * Math.random(), 2.2 * (Math.random() - 0.5), 0.9);
-					// plants bloom where the water lands
-					for (const pl of garden.plants) {
-						const dx = pl.g.position.x - J.land.x,
-							dz = pl.g.position.z - J.land.z;
-						if (dx * dx + dz * dz < 2.6) {
-							pl.grow = Math.min(1, pl.grow + 2.5 * dt);
-							if (pl.grow >= 1 && !pl.bloomed) (pl.bloomed = !0), Math.random() < 0.35 && Ut.at(pl.g.position.x, 0.9, pl.g.position.z, "✿", f(PLANT_COLS));
+					// plants bloom where the water lands (only with the Seeds in)
+					if (bt.seeds)
+						for (const pl of garden.plants) {
+							const dx = pl.g.position.x - J.land.x,
+								dz = pl.g.position.z - J.land.z;
+							if (dx * dx + dz * dz < 2.6) {
+								pl.grow = Math.min(1, pl.grow + 2.5 * dt);
+								if (pl.grow >= 1 && !pl.bloomed) (pl.bloomed = !0), Math.random() < 0.35 && Ut.at(pl.g.position.x, 0.9, pl.g.position.z, "✿", f(PLANT_COLS));
+							}
 						}
-					}
 				}
 			});
 			P.jetMat.map.offset.y = -2.2 * e;
@@ -11402,7 +11610,7 @@ const JGP = (() => {
 				P.dgeo.attributes.position.needsUpdate = !0;
 			}
 			// the rainbow
-			const rb = Math.min(seg(e, D.splay + 3, D.splay + 7), 1 - seg(e, D.unsplay, D.gone));
+			const rb = bt.seeds ? Math.min(seg(e, D.splay + 3, D.splay + 7), 1 - seg(e, D.unsplay, D.gone)) : 0;
 			(P.rainbow.visible = rb > 0.01), (P.rainbow.material.opacity = 0.42 * rb);
 			// everyone reacts
 			if (dt) {
@@ -11413,7 +11621,7 @@ const JGP = (() => {
 				// and plays "Backpacka's Rain Strut" until the event ends
 				once("horn", D.inA - 2.2, () => {
 					try {
-						"off" === gcHorn.phase && gcHorn.play();
+						bt.seeds && "off" === gcHorn.phase && gcHorn.play();
 					} catch (err) {}
 				});
 				// as he reaches the middle, everyone stops planting and steps out to the walk around the
@@ -11473,8 +11681,9 @@ const JGP = (() => {
 			// the event ended early (or was left): put everything away
 			active && !me.active && ((active = !1), hideAll());
 			if (!live) plantedAt = 0;
-			else if (!plantedAt) plantedAt = tt;
-			if (!active && live && plantedAt && (tt - plantedAt > 30 || garden.plants.length >= 40)) start(tt);
+			else if (!plantedAt) (plantedAt = tt), (plantedN = garden.plants.length);
+			// (counting only this Event's plants: the garden keeps what grew at earlier ones)
+			if (!active && live && plantedAt && (tt - plantedAt > 30 || garden.plants.length - plantedN >= 40)) start(tt);
 			if (!active) return;
 			const e = tt - t0;
 			// he has gone: FORTIZMO plays the tag, and when it ends the event ends and everyone goes home
@@ -11507,7 +11716,7 @@ const JGP = (() => {
 	// styles: 0 swap, 1 volley, 2 boomerang, 3 parade, 4 juggle, 5 orbit dance, 6 bounce, 7 bubble,
 	// 8 zip, 9 confetti, 10 serenade, 11 tag
 	(() => {
-		const NAMES = { HN: "HENNRICK", MT: "SPARKAKUS", MU: "MUSHROOM", AN: "ANOMALEE", KD: "KING DINO", GW: "GOWARD", ZL: "ZOLLOD", SM: "SOMLET", FZ: "FORTIZMO", ET: "ETCHER", GT: "GEMTOE", GL: "GLYPH", NX: "NEXTESSA", BP: "BACKPACKA", GO: "GORTON" },
+		const NAMES = { HN: "HENNRICK", MT: "SPARKAKUS", MU: "MUSHROOM", AN: "ANOMALEE", KD: "KING DINO", GW: "GOWARD", ZL: "ZOLLOD", SM: "SOMLET", FZ: "FORTIZMO", ET: "ETCHER", GT: "GEMTOE", GL: "GLYPH", NX: "NEXTESSA", BP: "BACKPACKA", MG: "MONTGUMMERY" },
 			PAIRS = [
 			["HN", "MT", 8, "SCAN COMPLETE. You are 41% mushroom.", "And 100% the law. Mind the sidewalk!"],
 			["HN", "MU", 7, "Your spore count is... adorable.", "P-please don't put me in a spreadsheet."],
@@ -11600,20 +11809,20 @@ const JGP = (() => {
 			["GL", "NX", 8, "Your stripes spell 'zoom'.", "That's literally my job description."],
 			["GL", "BP", 11, "Your patches look like glyphs too!", "They spell 'thirsty'. Always thirsty!"],
 			["NX", "BP", 8, "Pizza for the sprinkler!", "Glug! Pizza... soup! Even better!"],
-			["HN", "GO", 0, "Your gauges read... cozy?", "Cozy is my factory setting."],
-			["MT", "GO", 3, "Nice pack. What's in the tubes?", "Mostly hums. One holds soup."],
-			["MU", "GO", 7, "Your porthole is glowing at me.", "It glows at friends. Hello, friend."],
-			["AN", "GO", 8, "Our screens should video call!", "Ringing you now. Wave at the doodle!"],
-			["KD", "GO", 2, "What is that contraption on your back?", "Royal plumbing, your majesty. Very fancy."],
-			["GW", "GO", 6, "Your hose looks like a noodle!", "A noodle that whistles. Listen!"],
-			["ZL", "GO", 10, "Your twig is budding nicely.", "Sunshine and one good oiling a week."],
-			["SM", "GO", 4, "Your humming... is so sleepy...", "Then I'll hum the slow setting."],
-			["FZ", "GO", 5, "Your pipe vent's got a nice tone.", "Toot! I only know the one note."],
-			["ET", "GO", 4, "Hold still, I'll engrave your gauges.", "Careful, the left one is ticklish."],
-			["GT", "GO", 9, "You're speckled like a gem!", "Speckled like a teapot, but thank you!"],
-			["GL", "GO", 11, "Your doodle's a glyph!", "It's a picture of you! Hee."],
-			["NX", "GO", 8, "Package for your pack!", "There's always room. Somewhere."],
-			["BP", "GO", 7, "Want me to fill your tubes?", "Just a splash! I rust easily."]
+			["HN", "MG", 0, "Your fans are humming in C major.", "FANS NOMINAL. HUMMING: OPTIONAL."],
+			["MT", "MG", 3, "Need anything from the store, Mont?", "ONE (1) OIL CAN. THANK YOU."],
+			["MU", "MG", 7, "Are you... a very tidy robot?", "TIDY: 98%. SPORES DETECTED: 1."],
+			["AN", "MG", 8, "Your screen and my screen! Twins!", "TWINS CONFIRMED. HELLO, SIBLING."],
+			["KD", "MG", 2, "Keep time for our royal march!", "BPM: VERY GOOD, YOUR MAJESTY."],
+			["GW", "MG", 6, "Want a goo hug, Montgummery?", "WARNING: GOO IN JOINTS. ...OK. ONE HUG."],
+			["ZL", "MG", 10, "Can you water my seedlings?", "WATERING. 2.4 LITRES. GROW WELL."],
+			["SM", "MG", 4, "Mm... are you... a lullaby machine?", "LULLABY MODE: ON. BEEP. BOOP. ZZZ."],
+			["FZ", "MG", 5, "Give me a beat, metal man.", "BEAT GENERATED. TOOT RESPONSIBLY."],
+			["ET", "MG", 4, "May I etch your serial number?", "SERIAL: MONT-G. ETCH GENTLY."],
+			["GT", "MG", 9, "Your lights twinkle like my gems!", "TWINKLE PROTOCOL ENGAGED."],
+			["GL", "MG", 11, "Can you read my glyphs?", "DECODING... RESULT: HEE HEE."],
+			["NX", "MG", 8, "Pizza for the robot!", "PIZZA RECEIVED. PIZZA SAVED. THANK YOU."],
+			["BP", "MG", 7, "Want a spray, Montgummery?", "NEGATIVE. RUST RISK. ...A SMALL ONE."]
 			],
 			// what each creature sends, how it moves, what it says without words, and how a catch sounds
 			SIG = {
@@ -11631,7 +11840,7 @@ const JGP = (() => {
 				GL: { item: "tile", col: "#f2c84a", gest: "giggle", emote: "?", snd: "pickup" },
 				NX: { item: "pizza", col: "#f2903a", gest: "zoom", emote: "!", snd: "pickup" },
 				BP: { item: "drop", col: "#8ad8ff", gest: "flutter", emote: "~", snd: "splash" },
-				GO: { item: "coin", col: "#c8a040", gest: "wobble", emote: "!", snd: "pickup" },
+				MG: { item: "coin", col: "#3db2d6", gest: "nod", emote: "!", snd: "pickup" },
 			},
 			V = (a = 0, b2 = 0, c = 0) => new THREE.Vector3(a, b2, c),
 			sm = (q) => (q <= 0 ? 0 : q >= 1 ? 1 : q * q * (3 - 2 * q));
@@ -11978,10 +12187,10 @@ const JGP = (() => {
 	// THE JUICE BAR: a long open-air bar on the west side of the square, facing the garden. No roof:
 	// an 18 m counter striped in fruit colours (with a gap and a raised flap where the bartender gets
 	// in and out), a row of stools, a back bar with two shelves of juice bottles, a pair of juice
-	// dispensers and a blender, the sign on two tall posts at the back with giant fruit on top, two
-	// cafe tables on the patio and a little fruit: a few bowls and cups on the counter, a crate and
-	// watermelons at each end and two potted orange trees. (Kept sparse: it is a backdrop, and every
-	// piece of fruit costs triangles.) Built in local space: +x faces the garden, the counter runs
+	// dispensers and a blender, the sign on two tall posts at the back with giant fruit on top, and a
+	// little fruit: a few bowls and cups on the counter, a crate and watermelons at each end. The patio
+	// is left open for the creatures. (Kept sparse: it is a backdrop, and every piece of fruit costs
+	// triangles.) Built in local space: +x faces the garden, the counter runs
 	// along z and FORTIZMO tends it from (-1.2, 0, 0), behind the counter.
 	function buildJuiceBar(o) {
 		const G = goods(),
@@ -12088,21 +12297,9 @@ const JGP = (() => {
 				G.add(CYL, pick(["#ff9a1a", "#f4d82a", "#8ad83a"]), m(px - 0.05, py + 0.16, pz, 0, 0, Math.PI / 2, 0.035, 0.008, 0.035));
 			};
 
-		// ---- floors: boards behind the bar, tiles for the patio ----
+		// ---- the floor: boards behind the bar ----
 		R(T.box(3.9, 0.04, 2 * LEN + 1.2), deck, o, [-1.9, 0.02, 0]);
-		// the patio: terracotta tiles in warm, uneven tones with pale grout
-		const tileTex = b(256, 256, (c) => {
-			(c.fillStyle = "#e8dcc4"), c.fillRect(0, 0, 256, 256);
-			const tr = srand(77);
-			for (let i = 0; i < 4; i++)
-				for (let j = 0; j < 4; j++) {
-					const v2 = tr();
-					(c.fillStyle = `rgb(${(196 + 30 * v2) | 0},${(112 + 30 * v2) | 0},${(72 + 20 * v2) | 0})`), c.fillRect(64 * i + 3, 64 * j + 3, 58, 58);
-					(c.fillStyle = "rgba(255,240,220,.18)"), c.fillRect(64 * i + 3, 64 * j + 3, 58, 6);
-				}
-		});
-		(tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping), tileTex.repeat.set(3.6, 10.2);
-		R(T.box(7.2, 0.03, 2 * LEN + 2.4), new THREE.MeshLambertMaterial({ map: tileTex }), o, [3.65, 0.015, 0]);
+		// (the patio in front of the counter is the dance floor, built with the town)
 
 		// ---- the counter: two sections either side of the gap ----
 		[
@@ -12219,55 +12416,19 @@ const JGP = (() => {
 			watermelon(-0.7, 0, z0 + 0.2 * sd, 0.3), watermelon(-1.2, 0, z0 - 0.4 * sd, 1.1, 0.9);
 		});
 
-		// ---- the patio: two cafe tables with chairs ----
-		[
-			[4.5, -5.6],
-			[4.6, 6.6],
-		].forEach(([px, pz], k) => {
-			G.add(CYL, "#c8ccd0", m(px, 0.02, pz, 0, 0, 0, 0.3, 0.03, 0.3)), G.add(CYL6, "#c8ccd0", m(px, 0.38, pz, 0, 0, 0, 0.04, 0.72, 0.04));
-			G.add(CYL, "#f8f4ea", m(px, 0.76, pz, 0, 0, 0, 0.5, 0.04, 0.5)), G.add(T.torus(1, 0.04, 4, 24), FRUITC[k % 5], m(px, 0.76, pz, Math.PI / 2, 0, 0, 0.5, 0.5, 0.5));
-			for (let j = 0; j < 3; j++) {
-				const a = (j * l) / 3 + k,
-					cx = px + 0.78 * Math.cos(a),
-					cz = pz + 0.78 * Math.sin(a),
-					face = Math.atan2(px - cx, pz - cz),
-					col = FRUITC[(k + j + 2) % 5];
-				G.add(CYL, col, m(cx, 0.46, cz, 0, 0, 0, 0.2, 0.05, 0.2));
-				[0, 1, 2, 3].forEach((q) => G.add(CYL6, "#c8ccd0", m(cx + 0.13 * Math.cos(0.8 + (q * l) / 4), 0.22, cz + 0.13 * Math.sin(0.8 + (q * l) / 4), 0, 0, 0, 0.015, 0.44, 0.015)));
-				G.add(G.UBX, col, m(cx - 0.2 * Math.sin(face), 0.72, cz - 0.2 * Math.cos(face), -0.15, face, 0, 0.34, 0.26, 0.04));
-			}
-			cup(px - 0.15, 0.78, pz + 0.1, pick(JUICE));
-		});
-		// potted orange trees at the outer corners of the patio
-		[
-			[6.9, -LEN - 0.4],
-			[6.9, LEN + 0.4],
-		].forEach(([px, pz], k) => {
-			G.add(T.cyl(0.36, 0.28, 1, 12), "#c8703e", m(px, 0.3, pz, 0, 0, 0, 1, 0.6, 1)), G.add(T.torus(1, 0.08, 3, 14), "#b8602e", m(px, 0.6, pz, Math.PI / 2, 0, 0, 0.37, 0.37, 0.37));
-			G.add(CYL, "#4a3424", m(px, 0.612, pz, 0, 0, 0, 0.33, 0.02, 0.33)), G.add(CYL6, "#6a4a2a", m(px, 1.1, pz, 0, 0, 0.05, 0.06, 1.1, 0.06));
-			for (let j = 0; j < 5; j++)
-				G.add(T.sphere(1, 9, 7), tint(j % 2 ? "#3f8a2a" : "#4f9a32", 0.08), m(px + 0.32 * Math.cos(1.3 * j + k) * (j ? 1 : 0), 1.95 + 0.18 * (j % 2), pz + 0.32 * Math.sin(1.3 * j + k) * (j ? 1 : 0), 0, j, 0, 0.55, 0.45, 0.55));
-			for (let j = 0; j < 8; j++) {
-				const a = 2.4 * j + k,
-					y = 1.68 + 0.7 * ((j + 0.5) / 8),
-					rr2 = 0.86 * Math.sqrt(Math.max(0.05, 1 - ((y - 2.02) / 0.6) ** 2)) + 0.02;
-				G.add(SPL, tint("#f28a1a"), m(px + rr2 * Math.cos(a), y, pz + rr2 * Math.sin(a), 0, 0, 0, 0.055, 0.055, 0.055));
-			}
-		});
 		G.done(o);
 	}
 
 	const JGP_K = { post: (g) => buildPostOffice(g), garden: (g) => buildGardenSupplies(g), sheriff: (g) => buildSheriff(g), juice: (g) => buildJuiceBar(g) };
 	function swapWorld() {
-		// keep the working stations (garden, shop, pond, phone, sign, obelisk, portal) and
+		// keep the working stations (garden, library, pond, phone, sign, portal) and
 		// everything that is not scenery; drop the engine's own scenery, then build the town.
 		const keepAt = [
 				[0, 0],
 				[-24.8, -24.8],
 				[24.6, 0],
 				[-7.2, 23.9],
-				[4.6, 25.4],
-				[-21.8, -17.4], // black obelisk
+				[5.4, 21.2],
 				[ot.x, ot.z], // pizza portal
 			],
 			bx = new THREE.Box3(),
@@ -12774,9 +12935,11 @@ const JGP = (() => {
 					B.box(o2.dark ? "glass" : "lit", o2.glass || "#3e4e5c", px, py + h / 2, zf - 0.02, w, h, 0.08);
 					B.box("plain", tr, px, py + h + 0.06, zf + 0.05, w + 0.24, 0.12, 0.12)
 						.box("plain", tr, px, py - 0.07, zf + 0.09, w + 0.32, 0.12, 0.22)
-						.box("plain", tr, px - w / 2 - 0.06, py + h / 2, zf + 0.05, 0.12, h, 0.1)
-						.box("plain", tr, px + w / 2 + 0.06, py + h / 2, zf + 0.05, 0.12, h, 0.1)
-						.box("plain", tr, px, py + 0.52 * h, zf + 0.03, w, 0.07, 0.06);
+						// (no face of a trim lies in the wall's own plane: from inside a building, where both
+						// sides of the walls show, the two would flicker)
+						.box("plain", tr, px - w / 2 - 0.06, py + h / 2, zf + 0.05, 0.12, h, 0.12)
+						.box("plain", tr, px + w / 2 + 0.06, py + h / 2, zf + 0.05, 0.12, h, 0.12)
+						.box("plain", tr, px, py + 0.52 * h, zf + 0.03, w, 0.07, 0.08);
 					o2.lintel && B.box(o2.lintelBin || "stone", o2.lintel, px, py + h + 0.28, zf + 0.06, w + 0.5, 0.32, 0.14);
 					o2.shutter && [-1, 1].forEach((sx) => B.box("plain", o2.shutter, px + sx * (w / 2 + 0.38), py + h / 2, zf + 0.05, 0.48, h + 0.05, 0.06));
 					return B;
@@ -12972,7 +13135,8 @@ const JGP = (() => {
 			});
 			// steeple: tower, louvred belfry, cornice, tall spire, gilded finial
 			B.box("siding", wh, 0, 6.8, 1.0, 4.4, 13.6, 4.4);
-			B.box("plain", "#8a1e24", 0, 2.3, 3.24, 2.0, 3.0, 0.1).box("plain", wh, 0, 2.4, 3.22, 2.4, 3.3, 0.06).box("plain", "#2a2a2e", 0, 2.3, 3.3, 0.04, 3.0, 0.02);
+			// (door, frame and the line between the leaves each at their own depth, none in the tower's face)
+			B.box("plain", "#8a1e24", 0, 2.3, 3.245, 2.0, 3.0, 0.1).box("plain", wh, 0, 2.4, 3.215, 2.4, 3.3, 0.06).box("plain", "#2a2a2e", 0, 2.3, 3.31, 0.04, 3.0, 0.02);
 			// over the door, the tall lancet of THE TRAVELER SAVES THE ORIGINATOR (from the cathedral in
 			// Greeblis City) in a carved stone frame with a sill; the glass glows, brighter at night
 			{
@@ -12986,7 +13150,7 @@ const JGP = (() => {
 					};
 				const fr = lancet(WW + 0.44, WH, WN + 0.24);
 				fr.holes.push(new THREE.Path(lancet(WW, WH, WN).getPoints(40)));
-				B.geo("stone", new THREE.ExtrudeGeometry(fr, { depth: 0.16, bevelEnabled: !1, curveSegments: 20 }), "#e6dfcf", 0, Y0, 3.2);
+				B.geo("stone", new THREE.ExtrudeGeometry(fr, { depth: 0.16, bevelEnabled: !1, curveSegments: 20 }), "#e6dfcf", 0, Y0, 3.21);
 				B.box("stone", "#d8d0be", 0, Y0 - 0.12, 3.32, WW + 0.7, 0.24, 0.3);
 				const gg = new THREE.ShapeGeometry(lancet(WW, WH, WN), 24),
 					pa = gg.attributes.position,
@@ -13005,7 +13169,7 @@ const JGP = (() => {
 					Math.abs(k - nk) > 0.01 && ((nk = k), (gm.emissiveIntensity = 0.32 + 0.75 * k));
 				});
 			}
-			B.box("siding", wh, 0, 0.8 + 14.4, 1.0, 3.8, 3.2, 3.8);
+			B.box("siding", wh, 0, 0.82 + 14.4, 1.0, 3.8, 3.16, 3.8);
 			[0, Math.PI / 2, Math.PI, -Math.PI / 2].forEach((a) => {
 				const px = 1.92 * Math.sin(a),
 					pz = 1.0 + 1.92 * Math.cos(a);
@@ -13013,11 +13177,11 @@ const JGP = (() => {
 				Sd.box("plain", "#2a2a2e", 0, 15.2, 0, 1.7, 2.3, 0.06);
 				for (let k = 0; k < 5; k++) Sd.box("plain", wh, 0, 14.3 + 0.42 * k, 0.06, 1.6, 0.08, 0.1, 0.5);
 			});
-			B.box("plain", wh, 0, 16.6, 1.0, 4.6, 0.4, 4.6).geo("shingle", upyr, roof, 0, 16.8, 1.0, 3.6, 12, 3.6);
+			B.box("plain", wh, 0, 16.62, 1.0, 4.6, 0.44, 4.6).geo("shingle", upyr, roof, 0, 16.84, 1.0, 3.6, 12, 3.6);
 			// a gilded ball, and on it a gold cross
 			B.geo("plain", usph(8), "#d8b040", 0, 29.0, 1.0, 0.45, 0.45, 0.45);
 			B.box("plain", "#e8c040", 0, 30.25, 1.0, 0.2, 2.1, 0.2).box("plain", "#e8c040", 0, 30.75, 1.0, 1.2, 0.2, 0.2);
-			for (let k = 0; k < 3; k++) B.box("concrete", "#c8c2b6", 0, 0.65 - 0.25 * k, 3.6 + 0.45 * k, 3.4 + 0.3 * k, 0.25, 0.5);
+			for (let k = 0; k < 3; k++) B.box("concrete", "#c8c2b6", 0, 0.65 - 0.25 * k, 3.6 + 0.45 * k + 0.004 * k, 3.4 + 0.3 * k, 0.26 - 0.004 * k, 0.5);
 			return B;
 		};
 		const FIRE_STATION = (cx, cz) => {
@@ -13262,11 +13426,6 @@ const JGP = (() => {
 			B.box("plain", "#2a6ac8", sx0, 1.5, sz0, 1.4, 0.1, 1.4).geo("plain", ucone(4), red, sx0, 2.25, sz0, 1.9, 0.7, 1.9, 0, Math.PI / 4, 0);
 			B.box("plain", red, sx0 + 1.7, 0.8, sz0, 2.6, 0.08, 0.8, 0, 0, -0.55);
 			for (let k = 0; k < 4; k++) B.box("plain", "#5a5a60", sx0 - 0.75, 0.3 + 0.35 * k, sz0, 0.06, 0.06, 0.9);
-			// parked cars nose-in at the stalls
-			[-7.5, -1.5, 1.5].forEach((px, k) => {
-				const wpos = new THREE.Vector3(px, 0, 9).applyMatrix4(B.M0);
-				car(wpos.x, wpos.z, Math.PI, 3 + 2 * k);
-			});
 			return B;
 		};
 		const ELEVATOR = (X, Z) => {
@@ -13362,7 +13521,7 @@ const JGP = (() => {
 			rotor.position.copy(new THREE.Vector3(0, hub + 0.6, 2.4).applyMatrix4(S(X, 0, Z, 0, ry, 0))), (rotor.rotation.y = ry), (rotor.rotation.z = X), grp.add(rotor), SPINNERS.push([rotor, 0.55]);
 		};
 
-		// ---- trees, cars and street furniture ----------------------------------------------------
+		// ---- trees and street furniture (no cars: they cost draw time and nobody needs them) -----
 		const crownGeo = (v2, d) =>
 			cached("crown" + v2 + "|" + d, () => {
 				const geo = new THREE.IcosahedronGeometry(1, d),
@@ -13402,26 +13561,6 @@ const JGP = (() => {
 					const a = 2.1 * k + 0.3 * X;
 					put("plain", crownGeo((k + 2) % 5, d - 1), cols[1], S(X + 0.62 * wid * Math.cos(a), h + 0.35 * tall + 0.3 * k * s, Z + 0.62 * wid * Math.sin(a), 0, a, 0, 0.62 * wid, 0.6 * tall, 0.62 * wid));
 				}
-		};
-		const CAR_COLS = ["#c8302a", "#2a5aa8", "#f2f0ea", "#3a6a3a", "#d8b878", "#7a2a3a", "#4a4a52", "#e8c040", "#6a8ab8"];
-		const car = (X, Z, ry, k) => {
-			const B = place(X, Z, ry, -0.1),
-				col = CAR_COLS[k % CAR_COLS.length],
-				pickup = k % 3 === 0,
-				chrome = "#c8ccd0";
-			B.box("plain", col, 0, 0.66, 0, 1.8, 0.62, 4.6);
-			if (pickup) {
-				B.box("glass", "#3a4650", 0, 1.3, 0.55, 1.66, 0.66, 1.5).box("plain", col, 0, 1.66, 0.55, 1.72, 0.1, 1.5);
-				[-1, 1].forEach((sx) => B.box("plain", col, sx * 0.86, 1.18, -1.25, 0.08, 0.42, 2.0));
-				B.box("plain", col, 0, 1.18, -2.26, 1.8, 0.42, 0.08).box("plain", "#2a2a2e", 0, 0.98, -1.25, 1.64, 0.04, 2.0);
-			} else B.box("glass", "#3a4650", 0, 1.26, -0.15, 1.64, 0.6, 2.4).box("plain", col, 0, 1.6, -0.15, 1.7, 0.1, 2.1);
-			[-1, 1].forEach((sz) => {
-				B.box("plain", chrome, 0, 0.45, sz * 2.33, 1.84, 0.18, 0.12);
-				[-1, 1].forEach((sx) => {
-					B.box("plain", sz > 0 ? "#fff6d0" : "#c8202a", sx * 0.62, 0.78, sz * 2.31, 0.32, 0.16, 0.04);
-					B.geo("plain", ucyl(10), "#1a1a1e", sx * 0.86, 0.36, sz * 1.42, 0.72, 0.28, 0.72, 0, 0, Math.PI / 2).geo("plain", ucyl(8), chrome, sx * 0.99, 0.36, sz * 1.42, 0.34, 0.04, 0.34, 0, 0, Math.PI / 2);
-				});
-			});
 		};
 		const lampPost = (X, Z) => {
 			const iron = "#1e2226";
@@ -13552,11 +13691,15 @@ const JGP = (() => {
 		);
 		// mowed stripes on the green
 		for (let k = 0; k < 26; k++) put("lawn", UHs(1, 8), k % 2 ? "#4a7a2c" : "#3f6c26", S(-38 + (k + 0.5) * (76 / 26), -0.02, ZS / 2, 0, 0, 0, 76 / 26, 1, 76 + ZS));
-		// walks: a ring around the garden, four diagonals to the corners, and the walk from the south.
-		// DIAG: the diagonal walk toward corner (dx, dz): it leaves the ring at 45 degrees and runs straight
-		// to the fence corner (the south corners are further out since the square was lengthened)
+		// walks: a ring around the garden and a walk out to each place there is to go: the Library
+		// (north-west), the Post Office and the Sheriff's (north-east, ending in a cross walk along
+		// both their fronts), Garden Supplies (south-east) and the church (south). Each one ends at
+		// the front of what it leads to. DIAG: the diagonal walk toward corner (dx, dz): it leaves the
+		// ring at 45 degrees and runs straight toward the fence corner (the south corners are further
+		// out since the square was lengthened), as far as wl
+		// (whether a point is on the dance floor by the Juice Bar: set once that is laid out)
+		let onDance = () => !1;
 		const WALKS = [],
-			LINEUP_X = ROWS.lineup.list[0][4][0],
 			DIAG = (dx, dz) => {
 				const r0 = GARDEN_R + 3.2,
 					x0 = (r0 * dx) / Math.SQRT2,
@@ -13566,24 +13709,38 @@ const JGP = (() => {
 					len = Math.hypot(cx - x0, cz - z0);
 				const ux = (cx - x0) / len,
 					uz = (cz - z0) / len,
-					// the walks on the line-up's side stop short of it instead of running through its ends,
-					// and the south-west walk ends at the church steps
-					wl = dx === Math.sign(LINEUP_X) ? (LINEUP_X - 2.6 * dx - x0) / ux : dx < 0 && dz > 0 ? CHURCH_AT.sFront + 0.3 : len + 0.53;
+					// (the kiosks stand back from the corner along these lines: the Post Office and the
+					// Sheriff's 19.3 m either side of it, Garden Supplies and the Library 18.17 m on it;
+					// a walk stops at the kiosk's deck, the north-east one at the cross walk)
+					wl = dz < 0 && dx > 0 ? len - 19.3 - 2.6 : len - 18.17 - 2.3;
 				return { x0, z0, cx, cz, len, ux, uz, wl };
 			};
 		put("concrete", cached("ringwalk", () => new THREE.RingGeometry(GARDEN_R + 1.6, GARDEN_R + 3.4, 72).rotateX(-Math.PI / 2)), WALK, S(0, 0.02, 0));
 		[
 			[1, -1],
 			[1, 1],
-			[-1, 1],
 			[-1, -1],
 		].forEach(([dx, dz]) => {
 			const d = DIAG(dx, dz),
 				len = d.wl,
 				m = [d.x0 + (d.ux * len) / 2, d.z0 + (d.uz * len) / 2];
 			WALKS.push(d), put("concrete", UBs(1, segs(len)), WALK, S(m[0], -0.05, m[1], 0, Math.atan2(d.ux, d.uz), 0, 2.6, 0.12, len));
+			// the cross walk in front of the Post Office and the Sheriff's, from one deck to the other
+			if (dz < 0 && dx > 0) {
+				const s0 = d.len - 19.3 - 3.9,
+					cx = d.x0 + d.ux * s0,
+					cz = d.z0 + d.uz * s0,
+					half = 7.2;
+				WALKS.push({ x0: cx + d.uz * half, z0: cz - d.ux * half, ux: -d.uz, uz: d.ux, wl: 2 * half });
+				put("concrete", UBs(segs(2 * half), 1), WALK, S(cx, -0.045, cz, 0, Math.atan2(d.ux, d.uz), 0, 2 * half, 0.12, 2.6));
+			}
 		});
-		put("concrete", UBs(1, 2), WALK, S(0, -0.05, (GARDEN_R + 3.2 + 38 + ZS) / 2, 0, 0, 0, 2.6, 0.12, 38 + ZS - GARDEN_R - 3.2));
+		// the south walk, to the church steps
+		{
+			const len = CHURCH_AT.sFront + 0.4;
+			WALKS.push({ x0: 0, z0: GARDEN_R + 3.2, ux: 0, uz: 1, wl: len });
+			put("concrete", UBs(1, segs(len)), WALK, S(0, -0.05, GARDEN_R + 3.2 + len / 2, 0, 0, 0, 2.6, 0.12, len));
+		}
 
 		// furnishings on the square (kept clear of the line-ups, the stations and the spawn point)
 		[-30, -15, 0, 15, 30].forEach((u) => (u && lampPost(u, 40.6 + ZS), lampPost(u, -40.6)));
@@ -13610,7 +13767,7 @@ const JGP = (() => {
 			[22, 34 + ZS, 1.2, 0],
 			[31, -33.5, 1.15, 0],
 			[-17, -34, 1.2, 1],
-			[9, 34.5 + ZS, 0.95, 0],
+			[12, 34.5 + ZS, 0.95, 0],
 			[-12, 34 + ZS, 1.0, 2],
 		].forEach(([X, Z, s, kind]) => (tree(X, Z, s, kind, 2), E.add(X, Z, 1.2 * s, "scenery")));
 		// hydrant and a blue mailbox by the south walk
@@ -13690,15 +13847,6 @@ const JGP = (() => {
 		MISTERGUMMERYS(90.5, -64);
 		// north-west: the grain elevator by the railroad
 		ELEVATOR(-76, -80);
-		// parked cars: angle parking on Main Street, parallel parking by the courthouse and the houses
-		let ck = 0;
-		[-37, -33, -29, -25, -21, -17, 18, 22, 26, 30, 34].forEach((Z, k) => {
-			const Zm = -37 + (Z + 37) * MK;
-			(k % 3 !== 1 || k > 6) && car(46.9, Zm, Math.atan2(1, Z < 0 ? 1 : -1) , ck++);
-			k % 2 === 0 && car(-46.9, ZS - Zm, Math.atan2(-1, Z < 0 ? -1 : 1), ck++);
-		});
-		[-31, -24, 22, 31].forEach((X) => car(X, -47.8, X < 0 ? Math.PI / 2 : -Math.PI / 2, ck++));
-		[-25, 27].forEach((X) => car(X, 47.8 + ZS, X < 0 ? -Math.PI / 2 : Math.PI / 2, ck++));
 		// lamp posts along Main Street's far sidewalks
 		[-32, -16, 0, 16, 32].forEach((Z) => (lampPost(50.6, ZS / 2 + Z * MK), lampPost(-50.6, ZS / 2 + Z * MK)));
 
@@ -13867,8 +14015,8 @@ const JGP = (() => {
 			}),
 		);
 
-		// ---- the park fence: black iron pickets between brick pillars, with a closed double gate
-		// where the south walk meets the sidewalk. It marks the edge of the play area.
+		// ---- the park fence: black iron pickets between brick pillars, all the way round (the church
+		// stands with its back to the south side). It marks the edge of the play area.
 		{
 			const FH = t.parkHalf,
 				FS = t.parkSouth,
@@ -13878,7 +14026,7 @@ const JGP = (() => {
 					put("plain", usph(10), iron, S(X, 1.52, Z, 0, 0, 0, 0.26, 0.26, 0.26));
 				};
 			[-1, 1].forEach((sx) => [-FH, FS].forEach((Z) => pillar(sx * FH, Z)));
-			[-1.65, 1.65].forEach((X) => pillar(X, FS));
+			pillar(0, FS);
 			// one run of fence from a to b along x (alongX) or z, at the fixed coordinate c
 			const run = (a, b2, c, alongX) => {
 				const len = b2 - a,
@@ -13889,30 +14037,28 @@ const JGP = (() => {
 				for (let u = a + 2.4; u < b2 - 0.5; u += 2.4) put("plain", UB, iron, at(u, 0.6, 0.08, 1.2, 0.08)), put("plain", ucone(4), iron, at(u, 1.27, 0.1, 0.16, 0.1));
 			};
 			run(-FH + 0.35, FH - 0.35, -FH, !0), run(-FH + 0.35, FS - 0.35, -FH, !1), run(-FH + 0.35, FS - 0.35, FH, !1);
-			run(-FH + 0.35, -1.95, FS, !0), run(1.95, FH - 0.35, FS, !0);
-			// the gate: two leaves with a scrolled top rail, latched shut
-			[-1, 1].forEach((sd) => {
-				const g0 = 1.32 * sd;
-				[0.2, 0.95].forEach((y) => put("plain", UB, iron, S(g0 / 2 + 0.06 * sd, y, FS, 0, 0, 0, 1.3, 0.05, 0.05)));
-				for (let k = 0; k <= 8; k++) put("plain", UB, iron, S(sd * (0.06 + 0.16 * k), 0.58 + 0.04 * Math.sin((k / 8) * Math.PI), FS, 0, 0, 0, 0.03, 1.08 + 0.1 * Math.sin((k / 8) * Math.PI), 0.03));
-				put("plain", cached("gatescroll", () => new THREE.TorusGeometry(0.22, 0.02, 4, 12, Math.PI)), iron, S(0.7 * sd, 1.0, FS));
-			});
-			put("plain", UB, "#c8a040", S(0, 0.6, FS + 0.04, 0, 0, 0, 0.08, 0.14, 0.06));
+			run(-FH + 0.35, -0.35, FS, !0), run(0.35, FH - 0.35, FS, !0);
 		}
 
 		// ---- kiosks: the Post Office and the Sheriff's share the north-east corner (either side of its
-		// walk), Garden Supplies has the south-east; the General Store is in the north-west and the
+		// walk), Garden Supplies has the south-east; the Library is in the north-west and the
 		// church in the south-west ----
 		["post", "sheriff", "garden"].forEach((name) => {
 			const { x: X, z: Z, ry } = KIOSK_AT.K[name],
 				k0 = new THREE.Group();
 			k0.position.set(X, 0, Z), (k0.rotation.y = ry), (k0.userData.keepInFinale = !0), C.add(k0), JGP_K[name](k0);
 			H(k0), E.add(X, Z, 5.2, "scenery"), keepAt.push([X, Z]);
-			F.addBuilding(X, Z, ry, KIOSK_AT.hull, KIOSK_AT.parts, name);
+			// (the Post Office's mail mountain behind it is solid, and kept clear of pickups and tufts)
+			const mail = "post" === name;
+			F.addBuilding(X, Z, ry, mail ? [-3.4, -6.75, 3.4, 2.45] : KIOSK_AT.hull, mail ? KIOSK_AT.parts.concat([[-3.3, -6.6, 3.3, -2.62]]) : KIOSK_AT.parts, name);
+			if (mail) {
+				const [mx, mz] = KIOSK_AT.at("post", 0, -4.6);
+				E.add(mx, mz, 4.2, "scenery"), keepAt.push([mx, mz]);
+			}
 		});
 		F.addBuilding(KIOSK_AT.K.shop.x, KIOSK_AT.K.shop.z, KIOSK_AT.K.shop.ry, KIOSK_AT.hull, KIOSK_AT.parts, "shop");
 
-		// ---- the church in the south-west corner with the Traveler window over its door ------------
+		// ---- the church at the end of the south walk, the Traveler window over its door ------------
 		{
 			const CA = CHURCH_AT;
 			CHURCH(CA.x, CA.z, CA.ry, CA.D);
@@ -13931,13 +14077,46 @@ const JGP = (() => {
 
 		// ---- the Juice Bar along the west side, facing the garden (FORTIZMO tends it) ---------------
 		{
-			const JX = -28,
+			// (its back flush with the west fence)
+			const JX = -t.parkHalf + 3.6,
 				k0 = new THREE.Group();
 			k0.position.set(JX, 0, 0), (k0.userData.keepInFinale = !0), C.add(k0), JGP_K.juice(k0), H(k0);
 			// solid: the counter either side of its gap and the back bar; the bartender works in between
 			F.addBuilding(JX, 0, 0, [-3.5, -9.45, 0.78, 9.45], [[-0.32, -9.45, 0.78, 1.0], [-0.32, 2.4, 0.78, 9.45], [-3.5, -9.2, -2.46, 9.2]], "juice");
 			// no lawn tufts through its floors, and no pickups under it
 			for (let zz = -10.5; zz <= 10.6; zz += 2.1) keepAt.push([JX - 2, zz], [JX + 1.5, zz], [JX + 5, zz]), E.add(JX + 1, zz, 3, "scenery");
+			// THE DANCE FLOOR: a glossy black-and-white checkerboard of 1.2 m tiles from the front of the
+			// bar's counter, across the patio and on south to where the church used to stand. It keeps
+			// well clear of the garden and the ring walk round it, and stops short of MAMA GORBO's spot.
+			{
+				const TS = 1.2,
+					X0 = JX + 0.9,
+					Z0 = -9.6,
+					NX = 18,
+					NZ = 45,
+					MG = ROWS.gorbos.list[0][4],
+					on = (i, j) => {
+						const X = X0 + (i + 0.5) * TS,
+							Z = Z0 + (j + 0.5) * TS;
+						return Math.hypot(X, Z) > GARDEN_R + 6 && Z < 44 && (Z < 9.6 || X > MG[0] + 2.4);
+					},
+					// one texel per tile (row j of the canvas is row j of tiles: the plane's top edge is north)
+					cv = document.createElement("canvas");
+				(cv.width = NX), (cv.height = NZ);
+				const cx2 = cv.getContext("2d");
+				for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) on(i, j) && ((cx2.fillStyle = (i + j) % 2 ? "#151517" : "#f4f4f2"), cx2.fillRect(i, j, 1, 1));
+				const tex = new THREE.CanvasTexture(cv);
+				(tex.magFilter = THREE.NearestFilter), (tex.minFilter = THREE.NearestFilter), (tex.generateMipmaps = !1);
+				const floor = R(new THREE.PlaneGeometry(NX * TS, NZ * TS), new THREE.MeshPhongMaterial({ map: tex, alphaTest: 0.5, shininess: 70, specular: 3355443 }), C, [X0 + (NX * TS) / 2, 0.035, Z0 + (NZ * TS) / 2], [-Math.PI / 2, 0, 0]);
+				floor.userData.keepInFinale = !0;
+				// no lawn tufts through it, and no pickups on it
+				onDance = (X, Z) => {
+					const i = Math.floor((X - X0) / TS),
+						j = Math.floor((Z - Z0) / TS);
+					return i >= 0 && i < NX && j >= 0 && j < NZ && on(i, j);
+				};
+				for (let i = 1; i < NX; i += 2) for (let j = 1; j < NZ; j += 2) on(i, j) && E.add(X0 + (i + 0.5) * TS, Z0 + (j + 0.5) * TS, 1.3, "dance");
+			}
 			// KING DINO's drum set from Greeblis Woods, on the patio facing the garden: red shells with
 			// white heads and chrome rims, his name on the bass drum, two rack toms, a snare, a floor tom,
 			// a hi-hat and a crash. KING DINO stands behind it with his sticks and stays there through the
@@ -14025,7 +14204,6 @@ const JGP = (() => {
 			const r = Math.hypot(X, Z);
 			return (
 				(r > GARDEN_R + 1.2 && r < GARDEN_R + 3.8) ||
-				(Math.abs(X) < 1.8 && Z > 0) ||
 				WALKS.some((d) => {
 					const q = Math.max(0, Math.min(d.wl, (X - d.x0) * d.ux + (Z - d.z0) * d.uz));
 					return Math.hypot(X - d.x0 - q * d.ux, Z - d.z0 - q * d.uz) < 1.85;
@@ -14035,7 +14213,7 @@ const JGP = (() => {
 		for (let k = 0; k < 1750 * LOD; k++) {
 			const X = rr(-37.5, 37.5),
 				Z = rr(-37.5, 37.5 + ZS);
-			if (Math.hypot(X, Z) < GARDEN_R + 0.8 || onWalk(X, Z) || keepAt.some(([x0, z0]) => Math.hypot(X - x0, Z - z0) < 3.4)) continue;
+			if (Math.hypot(X, Z) < GARDEN_R + 0.8 || onWalk(X, Z) || onDance(X, Z) || keepAt.some(([x0, z0]) => Math.hypot(X - x0, Z - z0) < 3.4)) continue;
 			put("plain", tuftGeo(k & 3), ["#5f9a32", "#6faa3a", "#4f8a2a", "#7ab842"][k & 3], S(X, -0.02, Z, 0, rnd() * l, 0, rr(0.8, 1.4), rr(0.8, 1.3), rr(0.8, 1.4)));
 			k % 6 || put("plain", flowerGeo, ["#ffffff", "#ffd23a", "#ffffff", "#f4e04a"][k % 4], S(X + 0.12, 0.08, Z, 0, rnd() * l, 0, 0.05, 0.05, 0.05));
 		}
@@ -14170,15 +14348,15 @@ const JGP = (() => {
 	return {
 		GARDEN_R,
 		GATHER_S,
-		NO_SEEDS_S,
 		garden,
 		buildGarden,
 		beginPlanting,
 		plantTick,
 		plantMove,
-		wateringCan,
-		addCan: (c) => garden.cans.push(c),
-		buildShop,
+		buildLibrary,
+		// where the shop panel hangs (Garden Supplies), and where SPARKAKUS steps out to at the Library
+		shopAt: () => KIOSK_AT.front("garden")[0],
+		libFront: () => KIOSK_AT.at("shop", -1.9, 3.0),
 		buildPond,
 		fireBlossom,
 		backpacka: BP,
@@ -14246,38 +14424,33 @@ if (
 							C.add(o),
 							E.add(0, 0, JGP.GARDEN_R + 1, "campfire");
 						JGP.buildGarden(o),
+							// the Summoning Stone in the centre starts the Event (once it is yours: the Summoning
+							// Stone quest's reward, owned from the start for testing)
+							F.add(0, 0, 1.15),
 							z.add({
 								id: "campfire",
 								x: 0,
 								z: 0,
-								r: JGP.GARDEN_R + 1.6,
-								solidR: 4,
+								r: 3.4,
+								solidR: 1.2,
 								waypointR: JGP.GARDEN_R + 1.2,
-								label: () => (me.active ? null : "Start the Gardening Event?"),
+								label: () => (me.active || !Kt.rewards.stone ? null : "Use the Summoning Stone"),
 								run: () => {
-									me.active || oe.open();
+									me.active || !Kt.rewards.stone || oe.open();
 								},
-							});
+							}),
+							// the one shop in town, at the Garden Supplies counter
+							z.add({
+								id: "gshop",
+								x: JGP.shopAt()[0],
+								z: JGP.shopAt()[1],
+								r: 2.8,
+								solidR: 0.8,
+								label: () => shopText.label,
+								run: () => ne.open(),
+							}),
+							ARTS.build();
 					})(),
-					(function (t, e) {
-						const o = new THREE.Group();
-						o.position.set(t, 0, e),
-							(o.rotation.y = A(t, e) + Math.PI / 4),
-							C.add(o),
-							o.updateMatrixWorld(!0),
-							F.add(t, e, 2.2),
-							E.add(t, e, 4.8, "bigtree");
-						const a = x.clay("#0c0c10", { shininess: 120, specular: 6974080 }),
-							n = x.clay("#1a1a20", { shininess: 60, specular: 3355456 });
-						R(T.box(3.4, 0.35, 3.4), n, o, [0, 0.175, 0]), R(T.box(2.6, 0.35, 2.6), n, o, [0, 0.52, 0]);
-						const r = new THREE.CylinderGeometry(0.62, 1, 8.5, 4, 1);
-						r.rotateY(Math.PI / 4), R(r, a, o, [0, 4.95, 0]);
-						const s = new THREE.ConeGeometry(0.62, 1.1, 4);
-						s.rotateY(Math.PI / 4),
-							R(s, a, o, [0, 9.75, 0]),
-							H(o),
-							z.add({ id: "bigtree", x: t, z: e, r: 4.3, solidR: 2.2, waypointR: 4.6, label: () => null });
-					})(-21.8, -17.4),
 					(function (t, e) {
 						const o = new THREE.Group();
 						o.position.set(t, 0, e),
@@ -14285,7 +14458,7 @@ if (
 							C.add(o),
 							F.add(t, e, 1.9),
 							E.add(t, e, 3.8, "stump"),
-							JGP.buildShop(o);
+							JGP.buildLibrary(o), (LIB.home = o);
 													H(o),
 							(function (t) {
 								const e = new THREE.Group();
@@ -14318,9 +14491,10 @@ if (
 									].map(([e, o]) => t.localToWorld(new c(e, 0, o)));
 									return o ? a.reverse() : a;
 								};
-								(st.join = (o) => {
+								// (`face`: once there he turns to the player, as for his Ancient Artifacts speech)
+								(st.join = (o, face) => {
 									const a = t.worldToLocal(new c(o.x, 0, o.z)).x < 0 ? -1 : 1;
-									C.attach(e), (H = { target: new c(o.x, 0, o.z), back: !1, via: v(a, !1) });
+									C.attach(e), (H = { target: new c(o.x, 0, o.z), back: !1, via: v(a, !1), face });
 								}),
 									(st.leave = () => {
 										if (!H) return;
@@ -14337,8 +14511,8 @@ if (
 									P = a;
 								L.push((s, c) => {
 									const x = s;
-									// (he talks while the shop is open)
-									if ((tkAnim(r, o, !H && jt.has("panel") && "shop" === _t.kind, s, c), a.anim(s, c, r), (r.moving = !1), H)) {
+									// (he talks while his dialogue is open)
+									if ((tkAnim(r, o, st.talking && qt.isOpen, s, c), a.anim(s, c, r), (r.moving = !1), H)) {
 										const a = e.position,
 											n = H.via.length ? H.via[0] : H.target,
 											s = n.x - a.x,
@@ -14356,7 +14530,7 @@ if (
 										} else
 											H.back
 												? (t.attach(e), e.position.copy(f), e.rotation.set(0, 0, 0), e.scale.setScalar(g), (H = null))
-												: ((a.y = 0), e.rotation.set(0, Math.atan2(-a.x, -a.z), 0));
+												: ((a.y = 0), e.rotation.set(0, H.face ? Math.atan2(At.position.x - a.x, At.position.z - a.z) : Math.atan2(-a.x, -a.z), 0));
 										if (((p.x = e.position.x), (p.z = e.position.z), H)) {
 											o.rotation.y = 0;
 											const t = !bt.live || H.back || r.moving ? 0 : 1;
@@ -14402,9 +14576,9 @@ if (
 								solidR: 1.9,
 								waypointR: 3.8,
 								markerTop: () => (st.group ? st.group.getWorldPosition(new c()) : { y: 1 }).y + st.height + 0.5,
-								label: () => (st.away() ? null : "Shop with " + i.name),
+								label: () => (st.away() ? null : "Talk to " + i.name),
 								run: () => {
-									st.away() || ne.open();
+									st.away() || LIB.talk();
 								},
 							});
 					})(-24.75, -24.75),
@@ -14474,7 +14648,7 @@ if (
 							F.add(t, e, 0.35),
 							E.add(t, e, 2, "sign"),
 							k.push({ x: t, z: e, id: "sign" });
-					})(4.6, 25.4),
+					})(5.4, 21.2),
 					E.add(-10, -21, 3, "ring"),
 					k.push({ x: -10, z: -18.2, id: "ring" }),
 					(function () {
@@ -14594,17 +14768,6 @@ if (
 						}),
 					),
 					at(),
-					L.push((t) => {
-						if (!Mt.core) return;
-						const e = 0.85 + 0.15 * Math.sin(3.1 * t);
-						Mt.core.color.setRGB(0.55 * e, 1 * e, 0.42 * e),
-							(Mt.tube.opacity = 0.34 + 0.12 * Math.sin(3.1 * t + 1)),
-							(Mt.halo.opacity = 0.1 + 0.06 * Math.sin(3.1 * t + 1)),
-							(Mt.held = Mt.held.filter((t) => t.parent));
-						for (const e of Mt.held)
-							(e.rotation.z = 0.5 + 0.35 * Math.sin(2.4 * t + e.userData.ph)),
-								(e.rotation.x = 0.12 * Math.sin(1.7 * t + e.userData.ph) - 0.15);
-					}),
 					L.push(() => {
 						const e = me.active;
 						for (const o of [le.list, ce.list])
@@ -14618,12 +14781,8 @@ if (
 					}),
 					L.push((t, e) => {
 						e = e || 0.016;
-						const o = !(!me.active || !Kt.rewards.seeds || !bt.live),
+						const o = me.active && bt.live,
 							a = t;
-						bt.chips = bt.chips.filter((t) => t.parent);
-						for (const e of bt.chips)
-							(e.rotation.z = 0.1 * Math.sin(2.2 * t + e.userData.ph) - 0.12),
-								(e.rotation.x = 0.1 * Math.sin(1.6 * t + e.userData.ph));
 						const n = [];
 						for (const t of It.all)
 							n.push({

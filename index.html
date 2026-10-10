@@ -700,8 +700,135 @@ const F = {
     free(e, o, a) {
       return this.list.every((t) => Math.hypot(e - t.x, o - t.z) > t.r + a) && Math.hypot(e, o) < t.clearingR - a;
     },
+    // ---- solid buildings (the church, the kiosks, the Juice Bar): oriented boxes in each building's
+    // own frame, [x0, z0, x1, z1]. The player, and a creature that works inside a building (its home
+    // is inside it), collide with the walls and counters (parts), so a worker can walk its way out
+    // through the gaps. Every other creature only ever meets one plain box over the whole building
+    // (hull): there are no corners to get wedged in, the pathfinder plans around it, and a creature
+    // walking straight at it slides along it the short way round to the nearer corner.
+    buildings: [],
+    addBuilding(x, z, ry, hull, parts, name) {
+      const B = { x, z, c: Math.cos(ry), s: Math.sin(ry), ry, hull, parts: parts || [hull], name };
+      return this.buildings.push(B), B;
+    },
+    local: (B, x, z) => [(x - B.x) * B.c - (z - B.z) * B.s, (x - B.x) * B.s + (z - B.z) * B.c],
+    world: (B, lx, lz) => [B.x + lx * B.c + lz * B.s, B.z - lx * B.s + lz * B.c],
+    inHull(B, x, z, m = 0) {
+      const [lx, lz] = this.local(B, x, z),
+        h = B.hull;
+      return lx > h[0] - m && lx < h[2] + m && lz > h[1] - m && lz < h[3] + m;
+    },
+    // a point pushed out of every hull it is inside (a destination nobody could reach otherwise)
+    outside(x, z, m = 1, home) {
+      for (const B of this.buildings) {
+        if (!this.inHull(B, x, z, m) || (home && this.inHull(B, home.x, home.z))) continue;
+        const [lx, lz] = this.local(B, x, z),
+          h = B.hull,
+          d = [lx - h[0] + m, h[2] + m - lx, lz - h[1] + m, h[3] + m - lz],
+          k = d.indexOf(Math.min(...d));
+        [x, z] = this.world(B, k === 0 ? h[0] - m : k === 1 ? h[2] + m : lx, k === 2 ? h[1] - m : k === 3 ? h[3] + m : lz);
+      }
+      return [x, z];
+    },
+    // does the segment cross a hull grown by n (hulls holding either end are left out)?
+    segBlocked(x0, z0, x1, z1, n) {
+      for (const B of this.buildings) {
+        if (this.inHull(B, x0, z0, n) || this.inHull(B, x1, z1, n)) continue;
+        const [ax, az] = this.local(B, x0, z0),
+          [bx, bz] = this.local(B, x1, z1),
+          h = B.hull,
+          dx = bx - ax,
+          dz = bz - az;
+        let t0 = 0,
+          t1 = 1;
+        const clip = (p, q) => {
+          if (Math.abs(p) < 1e-9) return q >= 0;
+          const r = q / p;
+          return p < 0 ? (r > t1 ? !1 : (r > t0 && (t0 = r), !0)) : r < t0 ? !1 : (r < t1 && (t1 = r), !0);
+        };
+        if (clip(-dx, ax - (h[0] - n)) && clip(dx, h[2] + n - ax) && clip(-dz, az - (h[1] - n)) && clip(dz, h[3] + n - az) && t0 <= t1) return !0;
+      }
+      return !1;
+    },
+    // the corners of the hulls grown by m, as waypoints for the pathfinder
+    corners(m) {
+      const out = [];
+      for (const B of this.buildings) {
+        const h = B.hull;
+        [[h[0] - m, h[1] - m], [h[2] + m, h[1] - m], [h[2] + m, h[3] + m], [h[0] - m, h[3] + m]].forEach(([lx, lz]) => out.push(this.world(B, lx, lz)));
+      }
+      return out;
+    },
+    _mem: new WeakMap(),
+    _ent: new WeakMap(),
+    _box(B, R, p, r) {
+      const [lx, lz] = this.local(B, p.x, p.z),
+        qx = Math.max(R[0], Math.min(R[2], lx)),
+        qz = Math.max(R[1], Math.min(R[3], lz));
+      let nx = lx - qx,
+        nz = lz - qz,
+        d = Math.hypot(nx, nz),
+        dep;
+      if (d >= r) return null;
+      if (d > 1e-6) (nx /= d), (nz /= d), (dep = r - d);
+      else {
+        const e = [lx - R[0], R[2] - lx, lz - R[1], R[3] - lz],
+          k = e.indexOf(Math.min(...e));
+        (nx = k === 0 ? -1 : k === 1 ? 1 : 0), (nz = k === 2 ? -1 : k === 3 ? 1 : 0), (dep = e[k] + r);
+      }
+      const wx = nx * B.c + nz * B.s,
+        wz = -nx * B.s + nz * B.c;
+      return (p.x += wx * dep), (p.z += wz * dep), [wx, wz];
+    },
+    solid(p, r) {
+      if (!this.buildings.length) return !1;
+      const pl = "undefined" != typeof At && At && p === At.position;
+      let ent = null;
+      if (!pl && !(ent = this._ent.get(p))) (ent = It.all.find((e) => e.group.position === p) || null), ent && this._ent.set(p, ent);
+      const mem = this._mem.get(p),
+        x0 = p.x,
+        z0 = p.z,
+        now = performance.now() / 1e3;
+      let hit = !1;
+      for (const B of this.buildings) {
+        const worker = ent && ent.home && this.inHull(B, ent.home.x, ent.home.z),
+          hl = worker && this.local(B, ent.home.x, ent.home.z);
+        for (const R of pl || worker ? B.parts : [B.hull]) {
+          // (a worker whose place is on a part, as the sheriff on his desk, is not pushed off it)
+          if (hl && hl[0] > R[0] && hl[0] < R[2] && hl[1] > R[1] && hl[1] < R[3]) continue;
+          // (a worker squeezes through its own gaps a little narrower than it is)
+          const n = this._box(B, R, p, worker && !pl ? Math.min(r, 0.42) : r);
+          if (!n) continue;
+          if (((hit = !0), pl || worker || !mem)) continue;
+          // walking (nearly) straight at it: slide along it toward its nearer end
+          const dx = x0 - mem.x,
+            dz = z0 - mem.z,
+            dn = dx * n[0] + dz * n[1],
+            tx = -n[1],
+            tz = n[0],
+            dt = dx * tx + dz * tz,
+            sp = Math.min(Math.hypot(dx, dz), 0.3);
+          if (dn >= 0 || Math.abs(dt) > 0.6 * Math.abs(dn) || sp < 1e-4) continue;
+          // the way it is already drifting along the wall, else toward the wall's nearer end
+          let side = mem.B === B && now < mem.until ? mem.side : Math.abs(dt) > 0.15 * Math.abs(dn) ? Math.sign(dt) : 0;
+          if (!side) {
+            let lo = 1 / 0,
+              hi = -1 / 0;
+            const h = B.hull;
+            [[h[0], h[1]], [h[2], h[1]], [h[2], h[3]], [h[0], h[3]]].forEach(([a, b2]) => {
+              const [cx, cz] = this.world(B, a, b2),
+                q = (cx - p.x) * tx + (cz - p.z) * tz;
+              (lo = Math.min(lo, q)), (hi = Math.max(hi, q));
+            });
+            side = hi < -lo ? 1 : -1;
+          }
+          (p.x += tx * side * sp), (p.z += tz * side * sp), (mem.B = B), (mem.side = side), (mem.until = now + 1.2);
+        }
+      }
+      return mem ? ((mem.x = p.x), (mem.z = p.z)) : this._mem.set(p, { x: p.x, z: p.z, side: 0, until: 0 }), hit;
+    },
     resolve(t, e, o) {
-      let a = !1;
+      let a = this.solid(t, e);
       for (const n of this.list) {
         if (!n.stage || (o && n.owner === o)) continue;
         const r = t.x - n.x,
@@ -1534,12 +1661,13 @@ function Ae(t, e, o, a, n, r) {
       c = Math.max(0, Math.min(1, ((o.x - t) * s + (o.z - e) * i) / l));
     if (Math.hypot(t + s * c - o.x, e + i * c - o.z) < a) return !0;
   }
-  return !1;
+  return F.segBlocked(t, e, o, a, n);
 }
 function Ve(e, o, a) {
   const n = 0.85 * (e.bodyR || 0.9) + 0.35,
     r = e.group.position,
     s = [];
+  [o, a] = F.outside(o, a, n + 0.3, e.home);
   let i = r.x,
     c = r.z;
   for (let t = 0; t < 4; t++) {
@@ -1579,9 +1707,13 @@ function Ve(e, o, a) {
         c = e.z + Math.sin(s) * o;
       Math.hypot(i, c) < t.clearingR - 1 &&
         !F.list.some((t) => t !== e && !h.has(t) && Math.hypot(i - t.x, c - t.z) < t.r + n) &&
+        !F.buildings.some((B) => F.inHull(B, i, c, n)) &&
         m.push([i, c]);
     }
   }
+  // and the corners of the buildings
+  for (const [i, c] of F.corners(n + 0.6))
+    i >= p && i <= f && c >= u && c <= d && Math.abs(i) < t.parkHalf - 1 && c > 1 - t.parkHalf && c < t.parkSouth - 1 && !F.buildings.some((B) => F.inHull(B, i, c, n)) && m.push([i, c]);
   const M = m.length,
     E = new Float64Array(M).fill(1 / 0),
     g = new Int32Array(M).fill(-1),
@@ -4514,7 +4646,8 @@ function ho(e, o, a) {
     const a = k.filter((e) => Math.hypot(e.x, e.z) > t.spreadR);
     if (a.length && Math.random() < t.trekChance && "creature" !== e.kind) {
       const t = f(a);
-      (e.dest = new c(t.x + h(-2, 2), 0, t.z + h(-2, 2))), (e.trek = !0);
+      const q = F.outside(t.x + h(-2, 2), t.z + h(-2, 2), (e.bodyR || 1) + 0.8, e.home);
+      (e.dest = new c(q[0], 0, q[1])), (e.trek = !0);
     } else {
       const o = t.clearingR - 3,
         a = t.spreadR,
@@ -4544,7 +4677,7 @@ function ho(e, o, a) {
           o = t.spreadR + 3 + Math.random() * (t.clearingR - 6 - t.spreadR);
         s = [Math.cos(e) * o, Math.sin(e) * o];
       }
-      (e.dest = new c(s[0], 0, s[1])), (e.trek = !1);
+      (s = F.outside(s[0], s[1], (e.bodyR || 1) + 0.8, e.home)), (e.dest = new c(s[0], 0, s[1])), (e.trek = !1);
     }
     const r = Math.hypot(n.position.x, n.position.z);
     if (r < t.spreadR - 1 && !e.trek) {
@@ -4700,7 +4833,7 @@ function Lt(e, o, a, n) {
       (s.y = i.y || 0),
       null !== i.face && co(r, i.face, a, 8),
       (e.moving = !0);
-  } else ho(e, o, a), (e.gcWant = e.moving ? 0.5 * a : 0);
+  } else ho(e, o, a), (e.gcWant = e.moving ? 0.5 * a : 0), s.y > 0 && Math.hypot(s.x - e.home.x, s.z - e.home.z) > 1.2 && (s.y = Math.max(0, s.y - 2.5 * a));
   F.resolve(s, 0.8 * e.bodyR, e.id),
     uo.solid(e) && uo.resolve(s, uo.radius(e), e),
     De(e, o, a, Math.hypot(s.x - i, s.z - l)),
@@ -7102,6 +7235,8 @@ const le = (() => {
           let s = a.x + r * Math.sin(0.5 * t + o.ph),
             i = a.z + r * Math.cos(0.4 * t + 1.3 * o.ph);
           const l = o.group.position;
+          // (one that sits up on something at home, as the sheriff on his desk, steps down to the ground)
+          l.y > 0 && (l.y = Math.max(0, l.y - 2.5 * e));
           // a creature working behind a counter (FORTIZMO at the Juice Bar) leaves by its gap first
           const via = o.def && o.def.via;
           if (via && (o.viaK || 0) < via.length) {
@@ -9154,27 +9289,30 @@ const JGP = (() => {
   // [id, name, builder, def fields, [x, z]]. Ids that already exist in the engine's defs keep their
   // engine role (companions, battles, quests); the rest are added as stationary NPCs.
   const ROWS = {
-    // everyone in one line-up along the east side of the square behind the duck pond, facing in:
-    // the merged creatures, the Greeblis Park NPCs, then the test models of the shopkeeper, the
-    // pizza courier and BACKPACKA
+    // two rows along the east side of the square, facing in. The back row (along the fence, behind
+    // the duck pond) holds the creatures still being worked on; the front row, on the lawn between
+    // the pond and Garden Supplies, holds the ones whose models are final. (Creatures at work
+    // elsewhere, at the kiosks, the Juice Bar and the church, stay at their places.)
     lineup: {
       face: -Math.PI / 2,
       list: [
         ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [34, -27.78]],
-        ["orbiter", "MALTOE", "born_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "talkR": 4.2}, [34, -22.14]],
-        ["drifter", "MUSHROOM", "born_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [34, -16.85]],
-        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [34, -11.91]],
-        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [34, -6.28]],
-        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#e8862a", "bodyR": 1.1}, [34, -1.12]],
-        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [34, 2.84]],
-        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [34, 7.03]],
-        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [34, 11.93]],
-        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [34, 17.55]],
-        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [34, 22.81]],
-        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [34, 27.06]],
-        ["t_nextessa", "NEXTESSA", "city_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [34, 31.25]],
-        // for testing: the garden event's BACKPACKA
-        ["t_backpacka", "BACKPACKA", "born_backpacka", {"color": "#d48e64", "bodyR": 1.4}, [34, 36.42]],
+        ["orbiter", "SPARKAKUS", "born_sparkakus", {"color": "#2c4cc0", "bodyR": 1.0, "talkR": 4.2}, [34, -18.61]],
+        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [34, -9.44]],
+        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [34, -0.27]],
+        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [34, 8.9]],
+        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [34, 18.07]],
+        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [34, 27.24]],
+        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [34, 36.41]],
+      ],
+    },
+    final: {
+      face: -Math.PI / 2,
+      list: [
+        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [27, 9.5]],
+        ["t_nextessa", "NEXTESSA", "city_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [27, 16]],
+        // the garden event's BACKPACKA
+        ["t_backpacka", "BACKPACKA", "born_backpacka", {"color": "#d48e64", "bodyR": 1.4}, [27, 22.5]],
       ],
     },
     // ANOMALEE stands before the church in the south-west corner, gazing up at the Traveler window
@@ -9182,6 +9320,18 @@ const JGP = (() => {
     church: {
       face: (at) => Math.atan2(CHURCH_AT.tower[0] - at[0], CHURCH_AT.tower[1] - at[1]),
       list: [["blinker", "ANOMALEE", "anomaleePeg", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2, "gazeUp": 0.6}, () => CHURCH_AT.at(CHURCH_AT.sFront - 4.2, 1.9)]],
+    },
+    // the kiosk workers: each stands behind its kiosk's counter and leaves (and comes back) by the
+    // kiosk's exit, past the crates and out through the gap beside the counter. ZOLLOD keeps Garden
+    // Supplies (SHOPSTAR keeps the General Store). MUSHROOM, the sheriff, is too short to see over his
+    // desk, so he sits on top of it ("kiosk-desk", at the desk's height) and hops down off its front
+    sheriff: {
+      face: () => KIOSK_AT.K.sheriff.ry,
+      list: [["drifter", "MUSHROOM", "born_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2, "via": "kiosk-front:sheriff", "standY": 1.12}, "kiosk-desk:sheriff"]],
+    },
+    gardenSupplies: {
+      face: () => KIOSK_AT.K.garden.ry,
+      list: [["cutebex", "ZOLLOD", "born_zollod", {"color": "#3cbe94", "bodyR": 0.9, "talkR": 4.2, "via": "kiosk:garden"}, "kiosk:garden"]],
     },
     // FORTIZMO tends the Juice Bar on the west side of the square. "via" is her way out through the
     // gap in the counter (from behind the bar to the front), so she never walks through the bar
@@ -9247,12 +9397,16 @@ const JGP = (() => {
       },
       // smooth value noise: a coarse random grid upscaled with smoothing, tiled so it wraps
       noise = (c, r, cells, alpha, lo, hi) => {
-        const n = document.createElement("canvas");
-        n.width = n.height = cells;
+        // the grid gets a one-cell border copied from the opposite edges, so the smoothing blends across
+        // the tile edge the same way it does inside and the tile repeats without a seam
+        const n = document.createElement("canvas"),
+          v0 = [];
+        n.width = n.height = cells + 2;
         const nc = n.getContext("2d");
-        for (let y = 0; y < cells; y++) for (let x0 = 0; x0 < cells; x0++) (nc.fillStyle = grey(lo + (hi - lo) * r())), nc.fillRect(x0, y, 1, 1);
+        for (let k = 0; k < cells * cells; k++) v0.push(grey(lo + (hi - lo) * r()));
+        for (let y = -1; y <= cells; y++) for (let x0 = -1; x0 <= cells; x0++) (nc.fillStyle = v0[((y + cells) % cells) * cells + ((x0 + cells) % cells)]), nc.fillRect(x0 + 1, y + 1, 1, 1);
         (c.imageSmoothingEnabled = !0), (c.globalAlpha = alpha);
-        wrap((ox, oy) => c.drawImage(n, ox, oy, S, S));
+        c.drawImage(n, -S / cells, -S / cells, (S * (cells + 2)) / cells, (S * (cells + 2)) / cells);
         c.globalAlpha = 1;
       },
       speck = (c, r, n, size, lo, hi, alpha) => {
@@ -9869,7 +10023,165 @@ const JGP = (() => {
     };
   }
 
+  // cards: merged feather, fur or quill cards for plumes, ruffs and wings. Each card {p, Z, N, L, W,
+  // col, shaft} lies at p, runs L along Z with its face toward N, W wide; a vane narrows to a point
+  // with a raised shaft down the middle (tinted toward shaft), fur is a narrow curling strand. Each
+  // card shades from dark at its root to light at its tip. Use with a double-sided vertex-colour
+  // material (gradMat).
+  const CARD = {
+    vane: { st: [[0, 0.22], [0.1, 0.72], [0.3, 1], [0.55, 0.96], [0.78, 0.7], [0.92, 0.36], [1, 0]], curl: 0.05, droop: 0.14 },
+    fur: { st: [[0, 1], [0.4, 0.78], [0.75, 0.45], [1, 0]], curl: 0.22, droop: 0.2 },
+  };
+  function cardGeo(cards, kind = "vane") {
+    const K = CARD[kind],
+      st = K.st,
+      n = st.length,
+      pos = [],
+      col = [],
+      uv = [],
+      idx = [],
+      m = new THREE.Matrix4(),
+      v3 = new c0(),
+      cc = new THREE.Color(),
+      sh = new THREE.Color();
+    for (const cd of cards) {
+      const X = new c0().crossVectors(cd.N, cd.Z).normalize(),
+        Y = new c0().crossVectors(cd.Z, X),
+        o = pos.length / 3;
+      m.makeBasis(X.multiplyScalar(cd.W), Y.multiplyScalar(cd.W), cd.Z.clone().multiplyScalar(cd.L)).setPosition(cd.p);
+      cd.shaft && sh.set(cd.shaft);
+      st.forEach(([z, w]) => {
+        const k = 0.6 + 0.55 * z,
+          bend = (K.curl * z * z * cd.L) / cd.W;
+        [-1, 0, 1].forEach((sd) => {
+          v3.set(sd * w, bend + (sd ? -K.droop * w : 0.12 * (1 - z)), z).applyMatrix4(m), pos.push(v3.x, v3.y, v3.z);
+          cc.copy(cd.col).multiplyScalar(sd ? k * 1.05 : k * 0.92), !sd && cd.shaft && cc.lerp(sh, 0.4), col.push(cc.r, cc.g, cc.b), uv.push(0.5 + 0.08 * sd * w, 0.4 * z);
+        });
+      });
+      for (let j = 0; j < n - 1; j++) {
+        const a = o + 3 * j,
+          b2 = a + 3;
+        idx.push(a, a + 1, b2, a + 1, b2 + 1, b2, a + 1, a + 2, b2 + 1, a + 2, b2 + 2, b2 + 1);
+      }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)), geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)), geo.setIndex(idx), geo.computeVertexNormals();
+    return geo;
+  }
+
+  // blobBody: one smooth sculpted body from ellipsoids blended together. parts: [cx, cy, cz, a, b, c,
+  // rx = 0, ry = 0] (radii a, b, c, turned by rx about x then ry about y), k: how softly they blend.
+  // The skin is meshed by casting rays out from C (so C must see every part), with normals taken
+  // from the field, uvs by arc length down each meridian (no squeezing at the poles), and vertex
+  // colours from col(p, fold) where fold (0..1) is how deep in a crease the point is. Returns the
+  // geometry and hit(o, d) -> {p, n}, the outermost skin point along a ray, to place parts on it.
+  function blobBody(parts, C, o = {}) {
+    const k0 = o.k || 0.2,
+      P = parts.map(([cx, cy, cz, a, b2, c, rx = 0, ry = 0]) => {
+        const m = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(rx, ry, 0, "YXZ")).invert().elements;
+        return { cx, cy, cz, a, b2, c, m };
+      }),
+      sdE = (px, py, pz, q) => {
+        const dx = px - q.cx,
+          dy = py - q.cy,
+          dz = pz - q.cz,
+          m = q.m,
+          lx = (m[0] * dx + m[4] * dy + m[8] * dz) / q.a,
+          ly = (m[1] * dx + m[5] * dy + m[9] * dz) / q.b2,
+          lz = (m[2] * dx + m[6] * dy + m[10] * dz) / q.c,
+          k0_ = Math.hypot(lx, ly, lz),
+          k1 = Math.hypot(lx / q.a, ly / q.b2, lz / q.c);
+        return k1 < 1e-6 ? -Math.min(q.a, q.b2, q.c) : (k0_ * (k0_ - 1)) / k1;
+      },
+      field = (px, py, pz) => {
+        let d = sdE(px, py, pz, P[0]);
+        for (let k = 1; k < P.length; k++) {
+          const e = sdE(px, py, pz, P[k]),
+            h = Math.max(k0 - Math.abs(d - e), 0) / k0;
+          d = Math.min(d, e) - h * h * k0 * 0.25;
+        }
+        return d;
+      },
+      hard = (px, py, pz) => Math.min(...P.map((q) => sdE(px, py, pz, q))),
+      grad = (p) => {
+        const e = 0.004;
+        return new c0(field(p.x + e, p.y, p.z) - field(p.x - e, p.y, p.z), field(p.x, p.y + e, p.z) - field(p.x, p.y - e, p.z), field(p.x, p.y, p.z + e) - field(p.x, p.y, p.z - e)).normalize();
+      },
+      TM = o.reach || 2.6,
+      hit = (oo, d) => {
+        const D = new c0(...d).normalize();
+        let t = TM;
+        while (t > 0 && field(oo[0] + D.x * t, oo[1] + D.y * t, oo[2] + D.z * t) > 0) t -= 0.02;
+        let lo = Math.max(0, t),
+          hi = t + 0.02;
+        for (let k = 0; k < 14; k++) {
+          const m = (lo + hi) / 2;
+          field(oo[0] + D.x * m, oo[1] + D.y * m, oo[2] + D.z * m) > 0 ? (hi = m) : (lo = m);
+        }
+        const p = new c0(oo[0] + D.x * lo, oo[1] + D.y * lo, oo[2] + D.z * lo);
+        return { p, n: grad(p) };
+      },
+      NI = o.NI || 80,
+      NJ = o.NJ || 60,
+      pos = [],
+      nor = [],
+      uv = [],
+      col = [],
+      idx = [],
+      arc = new Float32Array(NI + 1),
+      cc = new THREE.Color();
+    for (let j = 0; j <= NJ; j++)
+      for (let i = 0; i <= NI; i++) {
+        const th = (j / NJ) * Math.PI,
+          ph = Math.PI + (i / NI) * l,
+          { p, n } = hit(C, [Math.sin(th) * Math.sin(ph), Math.cos(th), Math.sin(th) * Math.cos(ph)]);
+        if (j) {
+          const q = 3 * (pos.length / 3 - NI - 1);
+          arc[i] += Math.hypot(p.x - pos[q], p.y - pos[q + 1], p.z - pos[q + 2]);
+        }
+        pos.push(p.x, p.y, p.z), nor.push(n.x, n.y, n.z), uv.push(i / NI, arc[i] / (o.uvLen || 4));
+        const fold = Math.min(1, Math.max(0, (hard(p.x, p.y, p.z) - field(p.x, p.y, p.z)) / 0.05));
+        o.col ? o.col(p, fold, cc) : cc.setRGB(1, 1, 1), col.push(cc.r, cc.g, cc.b);
+      }
+    for (let j = 0; j < NJ; j++)
+      for (let i = 0; i < NI; i++) {
+        const a = j * (NI + 1) + i,
+          b2 = a + NI + 1;
+        idx.push(a, b2, a + 1, b2, b2 + 1, a + 1);
+      }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)), geo.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3));
+    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)), geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)), geo.setIndex(idx);
+    return { geo, hit, field };
+  }
+  // orient an object so its +z follows n, keeping +y as near world up as it can
+  const faceTo = (ob, n, up = new c0(0, 1, 0)) => {
+    const X = new c0().crossVectors(up, n);
+    X.lengthSq() < 1e-6 && X.set(1, 0, 0), X.normalize();
+    return ob.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, new c0().crossVectors(n, X), n)), ob;
+  };
+  // a tube along pts tapering r0 -> r1, ridged with rid rings (horns, coils, segmented tails)
+  const ridgedTube = (pts, r0, r1, n, rid, depth = 0.18, rad = 10) => {
+    const cv = new THREE.CatmullRomCurve3(pts.map((q) => new c0(...q))),
+      tg = new THREE.TubeGeometry(cv, n, 1, rad, !1),
+      Pq = tg.attributes.position,
+      ctr = new c0(),
+      q = new c0();
+    for (let i = 0; i <= n; i++) {
+      cv.getPointAt(i / n, ctr);
+      const u = i / n,
+        r = (r0 + (r1 - r0) * u) * (1 + depth * Math.max(0, Math.sin(u * rid * l)) ** 0.5);
+      for (let j = 0; j <= rad; j++) {
+        const k = i * (rad + 1) + j;
+        q.fromBufferAttribute(Pq, k).sub(ctr).multiplyScalar(r).add(ctr), Pq.setXYZ(k, q.x, q.y, q.z);
+      }
+    }
+    return tg.computeVertexNormals(), tg;
+  };
+
   // GOWARD = HOWARD + GORBO + MAMA GORBO (the goo family).
+  // (This model is final: keep GOWARD as he is.)
   // GORBO / MAMA's egg built from HOWARD's fused bubbles; cyan above, MAMA's peach below. HOWARD's
   // "+" eyes, cheek spots, wavy brow lines, gold leaf crests and ribbon tongue; the purple octagon
   // ports and float ring that GORBO and MAMA share (with a little AP tag); MAMA's crystal wings;
@@ -10110,93 +10422,302 @@ const JGP = (() => {
     });
   };
 
-  // ZOLLOD = ZOLLOX + KOLLOD.
-  // ZOLLOX's segmented creature fading from ZOLLOX cyan at the head to KOLLOD green at the tail; its
-  // back is KOLLOD's mossy garden bed growing KOLLOD's black mushrooms among ZOLLOX's pink ones, with
-  // KOLLOD's little worm peeking out; fern fronds (KOLLOD) and yellow plumes (ZOLLOX) along its sides;
-  // ZOLLOX's curling trunk and magenta tail tip.
-  BORN.zollod = (g) => {
+  // apron pieces for the shopkeepers: a bib that lies on the body's skin (from hit) over the front
+  // between angles a0..a1 (around y) and heights y0..y1, and a skirt hanging from the waist
+  function apronBib(hit, C, a0, a1, y0, y1, mat, parent, lift = 0.03) {
+    const NU = 14,
+      NV = 10,
+      pos = [],
+      uv = [],
+      idx = [];
+    for (let j = 0; j <= NV; j++)
+      for (let i = 0; i <= NU; i++) {
+        const a = a0 + ((a1 - a0) * i) / NU,
+          y = y0 + ((y1 - y0) * j) / NV,
+          { p, n } = hit([C[0], y, C[2]], [Math.sin(a), 0, Math.cos(a)]);
+        p.addScaledVector(n, lift), pos.push(p.x, p.y, p.z), uv.push(i / NU, j / NV);
+      }
+    for (let j = 0; j < NV; j++)
+      for (let i = 0; i < NU; i++) {
+        const a = j * (NU + 1) + i,
+          b2 = a + NU + 1;
+        idx.push(a, a + 1, b2, b2, a + 1, b2 + 1);
+      }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)), geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)), geo.setIndex(idx), geo.computeVertexNormals();
+    return R(geo, mat, parent);
+  }
+  const fabricTex = (paint) => b(128, 128, paint, { smooth: !0 });
+
+  // SHOPSTAR (SPARKSTAR as the General Store's shopkeeper), standing on two legs: the orange shaggy
+  // dog with blue highlights (a blue saddle, muzzle and socks), cream belly, tall ears with purple
+  // insides, sleepy yellow eyes, his black collar with the orange APR coin, a few confetti stars in
+  // his fur and his antenna tail with its star; behind the counter he wears a navy pinstripe
+  // shopkeeper's apron with a sunflower pinned to the bib, and red sleeve garters.
+  BORN.shopstar = (g) => {
     const root = new THREE.Group(),
       body = new THREE.Group();
-    g.add(root), (body.position.y = 0.55), root.add(body);
-    const segs = [],
-      cols = ["#35d0c8", "#38c8b0", "#3cbe94", "#42b676", "#48ae58", "#4ca83c"],
-      zs = [0.75, 0.38, 0.0, -0.38, -0.74, -1.06],
-      rs = [0.4, 0.46, 0.48, 0.46, 0.4, 0.3];
-    zs.forEach((zz, k) => {
-      const sg = new THREE.Group();
-      sg.position.set(0, 0, zz), body.add(sg), segs.push(sg);
-      R(T.sphere(1, 18, 14), KIT.surf("scale", cols[k], { rep: 2, bump: 0.02, shine: 40 }), sg, [0, 0, 0], null, [rs[k], rs[k] * 0.9, rs[k] * 0.95]);
-    });
-    // KOLLOD's mossy bed with mushrooms and a worm
-    const moss = KIT.surf("grass", "#4caf34", { rep: 2, bump: 0.03, shine: 8 }),
-      bed = new THREE.Group();
-    (bed.position.y = 0.36), body.add(bed);
-    R(T.box(0.72, 0.16, 1.5), moss, bed, [0, 0, -0.15]);
-    R(T.cyl(0.36, 0.36, 0.16, 16, 1), moss, bed, [0, 0, 0.6], null, [1, 1, 0.5]);
-    const blade = x.clay("#5cc83a", { shininess: 20 }),
-      r4 = srand(5);
-    for (let k = 0; k < 30; k++) R(T.cone(0.025, 0.16 + 0.12 * r4(), 4), blade, bed, [-0.32 + 0.64 * r4(), 0.12, -0.85 + 1.4 * r4()], [0.3 * (r4() - 0.5), 0, 0.3 * (r4() - 0.5)]);
-    const stem = x.clay("#f4ecd8", { shininess: 30 }),
-      dot = x.clay("#ffffff");
-    [[-0.18, -0.55, "#141418"], [0.15, -0.3, "#ff5fb0"], [-0.12, 0.05, "#141418"], [0.2, 0.25, "#ff5fb0"], [0.0, -0.75, "#ff5fb0"], [0.18, -0.6, "#141418"]].forEach(([mx, mz, cc], k) => {
-      const h = 0.14 + 0.06 * (k % 3);
-      R(T.cyl(0.03, 0.04, h, 8), stem, bed, [mx, 0.08 + h / 2, mz]);
-      R(new THREE.SphereGeometry(0.1, 12, 6, 0, l, 0, Math.PI / 2), x.clay(cc, { shininess: 60 }), bed, [mx, 0.08 + h, mz], null, [1, 0.8, 1]);
-      [0, 2.1, 4.2].forEach((a) => R(T.sphere(0.018, 6, 4), dot, bed, [mx + 0.06 * Math.cos(a), 0.08 + h + 0.055, mz + 0.06 * Math.sin(a)]));
-    });
-    const worm = new THREE.Group();
-    worm.position.set(-0.22, 0.08, 0.3), bed.add(worm);
-    R(ao([[0, 0, 0], [0, 0.14, 0.02], [0.04, 0.22, 0.08]], 0.045, 0.04, 8, 6), x.clay("#f0a07a", { shininess: 40 }), worm);
-    R(T.sphere(0.05, 10, 8), x.clay("#f0a07a", { shininess: 40 }), worm, [0.04, 0.24, 0.1]);
-    [-0.02, 0.02].forEach((ex) => R(T.sphere(0.01, 6, 4), x.clay("#141418"), worm, [0.04 + ex, 0.26, 0.15]));
-    // fern fronds and yellow plumes along the sides
-    const fern = KIT.surf("leaf", "#3fa82a", { rep: 1, bump: 0.02, shine: 20 }),
-      plume = KIT.surf("feather", "#ffd83a", { rep: 1, bump: 0.02, shine: 20 }),
-      fronds = [];
-    [-1, 1].forEach((sx) =>
-      [0.45, 0.05, -0.35, -0.75].forEach((zz, k) => {
-        const f = new THREE.Group();
-        f.position.set(0.36 * sx, 0.3, zz), (f.rotation.z = sx * (1.0 + 0.15 * k)), (f.rotation.y = -0.4 * sx), body.add(f), fronds.push(f);
-        R(T.sphere(1, 10, 8), k % 2 ? plume : fern, f, [0, 0.42, 0], null, [0.05, 0.42, 0.13]);
-      }),
-    );
-    // ZOLLOX head with its curling trunk and pink caps
-    const head = new THREE.Group();
-    head.position.set(0, 0.28, 1.12), body.add(head);
-    R(T.sphere(1, 18, 14), KIT.surf("scale", "#35d0c8", { rep: 2, bump: 0.02, shine: 40 }), head, [0, 0, 0], null, [0.32, 0.3, 0.34]);
-    const trunk = new THREE.Group();
-    trunk.position.set(0, -0.05, 0.28), head.add(trunk);
-    R(ao([[0, 0, 0], [0, -0.12, 0.2], [0, -0.38, 0.24], [0, -0.48, 0.08], [0, -0.38, -0.02]], 0.09, 0.035, 18, 8), KIT.surf("scale", "#35d0c8", { rep: 1, bump: 0.015, shine: 40 }), trunk);
-    R(T.sphere(0.04, 8, 6), x.clay("#e040c8"), trunk, [0, -0.38, -0.02]);
+    g.add(root), root.add(body);
+    const orange = new THREE.Color("#e8862a"),
+      blue = new THREE.Color("#2a9ccf"),
+      cream = new THREE.Color("#f3ead2"),
+      C = [0, 1.4, 0.05],
+      bb = blobBody(
+        [
+          [0, 1.05, 0, 0.48, 0.55, 0.42],
+          [0, 1.45, 0.03, 0.42, 0.34, 0.36],
+          [0, 0.74, -0.02, 0.42, 0.3, 0.37],
+          [0, 1.74, 0.05, 0.24, 0.2, 0.24],
+          [0, 2.02, 0.08, 0.33, 0.31, 0.33],
+          [0, 1.94, 0.4, 0.19, 0.15, 0.22],
+        ],
+        C,
+        {
+          k: 0.16,
+          uvLen: 3,
+          col: (p, fold, cc) => {
+            const belly = Math.max(0, Math.min(1, (p.z - 0.12) / 0.2)) * Math.max(0, Math.min(1, (1.62 - p.y) / 0.15)) * Math.max(0, Math.min(1, (p.y - 0.62) / 0.15)),
+              muzzle = Math.max(0, Math.min(1, (p.z - 0.47) / 0.05)) * (p.y < 2.02 ? 1 : 0),
+              saddle = Math.max(0, Math.min(1, (-p.z - 0.18) / 0.12)) * (p.y > 0.95 && p.y < 1.62 ? 1 : 0);
+            cc.copy(orange).lerp(cream, belly).lerp(blue, Math.max(muzzle, saddle)).multiplyScalar(1 - 0.12 * fold);
+          },
+        },
+      ),
+      hit = bb.hit;
+    keepR(bb.geo, gradMat("fur", { rep: 6, bump: 0.035, shine: 18 }), body);
+    const furM = KIT.surf("fur", "#e8862a", { rep: 3, bump: 0.035, shine: 18 }),
+      blueM = KIT.surf("fur", "#2a9ccf", { rep: 3, bump: 0.03, shine: 20 }),
+      dark = x.clay("#141418", { shininess: 70 });
+    // nose, a short closed mouth line, sleepy yellow eyes
+    R(T.sphere(1, 14, 10), dark, body, [0, 1.98, 0.61], null, [0.075, 0.06, 0.06]);
+    R(T.box(0.012, 0.07, 0.012), dark, body, [0, 1.89, 0.6]);
     const lids = [];
-    [-1, 1].forEach((sx) => lids.push(KIT.eye(head, [0.16 * sx, 0.1, 0.25], 0.085, { iris: "#3a2a6a", lid: "#35d0c8", open: -0.3, rot: [0, 0.3 * sx, 0] }).lid));
-    [[-0.1, 0.12], [0.12, 0.0]].forEach(([mx, mz]) => {
-      R(T.cyl(0.025, 0.03, 0.08, 6), stem, head, [mx, 0.32, mz]);
-      R(new THREE.SphereGeometry(0.075, 10, 6, 0, l, 0, Math.PI / 2), x.clay("#ff5fb0", { shininess: 60 }), head, [mx, 0.36, mz]);
+    [-1, 1].forEach((sx) => {
+      const { p, n } = hit([0, 2.06, 0.1], [sx * 0.55, 0.15, 0.82]),
+        e = KIT.eye(body, [p.x - n.x * 0.04, p.y - n.y * 0.04, p.z - n.z * 0.04], 0.08, { iris: "#f2c21a", lid: "#e8862a", open: -0.05, rot: [0, Math.atan2(n.x, n.z), 0] });
+      lids.push(e.lid);
     });
-    // stubby legs and the tail with ZOLLOX's magenta tip
-    const legs = [[0.32, 0.55], [0.36, -0.35]].flatMap(([lx, lz]) => [-1, 1].map((sx) => KIT.leg(body, [lx * sx, -0.22, lz], { len: 0.36, r: 0.1, mat: KIT.surf("scale", "#3cbe94", { rep: 1, bump: 0.015, shine: 40 }), foot: "pad" })));
+    // tall ears with purple insides
+    const ears = [-1, 1].map((sx) => {
+      const ea = new THREE.Group();
+      ea.position.set(0.19 * sx, 2.24, -0.02), (ea.rotation.z = -0.2 * sx), body.add(ea);
+      R(T.cone(0.12, 0.5, 10), furM, ea, [0, 0.25, 0], null, [1, 1, 0.55]), R(T.cone(0.075, 0.36, 8), x.clay("#b080e0", { shininess: 30 }), ea, [0, 0.22, 0.04], null, [1, 1, 0.4]);
+      return ea;
+    });
+    // the collar and the APR coin
+    R(T.torus(0.255, 0.04, 8, 28), dark, body, [0, 1.7, 0.05], [Math.PI / 2 + 0.15, 0, 0]);
+    const coinTex = b(128, 128, (c) => {
+      (c.fillStyle = "#f08a1e"), c.beginPath(), c.arc(64, 64, 62, 0, l), c.fill();
+      (c.strokeStyle = "#ffd23a"), (c.lineWidth = 8), c.beginPath(), c.arc(64, 64, 52, 0, l), c.stroke();
+      (c.fillStyle = "#7a2a00"), (c.font = "bold 38px sans-serif"), (c.textAlign = "center"), (c.textBaseline = "middle"), c.fillText("APR", 64, 66);
+    });
+    const coin = new THREE.Group();
+    coin.position.set(0, 1.6, 0.33), (coin.rotation.x = -0.15), body.add(coin);
+    R(T.cyl(0.085, 0.085, 0.025, 16), x.clay("#f08a1e", { shininess: 90 }), coin, [0, 0, 0], [Math.PI / 2, 0, 0]);
+    R(new THREE.CircleGeometry(0.082, 16), new THREE.MeshPhongMaterial({ map: coinTex, shininess: 90 }), coin, [0, 0, 0.014]);
+    // the shopkeeper's apron: navy with white pinstripes, a bib with a pocket and a sunflower, a
+    // skirt to the knees, a neck strap and ties
+    const stripe = fabricTex((c) => {
+        (c.fillStyle = "#22386a"), c.fillRect(0, 0, 128, 128), (c.fillStyle = "#e8ecf4");
+        for (let k = 0; k < 8; k++) c.fillRect(k * 16 + 7, 0, 2, 128);
+      }),
+      apronM = new THREE.MeshPhongMaterial({ map: stripe, shininess: 12, side: THREE.DoubleSide });
+    stripe.wrapS = stripe.wrapT = THREE.RepeatWrapping;
+    stripe.repeat.set(3, 2);
+    apronBib(hit, C, -0.62, 0.62, 0.98, 1.55, apronM, body);
+    const skirt = new THREE.CylinderGeometry(1, 1, 1, 18, 1, !0, -1.05, 2.1);
+    R(skirt, apronM, body, [0, 0.66, 0.0], null, [0.47, 0.6, 0.43]);
+    R(T.box(0.26, 0.17, 0.02), apronM, body, [0, 0.82, 0.44], [-0.08, 0, 0]);
+    [-1, 1].forEach((sx) => R(ao([[0.16 * sx, 1.54, 0.33], [0.2 * sx, 1.7, 0.18], [0.12 * sx, 1.8, -0.05], [0, 1.82, -0.16]], 0.015, 0.015, 10, 5), apronM, body));
+    R(T.torus(1, 0.016, 5, 32), x.clay("#e8ecf4"), body, [0, 0.98, 0], [Math.PI / 2, 0, 0], [0.46, 0.41, 1]);
+    const sun = new THREE.Group();
+    sun.position.set(-0.17, 1.38, 0.43), (sun.rotation.x = -0.2), body.add(sun);
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * l;
+      R(T.sphere(1, 8, 6), x.clay("#f6c21a", { shininess: 50 }), sun, [0.06 * Math.cos(a), 0.06 * Math.sin(a), 0], [0, 0, a], [0.05, 0.022, 0.012]);
+    }
+    R(T.sphere(0.03, 10, 8), x.clay("#6a3a14"), sun, [0, 0, 0.01], null, [1, 1, 0.5]);
+    // a few confetti stars in his fur
+    const starM = ["#ffd23a", "#ff6ab0", "#b8f04a", "#ffffff"].map((h) => x.clay(h, { shininess: 50 })),
+      rr = srand(31);
+    for (let k = 0; k < 14; k++) {
+      const a = Math.PI * (0.55 + 0.9 * rr()) * (rr() < 0.5 ? 1 : -1),
+        y = 1.05 + 0.6 * rr(),
+        { p, n } = hit([0, y, 0], [Math.sin(a), 0.1, Math.cos(a)]);
+      if (Math.cos(a) > 0.2) continue;
+      const st = faceTo(new THREE.Group(), n);
+      st.position.copy(p).addScaledVector(n, 0.005), body.add(st), R(starGeo(), starM[k % 4], st, [0, 0, 0], null, 0.04 + 0.025 * rr());
+    }
+    // two legs with blue socks, arms with blue paws and red sleeve garters
+    const legs = [-1, 1].map((sx) => KIT.leg(body, [0.22 * sx, 0.64, 0], { len: 0.58, r: 0.13, mat: furM, thigh: 1.4, foot: "paw", footMat: blueM }));
+    const arms = [-1, 1].map((sx) => {
+      const a = KIT.arm(body, [0.44 * sx, 1.5, 0.02], { len: 0.66, r: 0.1, mat: furM, hand: "mitt", handMat: blueM, rot: [0.12, 0, 0.16 * sx] });
+      return R(T.torus(0.105, 0.025, 6, 18), x.clay("#c8282a", { shininess: 40 }), a.sh, [0, -0.17, 0], [Math.PI / 2, 0, 0]), a;
+    });
+    // the antenna tail with its star and signal arcs
     const tail = new THREE.Group();
-    tail.position.set(0, 0, -1.3), body.add(tail);
-    R(ao([[0, 0, 0], [0, -0.05, -0.4], [0.08, 0.1, -0.75], [0.04, 0.35, -0.85]], 0.22, 0.05, 18, 8), KIT.surf("scale", "#4ca83c", { rep: 1, bump: 0.015, shine: 40 }), tail);
-    R(T.sphere(0.07, 10, 8), x.clay("#e040c8", { shininess: 60 }), tail, [0.04, 0.37, -0.85]);
+    tail.position.set(0, 0.85, -0.36), body.add(tail);
+    R(ao([[0, 0, 0], [0, 0.05, -0.22], [0, 0.3, -0.38], [0, 0.6, -0.4]], 0.09, 0.035, 14, 8), furM, tail);
+    const starS = new THREE.Shape();
+    for (let k = 0; k <= 10; k++) {
+      const a = Math.PI / 2 + (k * Math.PI) / 5,
+        r = k % 2 ? 0.05 : 0.12;
+      k ? starS.lineTo(r * Math.cos(a), r * Math.sin(a)) : starS.moveTo(r * Math.cos(a), r * Math.sin(a));
+    }
+    R(new THREE.ExtrudeGeometry(starS, { depth: 0.03, bevelEnabled: !0, bevelThickness: 0.01, bevelSize: 0.01, bevelSegments: 1 }), x.clay("#ffd23a", { shininess: 80 }), tail, [0, 0.72, -0.4]);
+    [0.17, 0.24].forEach((r) => R(T.torus(r, 0.012, 4, 18, 1.2), x.clay("#2a9ccf"), tail, [0, 0.72, -0.4], [0, 0, Math.PI / 2 - 0.6]));
     return born(g, {
-      height: 1.7,
+      height: 2.85,
+      head: body,
+      crownY: 2.3,
       lids,
       step(t, dt, tk, wk) {
-        segs.forEach((s, k) => (s.position.y = 0.03 * Math.sin(2.4 * t - 0.8 * k)));
-        fronds.forEach((f, k) => (f.rotation.x = 0.12 * Math.sin(1.8 * t + k)));
-        (worm.position.y = 0.08 + 0.05 * Math.max(0, Math.sin(1.3 * t))), (worm.rotation.y = 0.5 * Math.sin(2 * t));
-        (trunk.rotation.x = 0.15 * Math.sin(1.7 * t)), (head.rotation.y = 0.15 * Math.sin(0.8 * t)), (tail.rotation.y = 0.3 * Math.sin(1.9 * t));
-        legs.forEach((lg, k) => KIT.stride(lg, 10 * t + (k % 2 ^ (k >> 1) ? Math.PI : 0), 0.5 * wk, 0.6 * wk));
+        (tail.rotation.z = 0.25 * Math.sin(2.2 * t)), body.scale.set(1, 1 + 0.01 * Math.sin(2 * t), 1);
+        ears.forEach((ea, k) => (ea.rotation.x = 0.06 * Math.sin(1.7 * t + k)));
+        arms.forEach((a, k) => (a.sh.rotation.x = 0.12 + 0.1 * Math.sin(1.5 * t + 3 * k) + 0.5 * wk * Math.sin(8 * t + k * Math.PI)));
+        legs.forEach((lg, k) => KIT.stride(lg, 8 * t + k * Math.PI, 0.5 * wk, 0.8 * wk));
       },
     });
   };
 
+  // ZOLLOD (ZOLLOX + KOLLOD), the Garden Supplies keeper, standing on two legs: ZOLLOX's segmented
+  // body fading from cyan at the head to KOLLOD's green at the feet, ZOLLOX's curling trunk with its
+  // magenta tip and pink mushroom caps on his head; KOLLOD's mossy garden bed grows over his back
+  // with black and pink mushrooms (and KOLLOD's little worm peeking out), fern fronds and yellow
+  // plumes along his shoulders, and a thick tail with ZOLLOX's magenta tip. He wears an olive canvas
+  // gardener's apron with seed packets in its pocket and carries a trowel.
+  BORN.zollod = (g) => {
+    const root = new THREE.Group(),
+      body = new THREE.Group();
+    g.add(root), root.add(body);
+    const bands = ["#35d0c8", "#38c8b0", "#3cbe94", "#42b676", "#48ae58", "#4ca83c"].map((h) => new THREE.Color(h)),
+      C = [0, 1.35, 0.06],
+      bb = blobBody(
+        [
+          [0, 1.1, 0, 0.46, 0.58, 0.4],
+          [0, 1.5, 0.03, 0.4, 0.32, 0.34],
+          [0, 0.7, -0.02, 0.4, 0.3, 0.36],
+          [0, 1.8, 0.08, 0.22, 0.2, 0.22],
+          [0, 2.06, 0.14, 0.3, 0.28, 0.32],
+          [0, 1.98, 0.42, 0.15, 0.13, 0.14],
+        ],
+        C,
+        {
+          k: 0.16,
+          uvLen: 2,
+          col: (p, fold, cc) => {
+            const u = Math.max(0, Math.min(1, (2.3 - p.y) / 1.9)) * 5,
+              k = Math.min(4, Math.floor(u)),
+              f = u - k,
+              seam = Math.exp(-(((f - 0.5) / 0.08) ** 2)) * (p.y < 1.75 ? 1 : 0);
+            cc.copy(bands[k]).lerp(bands[k + 1], f).multiplyScalar(1 - 0.22 * seam - 0.12 * fold);
+          },
+        },
+      ),
+      hit = bb.hit;
+    keepR(bb.geo, gradMat("scale", { rep: 5, bump: 0.025, shine: 40 }), body);
+    const cyanM = KIT.surf("scale", "#35d0c8", { rep: 2, bump: 0.02, shine: 40 }),
+      greenM = KIT.surf("scale", "#48ae58", { rep: 2, bump: 0.02, shine: 40 }),
+      stem = x.clay("#f4ecd8", { shininess: 30 }),
+      dot = x.clay("#ffffff");
+    // the curling trunk with its magenta tip
+    const trunk = new THREE.Group();
+    trunk.position.set(0, 1.97, 0.52), body.add(trunk);
+    R(ao([[0, 0, -0.04], [0, -0.1, 0.12], [0, -0.32, 0.18], [0, -0.44, 0.06], [0, -0.36, -0.03]], 0.085, 0.032, 18, 8), cyanM, trunk);
+    R(T.sphere(0.04, 8, 6), x.clay("#e040c8", { shininess: 60 }), trunk, [0, -0.36, -0.03]);
+    const lids = [];
+    [-1, 1].forEach((sx) => {
+      const { p, n } = hit([0, 2.1, 0.14], [sx * 0.6, 0.15, 0.78]);
+      lids.push(KIT.eye(body, [p.x - n.x * 0.035, p.y - n.y * 0.035, p.z - n.z * 0.035], 0.075, { iris: "#3a2a6a", lid: "#35d0c8", open: -0.25, rot: [0, Math.atan2(n.x, n.z), 0] }).lid);
+    });
+    // pink mushroom caps on his head
+    [[-0.12, 0.05], [0.13, -0.06]].forEach(([mx, mz], k) => {
+      const { p } = hit([0, 2.06, 0.14], [mx * 2, 1, mz * 2]);
+      R(T.cyl(0.025, 0.03, 0.09, 6), stem, body, [p.x, p.y + 0.03, p.z]);
+      R(new THREE.SphereGeometry(0.075 + 0.015 * k, 12, 6, 0, l, 0, Math.PI / 2), x.clay("#ff5fb0", { shininess: 60 }), body, [p.x, p.y + 0.07, p.z]);
+      [0, 2.1, 4.2].forEach((a) => R(T.sphere(0.013, 6, 4), dot, body, [p.x + 0.045 * Math.cos(a), p.y + 0.12, p.z + 0.045 * Math.sin(a)]));
+    });
+    // KOLLOD's mossy bed over his back, with mushrooms, grass and the worm
+    const moss = KIT.surf("grass", "#4caf34", { rep: 2, bump: 0.03, shine: 8 });
+    apronBib(hit, C, Math.PI - 0.95, Math.PI + 0.95, 0.95, 1.72, moss, body, 0.05);
+    const blade = x.clay("#5cc83a", { shininess: 20 }),
+      r4 = srand(5);
+    for (let k = 0; k < 26; k++) {
+      const a = Math.PI + 1.7 * (r4() - 0.5),
+        y = 1.0 + 0.68 * r4(),
+        { p, n } = hit([0, y, 0.06], [Math.sin(a), 0, Math.cos(a)]),
+        bl = faceTo(new THREE.Group(), new c0(0, 1, 0), n);
+      bl.position.copy(p).addScaledVector(n, 0.05), body.add(bl), R(T.cone(0.022, 0.14 + 0.1 * r4(), 4), blade, bl, [0, 0.06, 0], [0.4 * (r4() - 0.5) - 0.3, 0, 0]);
+    }
+    [[2.8, 1.5, "#141418"], [3.4, 1.62, "#ff5fb0"], [3.0, 1.22, "#ff5fb0"], [3.55, 1.3, "#141418"], [2.65, 1.12, "#ff5fb0"]].forEach(([a, y, cc], k) => {
+      const { p, n } = hit([0, y, 0.06], [Math.sin(a), 0, Math.cos(a)]),
+        h = 0.12 + 0.05 * (k % 3),
+        mg = new THREE.Group();
+      mg.position.copy(p).addScaledVector(n, 0.04), mg.quaternion.setFromUnitVectors(new c0(0, 1, 0), n.clone().lerp(new c0(0, 1, 0), 0.5).normalize()), body.add(mg);
+      R(T.cyl(0.026, 0.034, h, 8), stem, mg, [0, h / 2, 0]);
+      R(new THREE.SphereGeometry(0.085, 12, 6, 0, l, 0, Math.PI / 2), x.clay(cc, { shininess: 60 }), mg, [0, h, 0], null, [1, 0.8, 1]);
+      [0, 2.1, 4.2].forEach((q) => R(T.sphere(0.015, 6, 4), dot, mg, [0.05 * Math.cos(q), h + 0.05, 0.05 * Math.sin(q)]));
+    });
+    const worm = new THREE.Group();
+    {
+      const { p, n } = hit([0, 1.4, 0.06], [-0.45, 0, -1]);
+      worm.position.copy(p).addScaledVector(n, 0.04), body.add(worm);
+      R(ao([[0, 0, 0], [0, 0.12, -0.02], [0.03, 0.2, -0.06]], 0.04, 0.035, 8, 6), x.clay("#f0a07a", { shininess: 40 }), worm);
+      R(T.sphere(0.045, 10, 8), x.clay("#f0a07a", { shininess: 40 }), worm, [0.03, 0.22, -0.08]);
+      [-0.018, 0.018].forEach((ex) => R(T.sphere(0.009, 6, 4), x.clay("#141418"), worm, [0.03 + ex, 0.24, -0.12]));
+    }
+    // fern fronds and yellow plumes along his shoulders
+    const fern = KIT.surf("leaf", "#3fa82a", { rep: 1, bump: 0.02, shine: 20 }),
+      plume = KIT.surf("feather", "#ffd83a", { rep: 1, bump: 0.02, shine: 20 }),
+      fronds = [];
+    [-1, 1].forEach((sx) =>
+      [1.62, 1.4, 1.18].forEach((y, k) => {
+        const { p, n } = hit([0, y, 0.0], [sx, 0, -0.55]),
+          f = new THREE.Group();
+        f.position.copy(p), f.quaternion.setFromUnitVectors(new c0(0, 1, 0), n.clone().add(new c0(0, 0.9, -0.3)).normalize()), body.add(f), fronds.push(f);
+        R(T.sphere(1, 10, 8), k % 2 ? plume : fern, f, [0, 0.3, 0], null, [0.04, 0.32, 0.11]);
+      }),
+    );
+    // the gardener's apron: olive canvas bib and skirt, a big pocket with seed packets, leather ties
+    const canvasM = KIT.surf("fabric", "#7a8a44", { rep: 2, bump: 0.02, shine: 10 });
+    const canvasD = Object.assign(canvasM.clone(), { side: THREE.DoubleSide });
+    apronBib(hit, C, -0.6, 0.6, 0.96, 1.55, canvasD, body);
+    R(new THREE.CylinderGeometry(1, 1, 1, 18, 1, !0, -1.05, 2.1), canvasD, body, [0, 0.64, 0.0], null, [0.45, 0.6, 0.41]);
+    R(T.box(0.34, 0.2, 0.025), KIT.surf("fabric", "#6a7a3a", { rep: 1, bump: 0.02, shine: 10 }), body, [0, 0.82, 0.42], [-0.06, 0, 0]);
+    [["#e84a5a", -0.09], ["#ffd23a", 0.0], ["#5aa8e8", 0.09]].forEach(([cc, px], k) => R(T.box(0.07, 0.1, 0.008), x.clay(cc, { shininess: 30 }), body, [px, 0.92 + 0.012 * k, 0.43], [-0.06, 0, 0.1 * (k - 1)]));
+    [-1, 1].forEach((sx) => R(ao([[0.15 * sx, 1.54, 0.32], [0.19 * sx, 1.7, 0.18], [0.12 * sx, 1.82, -0.05], [0, 1.84, -0.15]], 0.016, 0.016, 10, 5), x.clay("#7a4a24", { shininess: 20 }), body));
+    R(T.torus(1, 0.018, 5, 32), x.clay("#7a4a24", { shininess: 20 }), body, [0, 0.96, 0], [Math.PI / 2, 0, 0], [0.44, 0.39, 1]);
+    // legs, arms (a trowel in his right hand) and the tail with its magenta tip
+    const legs = [-1, 1].map((sx) => KIT.leg(body, [0.21 * sx, 0.6, 0], { len: 0.55, r: 0.13, mat: greenM, thigh: 1.4, foot: "pad", footMat: greenM }));
+    const arms = [-1, 1].map((sx) => KIT.arm(body, [0.42 * sx, 1.52, 0.02], { len: 0.66, r: 0.095, mat: cyanM, hand: "fingers", rot: [0.15, 0, 0.16 * sx] }));
+    {
+      const tw = new THREE.Group();
+      tw.position.set(0, -0.12, 0.06), (tw.rotation.x = -1.2), arms[1].hand.add(tw);
+      R(T.cyl(0.025, 0.03, 0.18, 8), x.clay("#a8683a", { shininess: 30 }), tw, [0, 0, 0]);
+      R(T.box(0.09, 0.2, 0.012), x.clay("#c8ccd4", { shininess: 110, specular: 16777215 }), tw, [0, 0.19, 0.0], null, [1, 1, 1]);
+    }
+    const tail = new THREE.Group();
+    tail.position.set(0, 0.72, -0.32), body.add(tail);
+    R(ao([[0, 0, 0], [0, -0.25, -0.35], [0.1, -0.55, -0.75], [0.22, -0.6, -1.05], [0.3, -0.48, -1.2]], 0.2, 0.05, 22, 10), greenM, tail);
+    R(T.sphere(0.07, 10, 8), x.clay("#e040c8", { shininess: 60 }), tail, [0.3, -0.47, -1.22]);
+    return born(g, {
+      height: 2.6,
+      lids,
+      step(t, dt, tk, wk) {
+        fronds.forEach((f, k) => (f.rotation.z = 0.08 * Math.sin(1.8 * t + k)));
+        (worm.position.y += 0), (worm.rotation.y = 0.5 * Math.sin(2 * t));
+        (trunk.rotation.x = 0.15 * Math.sin(1.7 * t)), (tail.rotation.y = 0.2 * Math.sin(1.3 * t));
+        arms.forEach((a, k) => (a.sh.rotation.x = 0.15 + 0.08 * Math.sin(1.4 * t + 3 * k) + 0.5 * wk * Math.sin(8 * t + k * Math.PI)));
+        legs.forEach((lg, k) => KIT.stride(lg, 8 * t + k * Math.PI, 0.5 * wk, 0.8 * wk));
+      },
+    });
+  };
+
+
   // SOMLET = GRATELET + SOMNUX.
   // A floating cotton puffball (GRATELET) squared off like SOMNUX's box body, with SOMNUX's sleepy
-  // face (lashes, blush, little "o" mouth) and GRATELET's swirl, a mail carrier's cap, GRATELET's
+  // half-lidded eyes (small glossy dark beads) and GRATELET's swirl, a mail carrier's cap resting on
+  // top (the cotton puffs grow around the sides and back, clear of the cap and face), GRATELET's
   // cream-puff hands and dangling root tentacles, tinted plum between GRATELET's red and SOMNUX's blue.
   BORN.somlet = (g) => {
     const cream = KIT.surf("felt", "#f2e4b4", { rep: 2, bump: 0.025, shine: 12 }),
@@ -10218,18 +10739,22 @@ const JGP = (() => {
     fl.add(puff), R(geo, cream, puff);
     const r5 = srand(11);
     for (let k = 0; k < 16; k++) {
-      const a = l * r5(),
-        yy = 0.15 + 0.6 * r5();
+      // around the sides and back only, and below the cap's band
+      const a = Math.PI * (1.1 + 0.8 * (k / 15)) + 0.15 * (r5() - 0.5),
+        yy = -0.05 + 0.45 * r5();
       R(T.sphere(0.13 + 0.07 * r5(), 12, 10), k % 3 ? cream : cream2, puff, [0.74 * Math.cos(a), yy, 0.66 * Math.sin(a) - 0.05]);
     }
-    // SOMNUX's sleepy face
-    const ink = x.clay("#3a2a2a", { shininess: 20 });
+    // SOMNUX's sleepy eyes: small glossy dark beads under heavy cream lids, half closed
+    const lids = [];
     [-1, 1].forEach((sx) => {
-      R(T.torus(0.11, 0.018, 6, 14, 2.4), ink, puff, [0.24 * sx, 0.05, 0.73], [0, 0, Math.PI + 0.37]);
-      [-0.08, 0, 0.08].forEach((d) => R(T.box(0.012, 0.05, 0.01), ink, puff, [0.24 * sx + d, -0.06, 0.74], [0, 0, d * 3]));
-      R(T.sphere(1, 12, 8), x.clay("#ff9aa8", { shininess: 20 }), puff, [0.38 * sx, -0.1, 0.71], null, [0.11, 0.07, 0.02]);
+      const e = new THREE.Group();
+      e.position.set(0.25 * sx, 0.02, 0.665), (e.rotation.y = 0.18 * sx), puff.add(e);
+      R(T.sphere(0.092, 16, 12), x.clay("#1a1420", { shininess: 150, specular: 16777215 }), e);
+      R(T.sphere(0.02, 8, 6), x.basic("#ffffff"), e, [-0.03 * sx, 0.034, 0.08]);
+      const lid = new THREE.Group();
+      e.add(lid), R(new THREE.SphereGeometry(0.1, 16, 8, 0, l, 0, Math.PI / 2), cream2, lid);
+      (lid.userData.open = 0.55), (lid.rotation.x = 0.55), lids.push(lid);
     });
-    R(T.torus(0.04, 0.015, 6, 12), ink, puff, [0, -0.2, 0.74]);
     // GRATELET's swirl on each side
     [-1, 1].forEach((sx) => {
       const pts = [];
@@ -10277,6 +10802,7 @@ const JGP = (() => {
     }
     return born(g, {
       height: 3.0,
+      lids,
       step(t, dt, tk) {
         (fl.position.y = 1.35 + 0.1 * Math.sin(1.2 * t)), puff.scale.set(1 + 0.02 * Math.sin(1.6 * t), 1 - 0.02 * Math.sin(1.6 * t), 1);
         (cap.rotation.z = 0.04 * Math.sin(1.1 * t));
@@ -10444,7 +10970,9 @@ const JGP = (() => {
   // MUSHROOM = Mushroom (Greeblis City) + MUSHROOM (Greeblis Woods).
   // One mushroom: City's domed cap with Woods' rim band and white spots in both sizes, glowing from
   // gold at the crown to deep orange at the rim; a cream stem with City's grain, Woods' collar skirt,
-  // City's little feet and brows, and the blush both share.
+  // City's little feet and brows, and the blush both share. He is the town's sheriff: a gold sheriff's
+  // star on his stem and a sheriff's hat on his cap. (This model, badge and hat included, is final:
+  // keep it as it is.)
   BORN.mushroom = (g) => {
     const cream = KIT.surf("wood", "#f6eed4", { rep: 1, bump: 0.014, shine: 25 }),
       gillM = KIT.surf("fabric", "#ead6a8", { rep: 1, bump: 0.01, shine: 10 }),
@@ -10509,6 +11037,56 @@ const JGP = (() => {
       for (let k = 0; k < 3; k++) R(T.sphere(0.012, 6, 4), x.clay("#c88a5a"), stem, [0.34 * sx + 0.04 * (k - 1), 0.62 + 0.02 * (k % 2), 0.47]);
     });
     KIT.mouth(stem, [0, 0.58, 0.52], 0.075);
+    // the sheriff's star pinned to the front of his stem
+    {
+      const bd = new THREE.Group();
+      bd.position.set(0.3, 0.34, 0.52), (bd.rotation.y = 0.55), stem.add(bd);
+      const goldM = x.clay("#e8b830", { shininess: 120, specular: 16777215 }),
+        s = new THREE.Shape();
+      for (let k = 0; k <= 12; k++) {
+        const a = Math.PI / 2 + (k * Math.PI) / 6,
+          rr = k % 2 ? 0.065 : 0.13;
+        k ? s.lineTo(rr * Math.cos(a), rr * Math.sin(a)) : s.moveTo(rr * Math.cos(a), rr * Math.sin(a));
+      }
+      R(new THREE.ExtrudeGeometry(s, { depth: 0.015, bevelEnabled: !0, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 1 }), goldM, bd);
+      for (let k = 0; k < 6; k++) R(T.sphere(0.018, 8, 6), goldM, bd, [0.135 * Math.cos(Math.PI / 2 + (k * Math.PI) / 3), 0.135 * Math.sin(Math.PI / 2 + (k * Math.PI) / 3), 0.012]);
+      R(T.cyl(0.05, 0.05, 0.012, 20), x.clay("#c8962a", { shininess: 90 }), bd, [0, 0, 0.026], [Math.PI / 2, 0, 0]);
+      R(T.torus(0.05, 0.006, 4, 20), goldM, bd, [0, 0, 0.032]);
+    }
+    // and a sheriff's hat on his cap: a pinched felt crown with a band and a star, the brim turned
+    // up at the sides
+    {
+      const hat = new THREE.Group(),
+        felt = KIT.surf("felt", "#8a5a32", { rep: 2, bump: 0.02, shine: 14 }),
+        brim = latheGeo([[0.34, 0.03], [0.62, 0.012], [0.74, 0.05], [0.8, 0.12], [0.78, 0.13], [0.72, 0.07], [0.6, -0.012], [0.34, -0.005]], 48),
+        P = brim.attributes.position;
+      for (let k = 0; k < P.count; k++) {
+        const px = P.getX(k),
+          r0 = Math.hypot(px, P.getZ(k));
+        r0 > 0.5 && P.setY(k, P.getY(k) + 0.14 * ((px / r0) ** 2) * ((r0 - 0.5) / 0.3));
+      }
+      brim.computeVertexNormals();
+      (hat.position.y = 0.6), hat.scale.setScalar(1.2), cap.add(hat), R(brim, felt, hat);
+      const crown = latheGeo(smoothProfile([[0.37, 0.0], [0.38, 0.14], [0.34, 0.28], [0.2, 0.33], [0, 0.31]], 20), 40),
+        Q = crown.attributes.position;
+      for (let k = 0; k < Q.count; k++) Q.getY(k) > 0.22 && Q.setY(k, Q.getY(k) - 0.06 * Math.max(0, Q.getZ(k) / 0.37) - 0.04 * Math.exp(-((Q.getX(k) / 0.08) ** 2)));
+      crown.computeVertexNormals(), R(crown, felt, hat);
+      R(T.torus(0.375, 0.022, 6, 40), x.clay("#3a2414", { shininess: 30 }), hat, [0, 0.05, 0], [Math.PI / 2, 0, 0]);
+      const st = new THREE.Group();
+      st.position.set(0, 0.07, 0.385), hat.add(st);
+      R(new THREE.ExtrudeGeometry(
+        (() => {
+          const s = new THREE.Shape();
+          for (let k = 0; k <= 10; k++) {
+            const a = Math.PI / 2 + (k * Math.PI) / 5,
+              rr = k % 2 ? 0.025 : 0.055;
+            k ? s.lineTo(rr * Math.cos(a), rr * Math.sin(a)) : s.moveTo(rr * Math.cos(a), rr * Math.sin(a));
+          }
+          return s;
+        })(),
+        { depth: 0.01, bevelEnabled: !1 },
+      ), x.clay("#e8b830", { shininess: 120, specular: 16777215 }), st);
+    }
     return born(g, {
       height: 2.0,
       lids,
@@ -10518,121 +11096,413 @@ const JGP = (() => {
     });
   };
 
-  // KING DINO = KING DINO (Greeblis Park) + King Dino (Greeblis Woods).
-  // The yellow egg dino with the duck bill and square pixel eyes both share; a crown of Woods' teal
-  // band on Park's purple base, ringed with Park's cyan spikes and topped with Woods' coloured gem pins;
-  // Park's cyan scale tiles down the spine; a curled cyan tail (Woods) ending in Park's ring.
+  // KING DINO, after the King Dino artwork: an upright lemon-yellow gummy dino with a citrus-peel skin, a
+  // rounded muzzle with glossy navy bead eyes and a quiet smile line; a glossy turquoise crown (the front
+  // prong tallest, with a knob) under a great feathered plume that runs purple down the back of the head,
+  // over the crown and orange down the front; three square turquoise buttons with green lights down each
+  // side, short arms out of turquoise ball joints with holes, turquoise donut rings on the hips, a holed
+  // turquoise plate on the back and stubby feet.
   BORN.kingdino = (g) => {
     const root = new THREE.Group(),
       body = new THREE.Group();
     g.add(root), root.add(body);
-    // the egg, a little wider low down: fine scales going from warm gold at the crown to butter yellow
-    const rAt = (y) => {
-        const th = Math.acos(Math.max(-1, Math.min(1, 1 - (y - 0.22) / 1.02)));
-        return 0.9 * Math.sin(th) * (1 + 0.08 * Math.cos(th));
+    // the body is one smooth blob: trunk, domed head, muzzle and thighs blended together
+    const parts = [
+        [0, 1.0, -0.05, 0.7, 0.85, 0.6],
+        [0, 1.85, 0.18, 0.58, 0.6, 0.55],
+        [0, 1.9, 0.66, 0.44, 0.31, 0.5],
+        [-0.36, 0.45, 0.06, 0.36, 0.42, 0.42],
+        [0.36, 0.45, 0.06, 0.36, 0.42, 0.42],
+      ],
+      sdE = (px, py, pz, [cx, cy, cz, a, b2, c]) => {
+        const qx = (px - cx) / a,
+          qy = (py - cy) / b2,
+          qz = (pz - cz) / c,
+          k0 = Math.hypot(qx, qy, qz),
+          k1 = Math.hypot(qx / a, qy / b2, qz / c);
+        return k1 < 1e-6 ? -Math.min(a, b2, c) : (k0 * (k0 - 1)) / k1;
       },
-      egg = [];
-    for (let k = 0; k <= 36; k++) {
-      const th = (k / 36) * Math.PI;
-      egg.push([0.9 * Math.sin(th) * (1 + 0.08 * Math.cos(th)), 0.22 + 1.02 * (1 - Math.cos(th))]);
+      smin = (a, b2, k) => {
+        const h = Math.max(k - Math.abs(a - b2), 0) / k;
+        return Math.min(a, b2) - h * h * k * 0.25;
+      },
+      field = (px, py, pz) => {
+        let d = sdE(px, py, pz, parts[0]);
+        for (let k = 1; k < parts.length; k++) d = smin(d, sdE(px, py, pz, parts[k]), 0.22);
+        return d;
+      },
+      hardMin = (px, py, pz) => Math.min(...parts.map((p) => sdE(px, py, pz, p))),
+      grad = (p) => {
+        const e = 0.004;
+        return new c0(
+          field(p.x + e, p.y, p.z) - field(p.x - e, p.y, p.z),
+          field(p.x, p.y + e, p.z) - field(p.x, p.y - e, p.z),
+          field(p.x, p.y, p.z + e) - field(p.x, p.y, p.z - e),
+        ).normalize();
+      },
+      // the outermost surface point along a ray from o in direction d
+      hit = (o, d) => {
+        const D = new c0(...d).normalize();
+        let t = 2.4;
+        while (t > 0 && field(o[0] + D.x * t, o[1] + D.y * t, o[2] + D.z * t) > 0) t -= 0.02;
+        let lo = t,
+          hi = t + 0.02;
+        for (let k = 0; k < 14; k++) {
+          const m = (lo + hi) / 2;
+          field(o[0] + D.x * m, o[1] + D.y * m, o[2] + D.z * m) > 0 ? (hi = m) : (lo = m);
+        }
+        const p = new c0(o[0] + D.x * lo, o[1] + D.y * lo, o[2] + D.z * lo);
+        return { p, n: grad(p) };
+      },
+      // orient an object so its +z follows n with +y kept as close to world up as possible
+      face = (o, n, up = new c0(0, 1, 0)) => {
+        const X = new c0().crossVectors(up, n);
+        X.lengthSq() < 1e-6 && X.set(1, 0, 0), X.normalize();
+        const Y = new c0().crossVectors(n, X);
+        return o.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, Y, n)), o;
+      };
+    {
+      const NI = 88,
+        NJ = 64,
+        C = [0, 1.55, 0.2],
+        pos = [],
+        nor = [],
+        uv = [],
+        col = [],
+        idx = [],
+        arc = new Float32Array(NI + 1),
+        lemon = new THREE.Color("#f9dc22"),
+        gold = new THREE.Color("#eeb41a"),
+        crease = new THREE.Color("#dc8e16"),
+        cc = new THREE.Color();
+      for (let j = 0; j <= NJ; j++)
+        for (let i = 0; i <= NI; i++) {
+          const th = (j / NJ) * Math.PI,
+            ph = Math.PI + (i / NI) * l,
+            { p, n } = hit(C, [Math.sin(th) * Math.sin(ph), Math.cos(th), Math.sin(th) * Math.cos(ph)]);
+          j && (arc[i] += Math.hypot(p.x - pos[3 * (pos.length / 3 - NI - 1)], p.y - pos[3 * (pos.length / 3 - NI - 1) + 1], p.z - pos[3 * (pos.length / 3 - NI - 1) + 2]));
+          pos.push(p.x, p.y, p.z), nor.push(n.x, n.y, n.z), uv.push(i / NI, arc[i] / 4);
+          const fold = Math.min(1, Math.max(0, (hardMin(p.x, p.y, p.z) - field(p.x, p.y, p.z)) / 0.05)),
+            low = Math.min(1, Math.max(0, (0.75 - p.y) / 0.6)),
+            mot = 0.04 * Math.sin(p.x * 23 + p.y * 17) * Math.sin(p.z * 19 - p.y * 11);
+          cc.copy(lemon).lerp(gold, 0.75 * low).lerp(crease, 0.6 * fold).multiplyScalar(1 + mot);
+          col.push(cc.r, cc.g, cc.b);
+        }
+      for (let j = 0; j < NJ; j++)
+        for (let i = 0; i < NI; i++) {
+          const a = j * (NI + 1) + i,
+            b2 = a + NI + 1;
+          idx.push(a, b2, a + 1, b2, b2 + 1, a + 1);
+        }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)), geo.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3));
+      geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)), geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)), geo.setIndex(idx);
+      keepR(geo, gradMat("skin", { rep: 5, bump: 0.045, shine: 50, spec: 4473924 }), body);
     }
-    keepR(gradient(latheGeo(egg, 48), [[0.25, "#f6dc2a"], [1.1, "#f8e436"], [2.2, "#f0c818"]]), gradMat("scale", { rep: 7, bump: 0.018, shine: 40 }), body);
-    const yellow = KIT.surf("scale", "#f6de2a", { rep: 3, bump: 0.02, shine: 40 }),
-      gold = KIT.surf("metal", "#e8b830", { rep: 1, bump: 0.01, shine: 90, spec: 16777215 }),
-      cyan = KIT.surf("scale", "#2ad8e0", { rep: 2, bump: 0.02, shine: 70 }),
-      bill = KIT.surf("rubber", "#f4a01c", { rep: 1, bump: 0.01, shine: 50 }),
-      claw = x.clay("#fbf2d8", { shininess: 60 }),
-      dark = x.clay("#3a1a10", { shininess: 20 });
-    // cream belly plates down the front
-    onEllipsoid(body, T.sphere(1, 24, 16), KIT.surf("scute", "#fbeeb0", { rep: 1, bump: 0.02, shine: 30 }), [0, 1.0, 0], [0.92, 1.0, 0.92], [0, -0.15, 1], [0.44, 0.58, 0.1], 0.9);
-    // the duck bill: a broad upper bill with nostrils over a lower bill, the mouth open a little
-    const billG = new THREE.Group();
-    billG.position.set(0, 1.44, rAt(1.44) - 0.12), body.add(billG);
-    R(T.sphere(1, 24, 14), bill, billG, [0, 0.03, 0.2], [-0.08, 0, 0], [0.42, 0.11, 0.36]);
-    R(T.sphere(1, 20, 12), KIT.surf("rubber", "#e8901a", { rep: 1, bump: 0.01, shine: 40 }), billG, [0, -0.08, 0.16], [0.1, 0, 0], [0.36, 0.07, 0.3]);
-    R(T.sphere(1, 16, 10), dark, billG, [0, -0.03, 0.17], null, [0.3, 0.035, 0.24]);
-    R(T.sphere(1, 12, 8), x.clay("#ff7a8a", { shininess: 30 }), billG, [0, -0.05, 0.2], null, [0.14, 0.03, 0.12]);
-    [-1, 1].forEach((sx) => R(T.sphere(1, 8, 6), dark, billG, [0.09 * sx, 0.12, 0.42], [0.4, 0, 0], [0.03, 0.015, 0.02]));
-    // the square pixel eyes both games share, with a pixel glint and a little pixel brow
-    const eyes = new THREE.Group();
-    body.add(eyes);
+    const peel = (c) => KIT.surf("skin", c, { rep: 3, bump: 0.04, shine: 50, spec: 4473924 }),
+      teal = KIT.surf("skin", "#2cb2dc", { rep: 2, bump: 0.02, shine: 110, spec: 16777215 }),
+      tealDk = KIT.surf("skin", "#2398c8", { rep: 2, bump: 0.02, shine: 100, spec: 16777215 }),
+      holeM = x.clay("#0a2a44", { shininess: 30 });
+    // the muzzle's glossy navy bead eyes, with yellow lids for the blink, and a quiet smile line
+    const lids = [];
     [-1, 1].forEach((sx) => {
-      const ez = Math.sqrt(rAt(1.74) ** 2 - 0.09) + 0.005;
-      R(T.box(0.2, 0.2, 0.05), x.basic("#141418"), eyes, [0.3 * sx, 1.74, ez], [0, 0.4 * sx, 0]);
-      R(T.box(0.065, 0.065, 0.02), x.basic("#ffffff"), eyes, [0.3 * sx - 0.035, 1.785, ez + 0.03], [0, 0.4 * sx, 0]);
-      R(T.box(0.03, 0.03, 0.02), x.basic("#ffffff"), eyes, [0.3 * sx + 0.045, 1.69, ez + 0.03], [0, 0.4 * sx, 0]);
-      R(T.box(0.22, 0.05, 0.05), x.basic("#141418"), body, [0.3 * sx, 1.92, Math.sqrt(rAt(1.92) ** 2 - 0.09) + 0.01], [-0.2, 0.4 * sx, -0.12 * sx]);
+      const { p, n } = hit([0, 1.98, 0.55], [sx * 0.95, 0, 0.62]),
+        e = new THREE.Group();
+      e.position.copy(p).addScaledVector(n, -0.03), face(e, n), body.add(e);
+      R(T.sphere(0.082, 18, 14), x.clay("#0c1838", { shininess: 160, specular: 16777215 }), e);
+      R(T.sphere(0.022, 8, 6), x.basic("#ffffff"), e, [-0.026 * sx, 0.032, 0.074]);
+      R(T.torus(0.084, 0.016, 8, 24), peel("#f2c41e"), e, [0, 0, 0.012]);
+      const lid = new THREE.Group();
+      e.add(lid), R(new THREE.SphereGeometry(0.09, 16, 8, 0, l, 0, Math.PI / 2), peel("#f6d222"), lid);
+      (lid.userData.open = -0.4), (lid.rotation.x = -0.4), lids.push(lid);
+      const sm = [];
+      for (let k = 0; k <= 8; k++) {
+        const u = k / 8,
+          a = sx * (0.42 + 0.78 * u),
+          q = hit([0, 1.72 + 0.07 * u * u * u, 0.55], [Math.sin(a), 0, Math.cos(a)]);
+        sm.push(q.p.addScaledVector(q.n, 0.004));
+      }
+      R(ao(sm, 0.008, 0.01, 16, 5), x.clay("#9a5a16", { shininess: 20 }), body);
     });
-    // stubby arms with three little claws
+    // three square turquoise buttons with little green lights down each side
+    const btn = (() => {
+      const s = new THREE.Shape(),
+        h = 0.06,
+        r = 0.028;
+      s.moveTo(-h + r, -h), s.lineTo(h - r, -h), s.quadraticCurveTo(h, -h, h, -h + r), s.lineTo(h, h - r), s.quadraticCurveTo(h, h, h - r, h);
+      s.lineTo(-h + r, h), s.quadraticCurveTo(-h, h, -h, h - r), s.lineTo(-h, -h + r), s.quadraticCurveTo(-h, -h, -h + r, -h);
+      return new THREE.ExtrudeGeometry(s, { depth: 0.035, bevelEnabled: !0, bevelThickness: 0.022, bevelSize: 0.02, bevelSegments: 3, curveSegments: 4 });
+    })();
+    [-1, 1].forEach((sx) =>
+      [2.0, 1.7, 1.4].forEach((y) => {
+        const { p, n } = hit([0, y, -0.12], [sx, 0, 0]),
+          b2 = new THREE.Group();
+        b2.position.copy(p).addScaledVector(n, -0.02), face(b2, n), body.add(b2);
+        R(btn, teal, b2);
+        R(T.sphere(1, 10, 8), x.basic("#b8ff4a"), b2, [0, 0, 0.06], null, [0.022, 0.022, 0.008]);
+        R(T.sphere(1, 10, 8), x.clay("#3a9a20", { shininess: 60 }), b2, [0, 0, 0.056], null, [0.034, 0.034, 0.008]);
+      }),
+    );
+    // short arms coming out of turquoise ball joints (each with its hole)
     const arms = [-1, 1].map((sx) => {
-      const a = new THREE.Group();
-      a.position.set(0.82 * sx, 1.12, 0.28), (a.rotation.z = -0.5 * sx), body.add(a);
-      R(T.sphere(1, 14, 10), yellow, a, [0.06 * sx, -0.1, 0], null, [0.13, 0.24, 0.13]);
-      for (let k = 0; k < 3; k++) R(T.cone(0.028, 0.09, 6), claw, a, [0.06 * sx + 0.05 * (k - 1), -0.33, 0.05], [0.3, 0, 0]);
+      const { p, n } = hit([0, 1.3, 0.05], [sx * Math.sin(0.85), 0, Math.cos(0.85)]),
+        a = new THREE.Group();
+      a.position.copy(p).addScaledVector(n, 0.04), body.add(a);
+      R(T.sphere(0.15, 22, 16), teal, a);
+      const hd = new c0(n.x, n.y, n.z + 0.7).normalize(),
+        hole = face(new THREE.Group(), hd);
+      hole.position.copy(hd).multiplyScalar(0.135), a.add(hole);
+      R(T.cyl(0.045, 0.045, 0.04, 16), holeM, hole, null, [Math.PI / 2, 0, 0]);
+      R(T.torus(0.05, 0.014, 8, 20), tealDk, hole, [0, 0, 0.01]);
+      const arm = peel("#f6d424"),
+        end = [0.06 * sx, -0.1, 0.36];
+      R(ao([[0, -0.03, 0], [0.04 * sx, -0.09, 0.18], end], 0.1, 0.105, 10, 12), arm, a);
+      R(T.sphere(0.115, 16, 12), arm, a, [end[0], end[1] + 0.02, end[2] + 0.02], null, [1, 1.05, 1.1]);
       return a;
     });
-    // feet: three toes with claws
+    // the big turquoise donut rings on the hips
     [-1, 1].forEach((sx) => {
-      R(T.sphere(1, 16, 10), yellow, body, [0.35 * sx, 0.12, 0.22], null, [0.26, 0.12, 0.32]);
-      for (let k = 0; k < 3; k++) {
-        const a = (k - 1) * 0.45;
-        R(T.sphere(1, 10, 8), yellow, body, [0.35 * sx + 0.2 * Math.sin(a), 0.08, 0.42 + 0.14 * Math.cos(a)], [0, a, 0], [0.08, 0.07, 0.12]);
-        R(T.cone(0.035, 0.1, 6), claw, body, [0.35 * sx + 0.27 * Math.sin(a), 0.07, 0.53 + 0.14 * Math.cos(a)], [Math.PI / 2, 0, -a]);
-      }
+      const { p, n } = hit([0, 0.55, 0.05], [sx * Math.sin(1.05), 0, Math.cos(1.05)]),
+        d = face(new THREE.Group(), n);
+      d.position.copy(p).addScaledVector(n, 0.02), body.add(d), R(T.torus(0.165, 0.068, 14, 36), teal, d);
     });
-    // the crown: a purple velvet cushion with an ermine trim, the teal band, cyan spikes and gem pins
-    const crown = new THREE.Group();
-    (crown.position.y = 2.14), body.add(crown);
-    R(T.sphere(1, 24, 12), KIT.surf("plush", "#8a3ae0", { rep: 2, bump: 0.03, shine: 20 }), crown, [0, 0.12, 0], null, [0.4, 0.2, 0.4]);
-    R(T.torus(0.45, 0.07, 10, 32), KIT.surf("fur", "#fbfaf4", { rep: 2, bump: 0.03, shine: 10 }), crown, [0, 0.03, 0], [Math.PI / 2, 0, 0]);
-    for (let k = 0; k < 10; k++) {
-      const a = (k / 10) * l;
-      R(T.sphere(1, 6, 4), dark, crown, [0.5 * Math.sin(a), 0.05, 0.5 * Math.cos(a)], null, [0.022, 0.04, 0.022]);
+    // the pillowy turquoise plate on the lower back, with its holes
+    {
+      const NU = 28,
+        NW = 20,
+        pos = [],
+        uv = [],
+        idx = [],
+        at = (u, w) => {
+          const ph = 0.95 * u,
+            y = 0.86 + 0.36 * w,
+            { p, n } = hit([0, y, -0.05], [Math.sin(ph), 0, -Math.cos(ph)]),
+            r = Math.pow(Math.abs(u) ** 6 + Math.abs(w) ** 6, 1 / 6),
+            off = r <= 1 ? 0.035 + 0.07 * Math.sqrt(1 - r ** 8) : 0.035 - 0.6 * (r - 1);
+          return { p: p.addScaledVector(n, off), n };
+        };
+      for (let j = 0; j <= NW; j++)
+        for (let i = 0; i <= NU; i++) {
+          const u = -1.12 + (2.24 * i) / NU,
+            w = -1.12 + (2.24 * j) / NW,
+            { p } = at(u, w);
+          pos.push(p.x, p.y, p.z), uv.push(i / NU, j / NW);
+        }
+      for (let j = 0; j < NW; j++)
+        for (let i = 0; i < NU; i++) {
+          const a = j * (NU + 1) + i,
+            b2 = a + NU + 1;
+          idx.push(a, a + 1, b2, b2, a + 1, b2 + 1);
+        }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)), geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)), geo.setIndex(idx);
+      geo.computeVertexNormals(), R(geo, tealDk, body);
+      [[-0.6, 0.45], [0.6, 0.45], [-0.6, -0.45], [0.6, -0.45], [0, 0]].forEach(([u, w]) => {
+        const { p, n } = at(u, w),
+          h = face(new THREE.Group(), n);
+        h.position.copy(p), body.add(h);
+        R(T.cyl(0.045, 0.045, 0.06, 16), holeM, h, null, [Math.PI / 2, 0, 0]);
+        R(T.torus(0.05, 0.013, 8, 20), teal, h, [0, 0, -0.004]);
+      });
     }
-    R(latheGeo([[0.42, 0.06], [0.43, 0.3], [0.41, 0.31], [0.4, 0.07]], 32), KIT.surf("metal", "#2ac8a0", { rep: 1, bump: 0.01, shine: 80 }), crown);
-    const gemCols = ["#e8302a", "#2a6ae8", "#ffd21a"];
-    for (let k = 0; k < 6; k++) {
-      const a = (k / 6) * l;
-      R(T.cone(0.075, 0.26, 8), cyan, crown, [0.38 * Math.sin(a), 0.43, 0.38 * Math.cos(a)]);
-      R(T.sphere(0.035, 8, 6), gold, crown, [0.38 * Math.sin(a), 0.57, 0.38 * Math.cos(a)]);
-      k % 2 || R(new THREE.OctahedronGeometry(0.08, 0), x.clay(gemCols[k / 2], { shininess: 120, specular: 16777215 }), crown, [0.43 * Math.sin(a), 0.2, 0.43 * Math.cos(a)], [0, a, 0], [0.8, 1.2, 0.5]);
+    // stubby feet
+    const feet = [-1, 1].map((sx) => {
+      const f = new THREE.Group(),
+        m = peel("#efb81c");
+      f.position.set(0.34 * sx, 0.42, 0.06), body.add(f);
+      R(T.cyl(0.25, 0.28, 0.36, 18), m, f, [0, -0.18, 0]);
+      R(T.sphere(1, 20, 12), m, f, [0, -0.28, 0.07], null, [0.3, 0.15, 0.36]);
+      return f;
+    });
+    // the glossy turquoise crown: a flared band rising into five rounded prongs, the front one tallest
+    const crown = new THREE.Group(),
+      top = hit([0, 1.55, 0.18], [0, 1, 0]).p.y,
+      CY = top - 0.1;
+    crown.position.set(0, CY, 0.18), (crown.rotation.x = 0.06), body.add(crown);
+    {
+      const NA = 100,
+        H = (k) => (k ? 0.21 : 0.34),
+        ht = (a) => {
+          let h = 0.17;
+          for (let k = 0; k < 5; k++) {
+            let d = Math.abs(a - (k / 5) * l) % l;
+            d > Math.PI && (d = l - d);
+            const u = d / (Math.PI / 5);
+            u < 0.84 && (h = Math.max(h, 0.17 + H(k) * Math.pow(1 - (u / 0.84) ** 3.2, 0.6)));
+          }
+          return h;
+        },
+        rad = (y) => 0.31 + 0.1 * Math.min(1, y / 0.5),
+        prof = [];
+      for (let k = 0; k <= 4; k++) prof.push([-0.08, -0.04 + (k / 4) * 1.04]);
+      for (let k = 1; k < 8; k++) {
+        const a = Math.PI - (k / 8) * Math.PI;
+        prof.push([-0.04 + 0.04 * Math.cos(a), 1, 0.04 * Math.sin(a)]);
+      }
+      for (let k = 0; k <= 4; k++) prof.push([0, 1 - (k / 4) * 1.04]);
+      const pos = [],
+        uv = [],
+        idx = [],
+        NP = prof.length;
+      for (let i = 0; i <= NA; i++) {
+        const a = Math.PI + (i / NA) * l,
+          h = ht(((a % l) + l) % l) - 0.03;
+        prof.forEach(([dr, f, lift = 0], k) => {
+          const y = Math.min(f, 1) * h + lift + (f < 0 ? f * 0 : 0),
+            yy = f < 0 ? f : y,
+            r0 = rad(Math.max(0, yy)) + dr;
+          pos.push(r0 * Math.sin(a), yy, r0 * Math.cos(a)), uv.push((i / NA) * 4, k / NP);
+        });
+      }
+      for (let i = 0; i < NA; i++)
+        for (let k = 0; k < NP - 1; k++) {
+          const a = i * NP + k,
+            b2 = a + NP;
+          idx.push(a, a + 1, b2, b2, a + 1, b2 + 1);
+        }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)), geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)), geo.setIndex(idx);
+      geo.computeVertexNormals();
+      keepR(gradient(geo, [[-0.04, "#1a7cb4"], [0.12, "#2aa8d8"], [0.5, "#4cc8e6"]]), gradMat("skin", { rep: 2, bump: 0.02, shine: 110, spec: 16777215 }), crown);
+      for (let k = 0; k < 5; k++) {
+        const a = (k / 5) * l,
+          y = 0.17 + H(k) - 0.02,
+          rr0 = rad(y) - 0.04;
+        R(T.sphere(k ? 0.058 : 0.078, 14, 10), teal, crown, [rr0 * Math.sin(a), y, rr0 * Math.cos(a)]);
+        k || R(T.sphere(0.036, 12, 8), teal, crown, [rr0 * Math.sin(a), y + 0.085, rr0 * Math.cos(a)]);
+        const av = a + Math.PI / 5,
+          rv = rad(0.17) - 0.01;
+        R(T.sphere(0.024, 8, 6), teal, crown, [rv * Math.sin(av), 0.2, rv * Math.cos(av)]);
+      }
     }
-    R(T.sphere(0.07, 12, 8), gold, crown, [0, 0.33, 0]);
-    R(new THREE.OctahedronGeometry(0.06, 0), x.clay("#e8302a", { shininess: 120, specular: 16777215 }), crown, [0, 0.43, 0]);
-    // a royal cape with an ermine hem, draped over the back and following the egg's curve
-    const cape = new THREE.Group();
-    body.add(cape);
-    const capeP = [];
-    for (let k = 0; k <= 12; k++) {
-      const y = 1.78 - (1.2 * k) / 12;
-      capeP.push([rAt(y) + 0.05 + 0.1 * (k / 12) ** 2, y]);
+    // the plume: a feathered crest rooted in the crown, purple down the back, orange over and down the front
+    const plume = new THREE.Group();
+    plume.position.set(0, CY, 0.18), body.add(plume);
+    {
+      const P = [
+          [0, 1.5, -0.56],
+          [0, 1.95, -0.6],
+          [0, 2.36, -0.46],
+          [0, 2.7, -0.2],
+          [0, 2.92, 0.16],
+          [-0.3, 2.88, 0.42],
+          [-0.62, 2.56, 0.46],
+          [-0.82, 2.06, 0.42],
+          [-0.88, 1.62, 0.36],
+          [-0.86, 1.26, 0.32],
+        ].map(([px, py, pz]) => new c0(px, py - CY, pz - 0.18)),
+        curve = new THREE.CatmullRomCurve3(P, !1, "centripetal"),
+        SA = 0.43,
+        HC = new c0(0, 1.95 - CY, 0),
+        stops = [[0, "#4a1890"], [0.16, "#6c20bc"], [0.36, "#9228d6"], [0.47, "#b02ac4"], [0.54, "#e0386e"], [0.62, "#ff6a26"], [0.82, "#ff8e2a"], [1, "#ffb64e"]].map(([s, h]) => [s, new THREE.Color(h)]),
+        colAt = (s, out) => {
+          let j = 0;
+          while (j < stops.length - 2 && s > stops[j + 1][0]) j++;
+          const [s0, c0a] = stops[j],
+            [s1, c1] = stops[j + 1];
+          return out.copy(c0a).lerp(c1, Math.min(1, Math.max(0, (s - s0) / (s1 - s0))));
+        },
+        wid = (s) => 0.24 * Math.pow(Math.sin(Math.PI * Math.min(1, 0.06 + s * 0.97)), 0.55),
+        thk = (s) => 0.2 * Math.pow(Math.sin(Math.PI * Math.min(1, 0.06 + s * 0.97)), 0.6),
+        frame = (s) => {
+          const p = curve.getPointAt(s),
+            t = curve.getTangentAt(s),
+            out = p.clone().sub(HC),
+            side = new c0();
+          out.addScaledVector(t, -out.dot(t)).normalize(), side.crossVectors(t, out).normalize();
+          return { p, t, side, out };
+        };
+      // the dark core the feathers grow from
+      {
+        const NS = 110,
+          NR = 14,
+          pos = [],
+          uv = [],
+          col = [],
+          idx = [],
+          cc = new THREE.Color();
+        for (let i = 0; i <= NS; i++) {
+          const s = i / NS,
+            { p, side, out } = frame(s),
+            w = Math.max(0.01, 0.82 * wid(s)),
+            th = Math.max(0.01, 0.82 * thk(s));
+          colAt(s, cc).multiplyScalar(0.55);
+          for (let k = 0; k <= NR; k++) {
+            const ps = (k / NR) * l,
+              q = p.clone().addScaledVector(side, w * Math.cos(ps)).addScaledVector(out, th * Math.sin(ps));
+            pos.push(q.x, q.y, q.z), uv.push(k / NR, s * 12), col.push(cc.r, cc.g, cc.b);
+          }
+        }
+        for (let i = 0; i < NS; i++)
+          for (let k = 0; k < NR; k++) {
+            const a = i * (NR + 1) + k,
+              b2 = a + NR + 1;
+            idx.push(a, b2, a + 1, b2, b2 + 1, a + 1);
+          }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)), geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+        geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)), geo.setIndex(idx), geo.computeVertexNormals();
+        keepR(geo, gradMat("feather", { rep: 3, bump: 0.03, shine: 20 }), plume);
+      }
+      // overlapping feathers, each lying along the flow away from the crest's peak
+      {
+        const tpl = [[0, 0, 0], [-0.8, 0, 0.22], [-1, 0, 0.58], [0, -0.03, 1], [1, 0, 0.58], [0.8, 0, 0.22], [0, 0.06, 0.28], [0, 0.05, 0.64]],
+          tri = [0, 1, 6, 0, 6, 5, 1, 2, 6, 6, 2, 7, 6, 7, 4, 6, 4, 5, 2, 3, 7, 7, 3, 4],
+          shadeK = [0.55, 0.8, 1, 1.18, 1, 0.8, 0.85, 1.05],
+          pos = [],
+          uv = [],
+          col = [],
+          idx = [],
+          rnd = srand(77),
+          cc = new THREE.Color(),
+          ck = new THREE.Color(),
+          len = curve.getLength(),
+          rows = Math.round(len / 0.05),
+          m = new THREE.Matrix4(),
+          v3 = new c0();
+        for (let i = 0; i <= rows; i++) {
+          const s0 = i / rows,
+            per = 9;
+          for (let k = 0; k < per; k++) {
+            const s = Math.min(1, Math.max(0, s0 + (rnd() - 0.5) * 0.012)),
+              { p, t, side, out } = frame(s),
+              ps = -0.15 * Math.PI + ((k + (i % 2) * 0.5 + 0.3 * rnd()) / per) * 1.3 * Math.PI,
+              w = wid(s),
+              th = thk(s),
+              base = p.clone().addScaledVector(side, 0.85 * w * Math.cos(ps)).addScaledVector(out, 0.85 * th * Math.sin(ps)),
+              nrm = side.clone().multiplyScalar(Math.cos(ps) / Math.max(w, 0.02)).addScaledVector(out, Math.sin(ps) / Math.max(th, 0.02)).normalize(),
+              dir = t.clone().multiplyScalar(s < SA ? -1 : 1),
+              end = Math.abs(s - SA) / (s < SA ? SA : 1 - SA),
+              L = 0.17 + 0.12 * end + 0.05 * rnd() + (s > 0.97 || s < 0.03 ? 0.08 : 0),
+              W = 0.05 + 0.025 * rnd(),
+              Z = dir.addScaledVector(nrm, 0.22 + 0.15 * rnd()).normalize(),
+              X = new c0().crossVectors(nrm, Z).normalize(),
+              Y = new c0().crossVectors(Z, X);
+            m.makeBasis(X.multiplyScalar(W), Y.multiplyScalar(0.6 * L), Z.multiplyScalar(L)).setPosition(base);
+            colAt(Math.min(1, Math.max(0, s + (rnd() - 0.5) * 0.04)), cc).multiplyScalar(0.88 + 0.22 * rnd());
+            const o = pos.length / 3;
+            tpl.forEach(([tx, ty, tz], q) => {
+              v3.set(tx, ty, tz).applyMatrix4(m), pos.push(v3.x, v3.y, v3.z), uv.push(0.5 + 0.05 * tx, 0.1 * tz);
+              ck.copy(cc).multiplyScalar(shadeK[q]), col.push(ck.r, ck.g, ck.b);
+            });
+            tri.forEach((q) => idx.push(o + q));
+          }
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)), geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+        geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)), geo.setIndex(idx), geo.computeVertexNormals();
+        const fm = gradMat("feather", { rep: 1, bump: 0.025, shine: 25 }).clone();
+        (fm.side = THREE.DoubleSide), keepR(geo, fm, plume);
+      }
     }
-    R(latheGeo(capeP, 24, Math.PI - 0.95, 1.9), Object.assign(KIT.surf("plush", "#7a2ad0", { rep: 2, bump: 0.03, shine: 20 }).clone(), { side: THREE.DoubleSide }), cape);
-    const ermine = KIT.surf("fur", "#fbfaf4", { rep: 2, bump: 0.03, shine: 10 });
-    [capeP[0], capeP[12]].forEach(([rr0, y]) => R(T.torus(rr0, 0.06, 8, 30, 1.9), ermine, cape, [0, y, 0], [Math.PI / 2, 0, -Math.PI / 2 - 0.95]));
-    for (let k = 0; k < 7; k++) {
-      const a = Math.PI - 0.8 + (1.6 * k) / 6,
-        rr0 = capeP[12][0] + 0.01;
-      R(T.sphere(1, 6, 4), dark, cape, [rr0 * Math.sin(a), capeP[12][1] + 0.01, rr0 * Math.cos(a)], null, [0.022, 0.04, 0.022]);
-    }
-    // cyan scale tiles down the spine, getting smaller toward the tail
-    for (let k = 0; k < 6; k++) {
-      const yy = 1.95 - 0.27 * k,
-        sz = 0.2 - 0.018 * k;
-      R(T.box(sz, sz, 0.1), cyan, body, [0, yy, -rAt(yy) - 0.1 - 0.012 * k], [0.35 - 0.16 * k, 0, Math.PI / 4]);
-    }
-    // the curled tail with its ring
-    const tail = new THREE.Group();
-    tail.position.set(0, 0.6, -0.78), body.add(tail);
-    R(ao([[0, 0.05, 0.12], [0, -0.22, -0.32], [0, -0.05, -0.62], [0, 0.25, -0.58]], 0.16, 0.08, 20, 12), cyan, tail);
-    [0.3, 0.55].forEach((f, k) => R(T.cone(0.05, 0.14, 6), cyan, tail, [0, 0.0 + 0.1 * k, -0.25 - 0.3 * f], [-0.6, 0, 0]));
-    R(T.torus(0.15, 0.06, 10, 24), gold, tail, [0, 0.38, -0.55], [0, Math.PI / 2, 0]);
     return born(g, {
-      height: 2.9,
+      height: 3.1,
+      lids,
       step(t, dt, tk, wk) {
-        (body.rotation.z = 0.05 * Math.sin(1.6 * t) + 0.08 * wk * Math.sin(8 * t)), (tail.rotation.y = 0.3 * Math.sin(1.9 * t));
-        (crown.position.y = 2.14 + 0.02 * Math.sin(3.2 * t)), (eyes.scale.y = (((t % 3.9) + 3.9) % 3.9) < 0.15 && t > 1 ? 0.15 : 1);
-        (cape.rotation.x = 0.02 * Math.sin(1.3 * t)), arms.forEach((a, k) => (a.rotation.x = 0.15 * Math.sin(2 * t + k)));
+        (body.rotation.z = 0.03 * Math.sin(1.4 * t) + 0.06 * wk * Math.sin(8 * t)), (body.position.y = 0.04 * wk * Math.abs(Math.sin(8 * t)));
+        (plume.rotation.x = 0.025 * Math.sin(1.7 * t)), (plume.rotation.z = 0.03 * Math.sin(1.3 * t + 1));
+        arms.forEach((a, k) => (a.rotation.x = 0.12 * Math.sin(2 * t + k) + 0.35 * wk * Math.sin(8 * t + k * Math.PI)));
+        feet.forEach((f, k) => (f.rotation.x = 0.35 * wk * Math.sin(8 * t + k * Math.PI)));
       },
     });
   };
@@ -10640,7 +11510,7 @@ const JGP = (() => {
   // SHOPKEEPER LARRY = Shopkeeper Larry (Greeblis City) + LARRY (Greeblis Woods).
   // City's two-legged teal lizard so he can stand at the counter, with the big pink gem eyes both share,
   // Woods' purple saddle pack with its stacked yellow blocks worn as a backpack, and yellow spikes down
-  // the back and the long tail (both).
+  // the back and the long tail (both). He wears a red baseball cap and his shopkeeper's apron.
   BORN.larry = (g) => {
     const teal = KIT.surf("scale", "#2ad8cc", { rep: 4, bump: 0.02, shine: 60 }),
       belly = KIT.surf("scale", "#9af2e6", { rep: 3, bump: 0.015, shine: 50 }),
@@ -10659,7 +11529,35 @@ const JGP = (() => {
     R(T.sphere(1, 16, 12), teal, head, [0, -0.1, 0.3], null, [0.3, 0.2, 0.28]);
     const gem = x.clay("#e0287a", { shininess: 140, specular: 16777215 });
     [-1, 1].forEach((sx) => (R(T.ico(0.12, 1), gem, head, [0.3 * sx, 0.08, 0.22]), R(T.sphere(0.03, 6, 4), x.basic("#ffffff"), head, [0.36 * sx, 0.14, 0.3])));
-    KIT.mouth(head, [0, -0.17, 0.53], 0.09);
+    // a red baseball cap: six-panel crown with stitched seams and a top button, a curved brim
+    // and a strap at the back
+    {
+      const capM = KIT.surf("fabric", "#c8302a", { rep: 2, bump: 0.02, shine: 14 }),
+        seamM = x.clay("#8e1e1a", { shininess: 10 }),
+        cap = new THREE.Group();
+      cap.position.set(0, 0.2, 0.0), (cap.rotation.x = -0.1), head.add(cap);
+      R(new THREE.SphereGeometry(1, 24, 10, 0, l, 0, Math.PI / 2), capM, cap, [0, 0, 0], null, [0.385, 0.25, 0.385]);
+      R(T.torus(1, 0.03, 6, 40), capM, cap, [0, 0.005, 0], [Math.PI / 2, 0, 0], [0.385, 0.385, 0.6]);
+      for (let k = 0; k < 3; k++) R(T.torus(1, 0.006, 4, 24, Math.PI), seamM, cap, [0, 0.002, 0], [0, (k * Math.PI) / 3, 0], [0.388, 0.252, 0.388]);
+      R(T.sphere(0.035, 10, 6), capM, cap, [0, 0.25, 0], null, [1, 0.55, 1]);
+      const brim = new THREE.Shape();
+      brim.moveTo(-0.3, 0.2);
+      for (let k = 0; k <= 16; k++) {
+        const a = Math.PI + (k / 16) * Math.PI;
+        brim.lineTo(0.31 * Math.cos(a), 0.2 - 0.36 * Math.sin(a));
+      }
+      for (let k = 0; k <= 8; k++) {
+        const a = (k / 8) * Math.PI;
+        brim.lineTo(0.3 * Math.cos(a), 0.2 + 0.1 * Math.sin(a) - 0.05);
+      }
+      const bg = new THREE.ExtrudeGeometry(brim, { depth: 0.018, bevelEnabled: !0, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 2, curveSegments: 4 });
+      bg.rotateX(Math.PI / 2);
+      // a gentle curve across the brim
+      const bp = bg.attributes.position;
+      for (let k = 0; k < bp.count; k++) bp.setY(k, bp.getY(k) - 0.35 * bp.getX(k) ** 2);
+      bg.computeVertexNormals(), R(bg, capM, cap, [0, 0.02, 0.12], [0.16, 0, 0]);
+      R(T.box(0.16, 0.035, 0.01), seamM, cap, [0, 0.05, -0.38], [-0.15, 0, 0]);
+    }
     // saddle pack with stacked blocks
     const pack = new THREE.Group();
     pack.position.set(0, 1.6, -0.42), body.add(pack);
@@ -10706,281 +11604,811 @@ const JGP = (() => {
     });
   };
 
-  // ETCHER = SEALIO + ETCHELON (Greeblis Park).
-  // ETCHELON's stacked three-bump body, shading from SEALIO's mint at the bottom up to ETCHELON's gold
-  // head; ETCHELON's curly antenna and orange "R" shield; ETCHELON's silver ring worn as a belt;
-  // SEALIO's silver struts with cyan spikes as a tripod of legs. SEALIO's floating cards and
-  // ETCHELON's power icons became one card he holds up (the power icon in SEALIO's pink frame) and an
-  // etching stylus in his other flipper. His head is a yellow LARRY head: the round skull and snout,
-  // LARRY's pink gem eyes and his smile, set on the gold collar.
+  // SPARKAKUS, after the Sparkakus artwork: a royal-blue wolf painted all over like an alebrije, with
+  // winding vines, little flowers and dots in gold, green, magenta, orange and teal; a fluffy cream
+  // ruff down his throat and chest, tall ears lined in purple, two little purple horn nubs, yellow
+  // eyes and a glossy black nose; a bunch of yellow daffodils growing from his shoulder, a dark
+  // feather fin rising from his back, black claws, and a long tail ending in a fan of pink, teal
+  // and blue feathers.
+  BORN.sparkakus = (g) => {
+    const root = new THREE.Group(),
+      body = new THREE.Group();
+    g.add(root), root.add(body);
+    const rs = srand(808),
+      paint = b(
+        256,
+        256,
+        (c) => {
+          const r = srand(12);
+          (c.fillStyle = "#2c4cc0"), c.fillRect(0, 0, 256, 256);
+          // fur strokes
+          for (let k = 0; k < 1400; k++) {
+            const x0 = 256 * r(),
+              y0 = 256 * r(),
+              v = r();
+            (c.strokeStyle = v < 0.5 ? "rgba(20,36,120,0.55)" : "rgba(90,120,230,0.45)"), (c.lineWidth = 1.2), c.beginPath(), c.moveTo(x0, y0), c.lineTo(x0 + 2 * (r() - 0.5), y0 + 5 + 4 * r()), c.stroke();
+          }
+          // winding vines with leaves, little flowers and dots, drawn wrapped so the tile repeats
+          const cols = ["#f2c21a", "#7ad04a", "#e0408a", "#f08a2a", "#3ac8c0", "#b070e0"];
+          for (let k = 0; k < 14; k++) {
+            const col = cols[k % cols.length];
+            let x0 = 256 * r(),
+              y0 = 256 * r(),
+              a = r() * l;
+            const pts = [];
+            for (let j = 0; j < 14; j++) (a += 0.6 * (r() - 0.5)), (x0 += 9 * Math.cos(a)), (y0 += 9 * Math.sin(a)), pts.push([x0, y0, a]);
+            for (const ox of [-256, 0, 256])
+              for (const oy of [-256, 0, 256]) {
+                (c.strokeStyle = col), (c.lineWidth = 3.2), c.beginPath();
+                pts.forEach(([px, py], j) => (j ? c.lineTo(px + ox, py + oy) : c.moveTo(px + ox, py + oy))), c.stroke();
+                pts.forEach(([px, py, pa], j) => {
+                  if (j % 3) return;
+                  (c.fillStyle = col), c.beginPath(), c.ellipse(px + ox + 4 * Math.cos(pa + 1.5), py + oy + 4 * Math.sin(pa + 1.5), 4, 1.8, pa + 1.5, 0, l), c.fill();
+                });
+              }
+          }
+          for (let k = 0; k < 40; k++) {
+            const px = 256 * r(),
+              py = 256 * r(),
+              col = cols[k % cols.length];
+            for (const ox of [-256, 0, 256])
+              for (const oy of [-256, 0, 256]) {
+                c.fillStyle = col;
+                if (k % 3) c.beginPath(), c.arc(px + ox, py + oy, 2.6, 0, l), c.fill();
+                else {
+                  for (let j = 0; j < 5; j++) c.beginPath(), c.arc(px + ox + 4.5 * Math.cos((j * l) / 5), py + oy + 4.5 * Math.sin((j * l) / 5), 3, 0, l), c.fill();
+                  (c.fillStyle = "#fff4c0"), c.beginPath(), c.arc(px + ox, py + oy, 2, 0, l), c.fill();
+                }
+              }
+          }
+        },
+        { smooth: !0 },
+      );
+    paint.wrapS = paint.wrapT = THREE.RepeatWrapping;
+    paint.repeat.set(2, 2);
+    const skinM = new THREE.MeshPhongMaterial({ map: paint, bumpMap: paint, bumpScale: 0.02, vertexColors: !0, shininess: 22, specular: 2236962 }),
+      blueM = new THREE.MeshPhongMaterial({ map: paint, bumpMap: paint, bumpScale: 0.02, shininess: 22, specular: 2236962 }),
+      clawM = x.clay("#141418", { shininess: 90, specular: 8947848 }),
+      featherM = gradMat("feather", { rep: 1, bump: 0.02, shine: 30 }).clone();
+    featherM.side = THREE.DoubleSide;
+    // the body: chest, barrel and haunches, the neck and the long wolf's head, all one piece
+    const C = [0, 1.0, 0.3],
+      bb = blobBody(
+        [
+          [0, 0.98, 0.42, 0.37, 0.42, 0.45],
+          [0, 0.98, -0.12, 0.34, 0.35, 0.62],
+          [0, 0.98, -0.62, 0.35, 0.37, 0.38],
+          [0, 1.24, 0.8, 0.24, 0.28, 0.25, -0.5],
+          [0, 1.44, 1.0, 0.25, 0.23, 0.27],
+          [0, 1.35, 1.32, 0.135, 0.115, 0.28, 0.12],
+          [-0.23, 0.74, 0.5, 0.16, 0.3, 0.2],
+          [0.23, 0.74, 0.5, 0.16, 0.3, 0.2],
+          [-0.24, 0.78, -0.62, 0.19, 0.34, 0.28],
+          [0.24, 0.78, -0.62, 0.19, 0.34, 0.28],
+        ],
+        C,
+        { k: 0.16, uvLen: 1.4, col: (p, fold, cc) => cc.setRGB(1, 1, 1).multiplyScalar(1 - 0.18 * fold) },
+      ),
+      hit = bb.hit;
+    keepR(bb.geo, skinM, body);
+    // the cream ruff down the throat and chest
+    {
+      const cards = [],
+        cream = new THREE.Color("#f2ecd8");
+      for (let y = 0.72; y <= 1.36; y += 0.04)
+        for (let k = 0; k < 13; k++) {
+          const a = -0.95 + (1.9 * (k + 0.5 * ((y * 25) % 2))) / 13,
+            { p, n } = hit([0, y, 0.4], [Math.sin(a), 0, Math.cos(a)]);
+          if (p.z < 0.45) continue;
+          const Z = new c0(0, -1, 0).addScaledVector(n, n.y).addScaledVector(n, 0.12).normalize();
+          cards.push({ p: p.addScaledVector(n, -0.015), Z, N: n, L: 0.12 + 0.05 * rs(), W: 0.065, col: cream.clone().offsetHSL(0, 0, 0.05 * (rs() - 0.5)) });
+        }
+      keepR(cardGeo(cards, "fur"), featherM, body);
+    }
+    // eyes, nose and the closed line of his mouth
+    const lids = [];
+    [-1, 1].forEach((sx) => {
+      const { p, n } = hit([0, 1.46, 1.0], [sx * 0.75, 0.3, 0.6]),
+        e = KIT.eye(body, [p.x - n.x * 0.03, p.y - n.y * 0.03, p.z - n.z * 0.03], 0.062, { iris: "#f2c21a", lid: "#2c4cc0", open: -0.3, rot: [0, Math.atan2(n.x, n.z), 0] });
+      lids.push(e.lid);
+      const ml = [];
+      for (let k = 0; k <= 7; k++) {
+        const u = k / 7,
+          q = hit([0, 1.3, 1.25], [sx * Math.sin(0.25 + 1.0 * u), -0.25, Math.cos(0.25 + 1.0 * u)]);
+        ml.push(q.p.addScaledVector(q.n, 0.003));
+      }
+      R(ao(ml, 0.008, 0.006, 12, 5), x.clay("#141c3a", { shininess: 20 }), body);
+    });
+    R(T.sphere(1, 16, 12), x.clay("#16161a", { shininess: 130, specular: 16777215 }), body, [0, 1.38, 1.6], null, [0.075, 0.062, 0.06]);
+    // tall ears lined in purple, and two little purple horn nubs
+    const ears = [-1, 1].map((sx) => {
+      const ea = new THREE.Group();
+      ea.position.set(0.14 * sx, 1.6, 0.94), (ea.rotation.z = -0.12 * sx), (ea.rotation.x = -0.1), body.add(ea);
+      R(T.cone(0.12, 0.42, 10), blueM, ea, [0, 0.21, 0], null, [1, 1, 0.5]);
+      R(T.cone(0.08, 0.32, 8), x.clay("#a040b0", { shininess: 30 }), ea, [0, 0.19, 0.035], null, [1, 1, 0.3]);
+      R(T.cone(0.03, 0.09, 6), x.clay("#8a3aa8", { shininess: 40 }), body, [0.2 * sx, 1.58, 0.82], [-0.5, 0, -0.3 * sx]);
+      return ea;
+    });
+    // legs with black claws
+    const legs = [
+      [-0.23, 0.62, 0.52, 0.55],
+      [0.23, 0.62, 0.52, 0.55],
+      [-0.25, 0.66, -0.64, 0.58],
+      [0.25, 0.66, -0.64, 0.58],
+    ].map(([lx, ly, lz, len]) => KIT.leg(body, [lx, ly, lz], { len, r: 0.13, mat: blueM, thigh: 1.55, foot: "claw", footMat: blueM, nailMat: clawM }));
+    // yellow daffodils growing from his left shoulder
+    {
+      const petal = x.clay("#f6c21a", { shininess: 40 }),
+        trumpet = x.clay("#f0a018", { shininess: 40 }),
+        sp = [[-0.5, 0.5, 0.2], [-0.62, 0.25, 0.35], [-0.55, 0.15, 0.0], [-0.42, 0.72, 0.42], [-0.6, 0.45, -0.15]];
+      sp.forEach(([dx, dy, dz], k) => {
+        const { p, n } = hit(C, [dx, dy, dz]),
+          fl = faceTo(new THREE.Group(), n);
+        fl.position.copy(p).addScaledVector(n, 0.03), (fl.rotation.z += 0.5 * k), fl.scale.setScalar(0.9 + 0.25 * rs()), body.add(fl);
+        for (let j = 0; j < 6; j++) {
+          const a = (j / 6) * l;
+          R(T.sphere(1, 10, 6), petal, fl, [0.07 * Math.cos(a), 0.07 * Math.sin(a), 0], [0, 0, a], [0.075, 0.04, 0.012]);
+        }
+        R(new THREE.CylinderGeometry(0.035, 0.028, 0.06, 12, 1, !0), Object.assign(trumpet.clone(), { side: THREE.DoubleSide }), fl, [0, 0, 0.03], [Math.PI / 2, 0, 0]);
+        R(T.torus(0.036, 0.008, 5, 14), trumpet, fl, [0, 0, 0.06]);
+      });
+    }
+    // the dark feather fin rising from his back
+    {
+      const cards = [];
+      for (let k = 0; k < 7; k++) {
+        const u = k / 6,
+          { p } = hit(C, [0, 1, -0.2 - 0.9 * u]);
+        cards.push({ p: p.add(new c0(0, -0.02, 0)), Z: new c0(0, 0.75 - 0.25 * u, -1).normalize(), N: new c0(1, 0, 0), L: 0.45 + 0.2 * Math.sin(Math.PI * u), W: 0.1, col: new THREE.Color(k % 2 ? "#1c2448" : "#242e5a"), shaft: "#4a5aa0" });
+      }
+      keepR(cardGeo(cards, "vane"), featherM, body);
+    }
+    // the long tail, a pink feather on it, and the fan of feathers at its end
+    const tail = new THREE.Group();
+    tail.position.set(0, 1.02, -0.92), body.add(tail);
+    const tp = [[0, 0, 0.1], [0, -0.06, -0.35], [0, -0.18, -0.8], [0, -0.14, -1.2], [0, 0.0, -1.5]],
+      tcv = new THREE.CatmullRomCurve3(tp.map((q) => new c0(...q)));
+    R(ao(tp, 0.2, 0.06, 30, 12), blueM, tail);
+    {
+      const cards = [],
+        cs = ["#e0307a", "#2a9ab0", "#3a5ad0", "#e85a9a", "#38b8a0"],
+        end = tcv.getPointAt(1),
+        dir = tcv.getTangentAt(1);
+      for (let k = 0; k < 13; k++) {
+        const a = -1.1 + (2.2 * k) / 12,
+          Z = dir.clone().add(new c0(0.9 * Math.sin(a), 0.7 * Math.cos(a) - 0.1, 0)).normalize();
+        cards.push({ p: end.clone().addScaledVector(dir, -0.05), Z, N: new c0(0, 0, 1).cross(Z).normalize().cross(Z).normalize(), L: 0.38 + 0.12 * Math.cos(a), W: 0.08, col: new THREE.Color(cs[k % cs.length]), shaft: "#ffffff" });
+      }
+      const mid = tcv.getPointAt(0.45);
+      cards.push({ p: mid.add(new c0(0, 0.12, 0)), Z: new c0(0, 0.9, -0.4).normalize(), N: new c0(1, 0, 0), L: 0.3, W: 0.07, col: new THREE.Color("#e0307a"), shaft: "#ffffff" });
+      keepR(cardGeo(cards, "vane"), featherM, tail);
+    }
+    return born(g, {
+      height: 2.0,
+      lids,
+      step(t, dt, tk, wk) {
+        (tail.rotation.y = 0.18 * Math.sin(1.6 * t) + 0.3 * wk * Math.sin(7 * t)), (tail.rotation.x = 0.05 * Math.sin(1.1 * t));
+        ears.forEach((ea, k) => (ea.rotation.x = -0.1 + 0.06 * Math.max(0, Math.sin(0.7 * t + 2 * k)) ** 8));
+        body.position.y = 0.012 * Math.sin(2 * t) + 0.03 * wk * Math.abs(Math.sin(7 * t));
+        legs.forEach((lg, k) => KIT.stride(lg, 7 * t + (k === 0 || k === 3 ? 0 : Math.PI), 0.45 * wk, 0.6 * wk));
+      },
+    });
+  };
+
+  // ETCHER, after the Etcher artwork: a blue-teal serpent-dragon whose body rises like a bell of
+  // overlapping scales from the ground into a long neck, a lizard's head with golden eyes and a row
+  // of little purple knobs, a green gem set into the chest, two stubby clawed front feet, and long
+  // segmented purple tentacle tails spreading out across the ground around him.
   BORN.etcher = (g) => {
     const root = new THREE.Group(),
-      body = new THREE.Group(),
-      etchP = smoothProfile([[0, 0.24], [0.48, 0.32], [0.7, 0.6], [0.73, 0.95], [0.62, 1.3], [0.44, 1.45], [0.5, 1.6], [0.54, 1.8], [0.46, 2.02], [0.32, 2.12], [0.2, 2.2], [0, 2.22]], 90);
+      body = new THREE.Group();
     g.add(root), root.add(body);
-    keepR(
-      gradient(
-        latheGeo(etchP, 44),
-        [[0.3, "#6ad8b0"], [1.2, "#9ee09a"], [1.9, "#d4cc5a"], [2.2, "#e2c444"]],
+    const rs = srand(616),
+      teal = new THREE.Color("#2a8a9e"),
+      blue = new THREE.Color("#2a5aa8"),
+      C = [0, 1.1, 0.12],
+      bb = blobBody(
+        [
+          [0, 0.42, 0, 0.74, 0.46, 0.68],
+          [0, 0.95, 0.02, 0.52, 0.55, 0.48],
+          [0, 1.45, 0.1, 0.33, 0.4, 0.31, 0.12],
+          [0, 1.88, 0.2, 0.25, 0.32, 0.25, 0.2],
+          [0, 2.2, 0.32, 0.27, 0.22, 0.29, -0.15],
+          [0, 2.15, 0.62, 0.18, 0.13, 0.26, 0.15],
+        ],
+        C,
+        {
+          k: 0.2,
+          uvLen: 0.9,
+          col: (p, fold, cc) => cc.copy(teal).lerp(blue, Math.max(0, Math.min(1, (p.y - 0.4) / 1.8))).offsetHSL(0, 0, 0.04 * Math.sin(7 * p.x + 5 * p.y) - 0.1 * fold),
+        },
       ),
-      gradMat("skin", { rep: 4, bump: 0.022, shine: 55 }),
-      body,
-    );
-    const silver = KIT.surf("metal", "#c8ccd4", { rep: 1, bump: 0.01, shine: 110, spec: 16777215 }),
-      cyan = x.clay("#3ae0e8", { shininess: 90 }),
-      goldM = KIT.surf("metal", "#e8b830", { rep: 1, bump: 0.01, shine: 90, spec: 16777215 });
-    // gold collars where the stacked segments meet, each with a row of rivets
-    [1.45, 2.12].forEach((y) => {
-      const rr0 = profileR(etchP, y) + 0.01;
-      R(T.torus(rr0, 0.035, 8, 40), goldM, body, [0, y, 0], [Math.PI / 2, 0, 0]);
-      for (let k = 0; k < 10; k++) R(T.sphere(0.018, 6, 4), silver, body, [(rr0 + 0.03) * Math.cos((k / 10) * l), y, (rr0 + 0.03) * Math.sin((k / 10) * l)]);
-    });
-    // freckles of gold on the lower segment
-    const rf = srand(23);
-    for (let k = 0; k < 14; k++) {
-      const a = l * rf(),
-        y = 0.45 + 0.85 * rf();
-      if (Math.cos(a - Math.PI / 2) > 0.6 && y > 0.8) continue;
-      onEllipsoid(body, T.sphere(1, 8, 6), x.clay("#c8d070", { shininess: 30 }), [0, y, 0], [profileR(etchP, y), 0.01, profileR(etchP, y)], [Math.cos(a), 0, Math.sin(a)], [0.03 + 0.02 * rf(), 0.03 + 0.02 * rf(), 0.01], 1.0);
+      hit = bb.hit;
+    keepR(bb.geo, gradMat("scale", { rep: 6, bump: 0.05, shine: 70, spec: 6710886 }), body);
+    // overlapping scales over the bell of his body, larger low down
+    {
+      const sc = new THREE.SphereGeometry(1, 10, 6, 0, l, 0, Math.PI / 2),
+        mats = ["#2a8296", "#2e74a8", "#2a9a9a", "#3368b0"].map((h) => KIT.surf("scale", h, { rep: 1, bump: 0.03, shine: 80, spec: 8947848 }));
+      for (let row = 0; row < 9; row++) {
+        const y = 0.28 + 0.16 * row,
+          n0 = Math.max(8, Math.round(22 - 1.6 * row));
+        for (let k = 0; k < n0; k++) {
+          const a = ((k + 0.5 * (row % 2)) / n0) * l;
+          if (Math.cos(a) > 0.55 && y > 0.75 && y < 1.25) continue;
+          const { p, n } = hit([0, y, 0.05], [Math.sin(a), 0, Math.cos(a)]),
+            s = 0.13 - 0.007 * row,
+            m = R(sc, mats[(row + k) % 4], body, [p.x, p.y, p.z], null, [s, s * 0.35, s * 1.2]);
+          m.quaternion.setFromUnitVectors(new c0(0, 1, 0), n), m.rotateY(0), m.rotateX(-0.35);
+        }
+      }
     }
-    // ETCHELON's ring as a belt, SEALIO's struts as a tripod with spiked feet
-    R(T.torus(0.75, 0.075, 12, 48), silver, body, [0, 0.95, 0], [Math.PI / 2, 0, 0]);
-    for (let k = 0; k < 16; k++) R(T.sphere(0.025, 6, 4), goldM, body, [0.83 * Math.cos((k / 16) * l), 0.95, 0.83 * Math.sin((k / 16) * l)]);
-    [Math.PI / 2 + 0.5, Math.PI / 2 - 0.5 + Math.PI, -0.05].forEach((a) => {
-      const c = Math.cos(a),
-        sn = Math.sin(a);
-      R(ao([[0.32 * c, 0.5, 0.32 * sn], [0.7 * c, 0.3, 0.7 * sn], [1.0 * c, 0.08, 1.0 * sn]], 0.07, 0.06, 10, 8), silver, root);
-      R(T.sphere(0.09, 12, 8), goldM, root, [0.66 * c, 0.32, 0.66 * sn]);
-      R(T.cone(0.07, 0.22, 8), cyan, root, [1.08 * c, 0.06, 1.08 * sn], [0, 0, 0]).quaternion.setFromUnitVectors(new c0(0, 1, 0), new c0(c, -0.25, sn).normalize());
+    // golden eyes, nostrils, a closed mouth and a row of little purple knobs over the head
+    const lids = [];
+    [-1, 1].forEach((sx) => {
+      const { p, n } = hit([0, 2.22, 0.34], [sx * 0.8, 0.35, 0.5]);
+      lids.push(KIT.eye(body, [p.x - n.x * 0.04, p.y - n.y * 0.04, p.z - n.z * 0.04], 0.085, { iris: "#c8a020", lid: "#2a5aa8", open: -0.25, rot: [0, Math.atan2(n.x, n.z), 0] }).lid);
+      const q = hit([0, 2.15, 0.62], [sx * 0.3, 0.3, 1]);
+      R(T.sphere(1, 8, 6), x.clay("#0e1a2a"), body, [q.p.x, q.p.y, q.p.z], null, [0.018, 0.012, 0.016]);
+      const ml = [];
+      for (let k = 0; k <= 8; k++) {
+        const u = k / 8,
+          r2 = hit([0, 2.1, 0.5], [sx * Math.sin(0.15 + 1.2 * u), -0.22, Math.cos(0.15 + 1.2 * u)]);
+        ml.push(r2.p.addScaledVector(r2.n, 0.003));
+      }
+      R(ao(ml, 0.009, 0.007, 14, 5), x.clay("#0e1a2a", { shininess: 20 }), body);
     });
-    // the head: LARRY's, in yellow (same skull, snout, pink gem eyes and smile), resting on the collar
+    for (let k = 0; k < 5; k++) {
+      const { p, n } = hit([0, 2.2, 0.32], [0.1 * (k % 2 ? 1 : -1) * (k > 0 ? 1 : 0), 1, 0.3 - 0.22 * k]),
+        kn = new THREE.Group();
+      kn.position.copy(p), kn.quaternion.setFromUnitVectors(new c0(0, 1, 0), n), body.add(kn);
+      R(T.sphere(1, 10, 8), x.clay("#7a3ab8", { shininess: 60 }), kn, [0, 0.03, 0], null, [0.045, 0.06, 0.045]);
+    }
+    // the green gem set in his chest
+    {
+      const { p, n } = hit(C, [0, 0.35, 1]),
+        gm = faceTo(new THREE.Group(), n);
+      gm.position.copy(p).addScaledVector(n, 0.01), body.add(gm);
+      const s = new THREE.Shape(),
+        w = 0.1,
+        h = 0.12,
+        c = 0.035;
+      s.moveTo(-w + c, -h), s.lineTo(w - c, -h), s.lineTo(w, -h + c), s.lineTo(w, h - c), s.lineTo(w - c, h), s.lineTo(-w + c, h), s.lineTo(-w, h - c), s.lineTo(-w, -h + c), s.lineTo(-w + c, -h);
+      R(new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: !0, bevelThickness: 0.03, bevelSize: 0.025, bevelSegments: 1 }), x.clay("#6ad02a", { emissive: "#1e5008", shininess: 170, specular: 16777215, flatShading: !0 }), gm);
+      R(T.torus(0.14, 0.02, 6, 24), x.clay("#1e4a5a", { shininess: 60 }), gm, [0, 0, 0.01], null, [0.85, 1, 1]);
+    }
+    // two stubby clawed front feet
+    [-1, 1].forEach((sx) => {
+      const { p } = hit([0, 0.15, 0.1], [sx * 0.42, -0.05, 1]),
+        ft = new THREE.Group();
+      ft.position.set(p.x, 0.1, p.z + 0.06), body.add(ft);
+      R(T.sphere(1, 14, 10), KIT.surf("scale", "#2a7a9a", { rep: 1, bump: 0.03, shine: 60 }), ft, [0, 0, 0], null, [0.16, 0.11, 0.2]);
+      [-1, 0, 1].forEach((k) => R(T.cone(0.03, 0.08, 6), x.clay("#e8e0c8", { shininess: 60 }), ft, [0.07 * k, -0.04, 0.19], [Math.PI / 2, 0, -0.2 * k]));
+    });
+    // long segmented purple tentacle tails spreading out over the ground
+    const purple = KIT.surf("scale", "#7a4ab8", { rep: 1, bump: 0.03, shine: 80, spec: 8947848 }),
+      tails = [];
+    [
+      [Math.PI * 0.62, 2.4, 1],
+      [-Math.PI * 0.62, 2.6, -1],
+      [Math.PI * 0.85, 2.9, -1],
+      [-Math.PI * 0.86, 2.7, 1],
+      [Math.PI * 0.4, 2.0, -1],
+      [-Math.PI * 0.42, 2.2, 1],
+    ].forEach(([ph, len, w], k) => {
+      const tg = new THREE.Group();
+      (tg.rotation.y = ph), root.add(tg), tails.push(tg);
+      const pts = [[0, 0.32, 0.45], [0, 0.16, 0.8]];
+      for (let j = 1; j <= 8; j++) {
+        const u = j / 8;
+        pts.push([w * 0.35 * Math.sin(u * 3.2 + k), 0.11 + (k === 2 && u > 0.8 ? 0.4 * (u - 0.8) * 5 : 0), 0.8 + len * u]);
+      }
+      R(ridgedTube(pts, 0.14, 0.05, 80, len * 7, 0.16, 10), purple, tg);
+    });
+    return born(g, {
+      height: 2.6,
+      lids,
+      step(t, dt, tk, wk) {
+        (body.rotation.z = 0.025 * Math.sin(1.1 * t)), (body.rotation.x = 0.02 * Math.sin(0.9 * t)), (body.position.y = 0.03 * wk * Math.abs(Math.sin(6 * t)));
+        tails.forEach((tg, k) => (tg.rotation.y += 0.0006 * Math.sin(0.8 * t + k)));
+      },
+    });
+  };
+
+  // GEMTOE, after the Gemtoe artwork: a teal feathered dragon with a bird's face. A feathered horned
+  // head with a mint crest, glowing magenta eyes under heavy brows and a hooked pale beak, a little
+  // open, with feather tufts at the cheeks; a deep fur ruff over
+  // the chest; two pairs of great feathered wings; four long scaly tails that run out along the
+  // ground and rise at their ends to hold up her amethyst crystals, coiled round them.
+  BORN.gemtoe = (g) => {
+    const root = new THREE.Group(),
+      body = new THREE.Group();
+    g.add(root), root.add(body);
+    const rs = srand(4242),
+      teal = new THREE.Color("#2496aa"),
+      scaleTeal = KIT.surf("scale", "#2eaabc", { rep: 4, bump: 0.03, shine: 60 }),
+      featherM = gradMat("feather", { rep: 1, bump: 0.02, shine: 30 }).clone();
+    featherM.side = THREE.DoubleSide;
+    // a scale texture stretched along a tube (u runs along it)
+    const tubeScale = (() => {
+      const m = KIT.surf("scale", "#2aa6b8", { rep: 2, bump: 0.03, shine: 60 }).clone(),
+        tx = m.map.clone();
+      return tx.repeat.set(18, 2), (tx.needsUpdate = !0), (m.map = m.bumpMap = tx), m;
+    })();
+    // the trunk: a pear of scales from the root of the tails up to the neck, leaning forward a little
+    const torP = smoothProfile([[0, 0.55], [0.3, 0.6], [0.42, 0.8], [0.5, 1.1], [0.54, 1.4], [0.5, 1.7], [0.38, 1.98], [0.28, 2.2], [0.24, 2.4]], 60);
+    (body.rotation.x = 0.06), R(latheGeo(torP, 36), scaleTeal, body);
+    // the fur ruff: long soft strands over the chest and shoulders, shorter round the back
+    {
+      const cards = [];
+      for (let y = 1.12; y <= 2.3; y += 0.055)
+        for (let k = 0; k < 30; k++) {
+          const ph = ((k + 0.5 * ((y * 18) % 2) + 0.3 * rs()) / 30) * l,
+            front = Math.max(0, Math.cos(ph)),
+            r = profileR(torP, y) - 0.02,
+            up = (y - 1.12) / 1.18,
+            L = (0.2 + 0.32 * front + 0.12 * up) * (0.85 + 0.3 * rs());
+          cards.push({
+            p: new c0(r * Math.sin(ph), y, r * Math.cos(ph)),
+            Z: new c0(Math.sin(ph) * (0.55 + 0.2 * rs()), -1, Math.cos(ph) * (0.55 + 0.2 * rs())).normalize(),
+            N: new c0(Math.sin(ph), 0.3, Math.cos(ph)).normalize(),
+            L,
+            W: 0.06 + 0.03 * rs(),
+            col: teal.clone().offsetHSL(0.02 * (rs() - 0.5), 0.05 * (rs() - 0.5), 0.06 * (rs() - 0.3) + 0.04 * up),
+          });
+        }
+      keepR(cardGeo(cards, "fur"), featherM, body);
+    }
+    // two pairs of great feathered wings: long primaries fanned out, coverts and down over their roots
+    const wings = [];
+    [
+      [1.98, -0.24, 0.62, 1.48, 1.2, 1.62, 0.5],
+      [1.62, -0.28, -0.08, 0.6, 0.78, 1.08, 0.62],
+    ].forEach(([wy, wz, a0, a1, L0, L1, sw], pair) =>
+      [-1, 1].forEach((sx) => {
+        const w = new THREE.Group();
+        w.position.set(0.3 * sx, wy, wz), body.add(w), wings.push({ w, sx, pair });
+        const lat = new c0(sx * Math.cos(sw), 0, -Math.sin(sw)),
+          up = new c0(0, 1, 0),
+          N = new c0(sx * Math.sin(sw), 0, Math.cos(sw)),
+          cards = [],
+          layer = (n, aa0, aa1, La, Lb, Wd, off, lift, c, shaft) => {
+            for (let k = 0; k < n; k++) {
+              const u = n > 1 ? k / (n - 1) : 0.5,
+                a = aa0 + (aa1 - aa0) * u + 0.03 * (rs() - 0.5),
+                Z = lat.clone().multiplyScalar(Math.cos(a)).addScaledVector(up, Math.sin(a)).addScaledVector(N, lift).normalize();
+              cards.push({
+                p: Z.clone().multiplyScalar(0.06).addScaledVector(N, off),
+                Z,
+                N: N.clone(),
+                L: (La + (Lb - La) * Math.sin(Math.PI * (0.25 + 0.6 * u))) * (0.94 + 0.12 * rs()),
+                W: Wd * (0.9 + 0.2 * rs()),
+                col: new THREE.Color(c).offsetHSL(0.015 * (rs() - 0.5), 0, 0.05 * (rs() - 0.5)),
+                shaft,
+              });
+            }
+          };
+        layer(10, a0, a1, L0, L1, 0.24, 0, 0.04, "#2aa6b8", "#e8fbff");
+        layer(11, a0 + 0.04, a1 - 0.03, 0.58 * L0, 0.62 * L1, 0.2, 0.04, 0.1, "#30b2c2", "#d8f6fa");
+        layer(12, a0 + 0.08, a1 - 0.05, 0.3 * L0, 0.32 * L1, 0.14, 0.075, 0.16, "#38bac8", null);
+        keepR(cardGeo(cards, "vane"), featherM, w);
+      }),
+    );
+    // the head
     const head = new THREE.Group();
-    head.position.set(0, 2.5, 0.04), body.add(head);
-    const yel = KIT.surf("scale", "#f6d02a", { rep: 4, bump: 0.02, shine: 60 });
-    R(T.sphere(1, 22, 16), yel, head, [0, 0, 0], null, [0.42, 0.39, 0.42]);
-    R(T.sphere(1, 16, 12), yel, head, [0, -0.1, 0.3], null, [0.3, 0.2, 0.28]);
-    const gem = x.clay("#e0287a", { shininess: 140, specular: 16777215 });
-    [-1, 1].forEach((sx) => (R(T.ico(0.12, 1), gem, head, [0.3 * sx, 0.08, 0.22]), R(T.sphere(0.03, 6, 4), x.basic("#ffffff"), head, [0.36 * sx, 0.14, 0.3])));
-    KIT.mouth(head, [0, -0.17, 0.53], 0.09);
-    // ETCHELON's orange "R" shield on the chest
-    const shield = new THREE.Shape();
-    shield.moveTo(-0.2, 0.18), shield.lineTo(0.2, 0.18), shield.lineTo(0.2, -0.02), shield.quadraticCurveTo(0.18, -0.16, 0, -0.24), shield.quadraticCurveTo(-0.18, -0.16, -0.2, -0.02), shield.lineTo(-0.2, 0.18);
-    const sg = new THREE.Group();
-    sg.position.set(0, 1.82, 0.52), (sg.rotation.x = -0.12), body.add(sg);
-    R(new THREE.ExtrudeGeometry(shield, { depth: 0.03, bevelEnabled: !1 }), x.clay("#f08a1e", { shininess: 60 }), sg);
-    const rTex = b(64, 64, (c) => {
-      (c.fillStyle = "#c83a1a"), (c.font = "bold 50px sans-serif"), (c.textAlign = "center"), (c.textBaseline = "middle"), c.fillText("R", 32, 34);
+    head.position.set(0, 2.52, 0.12), head.scale.setScalar(1.22), body.add(head);
+    const hs = KIT.surf("feather", "#34b6c6", { rep: 7, bump: 0.02, shine: 40 }),
+      hs2 = KIT.surf("scale", "#2a9cae", { rep: 2, bump: 0.025, shine: 60 }),
+      horn = KIT.surf("plastic", "#e2d2a8", { rep: 1, bump: 0.01, shine: 90, spec: 16777215 });
+    R(T.sphere(1, 26, 20), hs, head, [0, 0, -0.02], null, [0.3, 0.28, 0.32]);
+    R(T.sphere(1, 22, 16), hs, head, [0, -0.04, 0.17], null, [0.22, 0.19, 0.22]);
+    // a hooked bird's beak, a little open: a curved upper bill over a shorter lower one, a darker
+    // cere at its root with two nostrils, and a dark mouth inside
+    const bill = (r, len, hook, flat) => {
+      const gq = new THREE.ConeGeometry(r, len, 18, 10).rotateX(Math.PI / 2).translate(0, 0, len / 2),
+        P = gq.attributes.position;
+      for (let k = 0; k < P.count; k++) {
+        const z = P.getZ(k) / len;
+        P.setX(k, P.getX(k) * 0.82), P.setY(k, P.getY(k) * flat - hook * len * z * z);
+      }
+      return gq.computeVertexNormals(), gq;
+    };
+    R(bill(0.11, 0.32, 0.36, 0.8), horn, head, [0, -0.02, 0.33], [0.12, 0, 0]);
+    const jaw = new THREE.Group();
+    jaw.position.set(0, -0.09, 0.32), (jaw.rotation.x = 0.22), head.add(jaw);
+    R(bill(0.085, 0.24, 0.1, 0.55), horn, jaw, [0, 0, 0], [-0.08, 0, 0]);
+    R(T.sphere(1, 14, 8), x.clay("#4a1020", { shininess: 20 }), head, [0, -0.07, 0.37], null, [0.07, 0.03, 0.09]);
+    R(T.sphere(1, 16, 10), x.clay("#4a7480", { shininess: 40 }), head, [0, 0.045, 0.34], [0.2, 0, 0], [0.085, 0.045, 0.07]);
+    [-1, 1].forEach((sx) => R(T.sphere(0.012, 6, 4), x.clay("#0e2024"), head, [0.035 * sx, 0.04, 0.42]));
+    // glowing magenta eyes with slit pupils under heavy scaled brows
+    const lids = [];
+    [-1, 1].forEach((sx) => {
+      const e = new THREE.Group();
+      e.position.set(0.18 * sx, 0.07, 0.22), (e.rotation.y = 0.55 * sx), head.add(e);
+      R(T.sphere(0.06, 18, 14), x.clay("#ff38d0", { emissive: "#7a0a64", shininess: 150, specular: 16777215 }), e);
+      R(T.sphere(1, 10, 8), x.basic("#14060f"), e, [0, 0, 0.052], null, [0.011, 0.04, 0.012]);
+      R(T.sphere(0.012, 6, 4), x.basic("#ffffff"), e, [-0.02 * sx, 0.024, 0.052]);
+      const lid = new THREE.Group();
+      e.add(lid), R(new THREE.SphereGeometry(0.066, 16, 8, 0, l, 0, Math.PI / 2), hs, lid);
+      (lid.userData.open = -0.5), (lid.rotation.x = -0.5), lids.push(lid);
+      R(T.sphere(1, 14, 10), hs2, head, [0.17 * sx, 0.14, 0.24], [0.3, 0.5 * sx, -0.35 * sx], [0.1, 0.035, 0.07]);
+      // swept-back horns and a row of little frill spikes along the cheek
+      R(ao([[0.14 * sx, 0.18, -0.06], [0.17 * sx, 0.3, -0.12], [0.19 * sx, 0.36, -0.24], [0.17 * sx, 0.36, -0.36]], 0.05, 0.01, 14, 8), hs2, head);
+      // a tuft of cheek feathers sweeping back
+      const tuft = [];
+      for (let k = 0; k < 9; k++)
+        tuft.push({ p: new c0(0.24 * sx, -0.06 + 0.02 * k - 0.004 * k * k, 0.02 - 0.02 * k), Z: new c0(sx * 0.7, 0.05 * (k - 4), -1).normalize(), N: new c0(sx, 0.2, 0).normalize(), L: 0.2 + 0.03 * (4 - Math.abs(k - 4)), W: 0.06, col: new THREE.Color(k % 2 ? "#3cc4d0" : "#2aa8ba") });
+      keepR(cardGeo(tuft, "fur"), featherM, head);
     });
-    R(new THREE.PlaneGeometry(0.26, 0.26), new THREE.MeshBasicMaterial({ map: rTex, transparent: !0 }), sg, [0, -0.01, 0.035]);
-    // flippers: one holds the card, the other the etching stylus
-    const card = b(96, 128, (c) => {
-      (c.fillStyle = "#e050b8"), c.fillRect(0, 0, 96, 128), (c.fillStyle = "#f8f4ff"), c.fillRect(8, 8, 80, 112);
-      (c.fillStyle = "#8a3ae8"), c.fillRect(20, 36, 56, 56), (c.strokeStyle = "#ffd23a"), (c.lineWidth = 7), c.beginPath(), c.arc(48, 66, 17, -1.1, 4.25), c.stroke();
-      c.beginPath(), c.moveTo(48, 44), c.lineTo(48, 64), c.stroke();
+    // the mint crest over the top of the head
+    {
+      const cards = [];
+      for (let k = 0; k < 34; k++) {
+        const u = k / 33,
+          z = 0.16 - 0.5 * u,
+          y = 0.25 + 0.03 * Math.sin(Math.PI * u),
+          sx = 0.05 * (rs() - 0.5);
+        cards.push({
+          p: new c0(sx, y - 0.03, z),
+          Z: new c0(sx * 2, 1, -0.55 - 0.6 * u).normalize(),
+          N: new c0(1, 0, 0),
+          L: (0.26 + 0.24 * Math.sin(Math.PI * (0.15 + 0.7 * u))) * (0.85 + 0.3 * rs()),
+          W: 0.07,
+          col: new THREE.Color(u < 0.5 ? "#4ee0b8" : "#3cc8cc").offsetHSL(0, 0, 0.05 * (rs() - 0.5)),
+        });
+      }
+      keepR(cardGeo(cards, "fur"), featherM, head);
+    }
+    // four long scaly tails out along the ground, each rising at its end and coiling round one of
+    // her amethysts to hold it up, a few sparkles about each crystal
+    const ameth = x.clay("#8a34e0", { emissive: "#3c0c78", shininess: 170, specular: 16777215, flatShading: !0 }),
+      amethL = x.clay("#b070ff", { emissive: "#5a20a0", shininess: 170, specular: 16777215, flatShading: !0 }),
+      cut = (() => {
+        const s = new THREE.Shape(),
+          w = 0.1,
+          h = 0.16,
+          c = 0.04;
+        s.moveTo(-w + c, -h), s.lineTo(w - c, -h), s.lineTo(w, -h + c), s.lineTo(w, h - c), s.lineTo(w - c, h), s.lineTo(-w + c, h), s.lineTo(-w, h - c), s.lineTo(-w, -h + c), s.lineTo(-w + c, -h);
+        return new THREE.ExtrudeGeometry(s, { depth: 0.1, bevelEnabled: !0, bevelThickness: 0.035, bevelSize: 0.03, bevelSegments: 1, curveSegments: 1 }).translate(0, 0, -0.05);
+      })(),
+      point = (() => {
+        const gq = new THREE.CylinderGeometry(0.09, 0.09, 0.2, 6),
+          top = new THREE.ConeGeometry(0.09, 0.14, 6).translate(0, 0.17, 0),
+          bot = new THREE.ConeGeometry(0.09, 0.1, 6).rotateX(Math.PI).translate(0, -0.15, 0);
+        return v([{ geo: gq, color: "#ffffff", matrix: S() }, { geo: top, color: "#ffffff", matrix: S() }, { geo: bot, color: "#ffffff", matrix: S() }]);
+      })(),
+      star = x.basic("#fff2a0", { side: THREE.DoubleSide }),
+      tails = [],
+      sparks = [];
+    [
+      [0.62, 1.15, 1, 1.3, 0],
+      [-0.62, 1.15, -1, 1.18, 1],
+      [2.45, 1.45, 1, 0.92, 1],
+      [-2.45, 1.45, -1, 1.02, 0],
+    ].forEach(([ph, reach, cw, gy, kind], k) => {
+      const tg = new THREE.Group();
+      (tg.rotation.y = ph), root.add(tg), tails.push(tg);
+      const gx = -0.1 * cw,
+        gz = 0.5 + 0.55 * reach + 0.55,
+        R0 = 0.17,
+        pts = [
+          [0.0, 0.85, 0.0],
+          [0.12, 0.55, 0.22],
+          [0.12, 0.24, 0.55],
+          [0.06, 0.16, 0.95],
+          [-0.06 * cw, 0.16, 0.5 + 0.55 * reach],
+          [gx, 0.3, gz + 0.32],
+          [gx, gy - 0.32, gz + 0.3],
+        ];
+      for (let j = 0; j <= 20; j++) {
+        const u = j / 20,
+          a = Math.PI / 2 + cw * u * 1.25 * l;
+        pts.push([gx + R0 * Math.cos(a) * cw, gy - 0.24 + 0.14 * u, gz + R0 * Math.sin(a)]);
+      }
+      R(ao(pts, 0.2, 0.04, 110, 12), tubeScale, tg);
+      const cg = new THREE.Group();
+      cg.position.set(gx, gy + 0.08, gz), (cg.rotation.y = 0.6 * k), tg.add(cg), R(kind ? point : cut, k % 2 ? amethL : ameth, cg, [0, 0, 0], null, kind ? [1.15, 1.25, 1.15] : [1, 1.05, 1]);
+      for (let j = 0; j < 3; j++) {
+        const sp = R(starGeo(), star, tg, [gx + 0.35 * (rs() - 0.5), gy + 0.25 + 0.25 * rs(), gz + 0.35 * (rs() - 0.5)], [0, -ph, 0], 0.045 + 0.035 * rs());
+        sparks.push({ sp, s0: sp.scale.x, ph: rs() * l });
+      }
     });
-    const flips = [-1, 1].map((sx) => {
-      const f = new THREE.Group();
-      f.position.set(0.66 * sx, 1.15, 0.12), (f.rotation.z = -0.5 * sx), body.add(f);
-      const fm = KIT.surf("skin", "#7ee0b8", { rep: 1, bump: 0.02, shine: 50 });
-      R(T.sphere(1, 16, 12), fm, f, [0.12 * sx, -0.12, 0], null, [0.11, 0.26, 0.1]);
-      // the flipper's fingers show as ridges, and a pale palm
-      for (let k = 0; k < 3; k++) R(T.sphere(1, 8, 6), fm, f, [0.12 * sx + 0.045 * (k - 1), -0.33, 0.02], null, [0.03, 0.07, 0.04]);
-      R(T.sphere(1, 10, 8), x.clay("#c8f4dc", { shininess: 30 }), f, [0.12 * sx, -0.14, 0.07], null, [0.07, 0.16, 0.04]);
-      return f;
-    });
-    const held = new THREE.Group();
-    held.position.set(-0.2, -0.32, 0.3), held.rotation.set(0, 0.35, 0.5), flips[0].add(held);
-    R(T.box(0.52, 0.68, 0.02), x.world(16777215, { map: card }), held, [0, 0.3, 0]);
-    const pen = new THREE.Group();
-    pen.position.set(0.22, -0.36, 0.1), (pen.rotation.set(0.4, 0, -0.2)), flips[1].add(pen);
-    R(T.cyl(0.028, 0.028, 0.42, 10), silver, pen, [0, 0.12, 0]), R(T.cone(0.028, 0.12, 10), x.clay("#3a3a40"), pen, [0, -0.15, 0], [Math.PI, 0, 0]), R(T.cyl(0.032, 0.032, 0.06, 10), cyan, pen, [0, 0.35, 0]);
     return born(g, {
       height: 3.0,
       head,
-      crownY: 0.37,
-      step(t, dt, tk) {
-        (body.position.y = 0.025 * Math.sin(2 * t)), (head.rotation.z = 0.06 * Math.sin(1.2 * t));
-        (flips[0].rotation.x = -0.15 + 0.12 * Math.sin(1.4 * t)), (flips[1].rotation.x = 0.25 * Math.sin(3 * t)), (pen.rotation.z = -0.2 + 0.15 * Math.sin(6 * t));
-      },
-    });
-  };
-
-  // GEMTOE = ZORTO + GEMWING (Greeblis Park).
-  // ZORTO's egg body blushing from his lavender up into GEMWING's magenta, ZORTO's purple ring belt
-  // and white cloud collar; GEMWING's spikes on the crown and a fan of petals that spins like ZORTO's
-  // propeller; GEMWING's long purple loop legs ending in big green gem toes, each set in one of
-  // GEMWING's silver rings (ZORTO's lime ball became the lime one).
-  BORN.gemtoe = (g) => {
-    const root = new THREE.Group(),
-      body = new THREE.Group(),
-      gemP = smoothProfile([[0, 1.12], [0.4, 1.2], [0.57, 1.5], [0.62, 1.9], [0.56, 2.3], [0.4, 2.6], [0.2, 2.76], [0, 2.79]], 60),
-      onEgg = (px, y, out = 0) => Math.sqrt(Math.max(0, profileR(gemP, y) ** 2 - px * px)) + out;
-    g.add(root), root.add(body);
-    keepR(
-      gradient(latheGeo(gemP, 44), [[1.2, "#a8a0ec"], [1.85, "#c870d0"], [2.7, "#ec3aa8"]]),
-      gradMat("soft", { rep: 3, bump: 0.025, shine: 60 }),
-      body,
-    );
-    const purple = KIT.surf("rubber", "#5a2a9a", { rep: 2, bump: 0.02, shine: 60 }),
-      silverG = KIT.surf("metal", "#d8dce0", { rep: 1, bump: 0.01, shine: 120, spec: 16777215 });
-    // the belt, studded with silver
-    R(T.torus(0.58, 0.075, 12, 48), KIT.surf("rubber", "#8a3ae8", { rep: 2, bump: 0.015, shine: 60 }), body, [0, 1.42, 0], [Math.PI / 2, 0, 0]);
-    for (let k = 0; k < 14; k++) R(T.sphere(0.028, 8, 6), silverG, body, [0.65 * Math.cos((k / 14) * l), 1.42, 0.65 * Math.sin((k / 14) * l)]);
-    // tiny gems grown into the skin, as GEMWING's are
-    const rg = srand(31),
-      gcs = ["#ff7ad8", "#b8a8ff", "#ffffff", "#ff4ab0"];
-    for (let k = 0; k < 18; k++) {
-      const a = l * rg(),
-        y = 1.65 + 1.0 * rg();
-      if (Math.cos(a - Math.PI / 2) > 0.55 && y < 2.35) continue;
-      const rr0 = profileR(gemP, y);
-      R(new THREE.OctahedronGeometry(0.035 + 0.025 * rg(), 0), x.clay(gcs[k % 4], { shininess: 140, specular: 16777215 }), body, [rr0 * Math.cos(a), y, rr0 * Math.sin(a)], [rg(), a, rg()]);
-    }
-    // white cloud collar under the face
-    [[0, 0.5], [-0.28, 0.42], [0.28, 0.42], [-0.45, 0.2], [0.45, 0.2]].forEach(([px, pz], k) => R(T.sphere(1, 14, 10), x.clay("#f8f6ff", { shininess: 50 }), body, [px, 1.55 + 0.03 * k, pz], null, [0.2, 0.15, 0.17]));
-    // face
-    const lids = [-1, 1].map((sx) => KIT.eye(body, [0.21 * sx, 2.17, onEgg(0.21, 2.17, -0.045)], 0.14, { iris: "#c8202a", lid: "#d060c0", open: -0.25, rot: [0, 0.36 * sx, 0] }).lid);
-    // lashes over each eye
-    [-1, 1].forEach((sx) => {
-      for (let k = 0; k < 3; k++) R(T.cone(0.012, 0.09, 4), x.clay("#2a0a2a"), body, [0.21 * sx + 0.06 * (k - 1), 2.33 - 0.02 * Math.abs(k - 1), onEgg(0.21, 2.3, 0.0)], [-0.3, 0, -0.4 * (k - 1)]);
-    });
-    KIT.mouth(body, [0, 1.9, onEgg(0, 1.9, -0.01)], 0.12);
-    R(T.cone(0.022, 0.06, 6), x.clay("#fbf8f0", { shininess: 60 }), body, [0.05, 1.87, onEgg(0.05, 1.87, 0.0)], [Math.PI, 0, 0]);
-    // gem-pink cheeks
-    [-1, 1].forEach((sx) => R(T.sphere(1, 12, 8), x.clay("#ff7ac8", { shininess: 30 }), body, [0.36 * sx, 1.97, onEgg(0.36, 1.97, -0.035)], [0, 0.6 * sx, 0], [0.09, 0.055, 0.04]));
-    // crown: GEMWING's spikes and the spinning petal fan
-    [-0.2, 0, 0.2].forEach((px, k) => R(T.cone(0.07, 0.3 - 0.06 * Math.abs(k - 1), 8), x.clay("#d82a98", { shininess: 60 }), body, [px, 2.82, -0.04 * k], [0, 0, -px]));
-    const fan = new THREE.Group();
-    fan.position.y = 2.88, body.add(fan);
-    for (let k = 0; k < 6; k++) {
-      const a = (k / 6) * l,
-        pg = new THREE.Group();
-      (pg.rotation.y = a), fan.add(pg);
-      R(T.sphere(1, 18, 10), KIT.surf("leaf", k % 2 ? "#a8a0ec" : "#f06ac8", { rep: 1, bump: 0.02, shine: 50 }), pg, [0.55, 0.22, 0], [0, 0, 0.35], [0.55, 0.06, 0.16]);
-      R(T.box(1.0, 0.012, 0.012), x.clay(k % 2 ? "#7a6ad0" : "#c8389a"), pg, [0.55, 0.255, 0], [0, 0, 0.35]);
-    }
-    R(T.sphere(0.09, 10, 8), purple, fan, [0, 0.12, 0]);
-    // loop legs ending in gem toes set in silver rings
-    const gemCols = ["#2ae070", "#2ad86a", "#c8f040", "#3aea80"],
-      toes = [];
-    for (let k = 0; k < 4; k++) {
-      const a = Math.PI / 4 + (k * Math.PI) / 2,
-        c = Math.cos(a),
-        sn = Math.sin(a),
-        P = (r, y) => [r * c, y, r * sn];
-      R(ao([P(0.3, 1.2), P(0.75, 0.95), P(1.15, 0.45), P(1.35, 0.15), P(1.6, 0.12), P(1.7, 0.3), P(1.5, 0.42), P(1.3, 0.3)], 0.085, 0.07, 40, 10), purple, root);
-      // knuckle rings along the leg
-      [
-        [0.75, 0.95],
-        [1.15, 0.45],
-      ].forEach(([r0, y]) => R(T.torus(0.085, 0.025, 6, 16), silverG, root, P(r0, y), [Math.PI / 2 - 0.9, a, 0]));
-      const toe = new THREE.Group();
-      toe.position.set(1.85 * c, 0.2, 1.85 * sn), root.add(toe), toes.push(toe);
-      R(T.torus(0.2, 0.045, 10, 28), silverG, toe, [0, -0.1, 0], [Math.PI / 2, 0, 0]);
-      R(new THREE.OctahedronGeometry(0.22, 0), x.clay(gemCols[k], { shininess: 140, specular: 16777215 }), toe, [0, 0.06, 0], [0, a, 0], [1, 1.3, 1]);
-      R(ao([P(1.62, 0.13), P(1.78, 0.14)], 0.06, 0.05, 4, 6), purple, root);
-    }
-    return born(g, {
-      height: 3.3,
       lids,
-      step(t, dt, tk) {
-        (fan.rotation.y = 0.9 * t), (body.position.y = 0.04 * Math.sin(1.6 * t)), (body.rotation.z = 0.03 * Math.sin(1.1 * t));
-        toes.forEach((to, k) => (to.rotation.y = 0.5 * t + k));
+      step(t, dt, tk, wk) {
+        (body.position.y = 0.03 * Math.sin(1.4 * t) + 0.03 * wk * Math.abs(Math.sin(6 * t))), (head.rotation.y = 0.12 * Math.sin(0.7 * t)), (head.rotation.x = 0.05 * Math.sin(1.1 * t));
+        jaw.rotation.x = 0.22 + 0.06 * Math.sin(1.9 * t);
+        wings.forEach(({ w, sx, pair }) => ((w.rotation.z = sx * (0.07 + 0.25 * wk) * Math.sin(1.5 * t + 0.6 * pair + (wk ? 4 * t : 0))), (w.rotation.y = -sx * 0.05 * Math.sin(1.5 * t + pair))));
+        tails.forEach((tg, k) => ((tg.rotation.z = 0.035 * Math.sin(1.2 * t + k)), (tg.rotation.x = -0.02 * Math.sin(0.9 * t + 2 * k))));
+        sparks.forEach(({ sp, s0, ph }) => sp.scale.setScalar(s0 * Math.max(0.05, Math.sin(2.6 * t + ph))));
       },
     });
   };
 
-  // GLYPH = AURAMEL + GIGGLYPH (Greeblis Park).
-  // AURAMEL's capsule body and round head, cyan below like GIGGLYPH and warming to AURAMEL's salmon
-  // above; GIGGLYPH's toothy grin, back spines and tail; AURAMEL's orange crown spikes, cyan dot
-  // eyes, belly ribs and white feet; GIGGLYPH's floating tiles and AURAMEL's PK panels became
-  // carved glyph tiles set into his back and belly, and AURAMEL's bead trail is his necklace.
+  // GLYPH, after the Glyph artwork: a crouching blue dinosaur glazed like old porcelain, engraved all
+  // over with swirling filigree. One great glowing orange eye on each side of a round head studded
+  // with little bumps, two gold coiled horns, short clawed arms held up in front, thick clawed legs;
+  // overlapping armour plates (dark blue, gold and teal filigree, tiny inset gems) over his back and
+  // down his heavy tail; and a gold shield on his flank bearing a red glyph. From the pixel-art
+  // Glyph: a bright cyan glaze, GIGGLYPH's two purple tiles with glowing power coins set into his
+  // back among the plates, two ribbed tubes (orange and grey) coming out of his back and coiling on
+  // the ground, and an excited little shake every few seconds. Nothing of him floats.
   BORN.glyph = (g) => {
     const root = new THREE.Group(),
       body = new THREE.Group();
     g.add(root), root.add(body);
-    const gm = gradMat("soft", { rep: 3, bump: 0.025, shine: 55 });
-    const glyP = smoothProfile([[0, 0.3], [0.46, 0.38], [0.64, 0.8], [0.68, 1.3], [0.6, 1.78], [0.42, 2.02], [0, 2.08]], 56);
-    keepR(gradient(latheGeo(glyP, 44), [[0.3, "#3aa8d8"], [1.1, "#78a8c8"], [1.9, "#e88a8a"]]), gm, body);
-    const head = new THREE.Group();
-    head.position.y = 2.42, body.add(head);
-    keepR(gradient(new THREE.SphereGeometry(0.5, 28, 20), [[-0.5, "#e88a8a"], [0.5, "#f0a0a0"]]), gm, head);
-    // GIGGLYPH's toothy grin
-    R(T.box(0.42, 0.16, 0.12), x.clay("#141418", { shininess: 30 }), head, [0, -0.12, 0.42], [-0.15, 0, 0]);
-    for (let k = 0; k < 5; k++) R(T.box(0.06, 0.07, 0.04), x.clay("#fbf8f0", { shininess: 60 }), head, [-0.16 + 0.08 * k, -0.075, 0.48], [-0.15, 0, 0]);
-    [-0.08, 0.08].forEach((px) => R(T.box(0.06, 0.06, 0.04), x.clay("#fbf8f0", { shininess: 60 }), head, [px, -0.17, 0.47], [-0.15, 0, 0]));
-    const lids = [-1, 1].map((sx) => KIT.eye(head, [0.18 * sx, 0.12, 0.42], 0.09, { iris: "#2ac8e0", lid: "#f0a0a0", open: -0.3, rot: [0, 0.35 * sx, 0] }).lid);
-    // nostrils and freckled cheeks
-    [-1, 1].forEach((sx) => {
-      R(T.sphere(1, 8, 6), x.clay("#8a3a3a"), head, [0.05 * sx, 0.02, 0.495], null, [0.022, 0.016, 0.012]);
-      for (let k = 0; k < 4; k++) R(T.sphere(0.012, 6, 4), x.clay("#d06a6a"), head, [0.3 * sx + 0.04 * ((k % 2) - 0.5), -0.02 - 0.03 * (k >> 1), 0.38]);
-    });
-    // AURAMEL's orange crown, GIGGLYPH's cyan spines down the back of the head
-    [-0.13, 0, 0.13].forEach((px, k) => R(T.cone(0.07, 0.36 - 0.08 * Math.abs(k - 1), 8), x.clay("#f8a020", { shininess: 60 }), head, [px, 0.55, 0.02], [0, 0, -1.2 * px]));
-    for (let k = 0; k < 4; k++) R(T.cone(0.06, 0.2, 6), x.clay("#3ad8e8", { shininess: 60 }), head, [0, 0.36 - 0.17 * k, -0.4 - 0.05 * k], [-1.0 - 0.15 * k, 0, 0]);
-    // bead necklace
-    for (let k = 0; k < 18; k++) {
-      const a = (k / 18) * l;
-      R(T.sphere(0.055, 10, 8), x.clay(k % 2 ? "#ff7ab8" : "#3ae0e8", { shininess: 80 }), body, [0.44 * Math.sin(a), 1.98 - 0.05 * Math.cos(a), 0.4 * Math.cos(a)]);
-    }
-    // belly: AURAMEL's white ribs on GIGGLYPH's tan patch, with a carved glyph tile
-    R(T.sphere(1, 20, 14), KIT.surf("soft", "#e0c08a", { rep: 1, bump: 0.03, shine: 25 }), body, [0, 0.82, 0.34], null, [0.4, 0.38, 0.34]);
-    for (let k = 0; k < 4; k++) R(T.torus(0.685 - 0.012 * k, 0.022, 5, 24, 1.3), x.clay("#ffffff", { shininess: 40 }), body, [0, 1.22 + 0.15 * k, 0], [Math.PI / 2, 0, Math.PI / 2 - 0.65]);
-    const glyphTex = (seed) =>
-      b(64, 64, (c) => {
-        (c.fillStyle = "#f2c84a"), c.fillRect(0, 0, 64, 64), (c.fillStyle = "#c88a1a"), c.fillRect(0, 56, 64, 8), c.fillRect(56, 0, 8, 64);
-        (c.strokeStyle = "#5a3a10"), (c.lineWidth = 5), (c.lineCap = "round"), c.beginPath();
-        const r2 = srand(seed);
-        let px = 14 + 36 * r2(),
-          py = 14 + 36 * r2();
-        c.moveTo(px, py);
-        for (let k = 0; k < 4; k++) (px = 12 + 40 * r2()), (py = 12 + 40 * r2()), c.lineTo(px, py);
-        c.stroke(), c.beginPath(), c.arc(14 + 36 * r2(), 14 + 36 * r2(), 6, 0, l), c.stroke();
-      });
-    const tile = (parent, pos, rot, seed, s = 0.26) => {
-      const tg = new THREE.Group();
-      tg.position.set(...pos), tg.rotation.set(...rot), parent.add(tg);
-      R(T.box(s, s, 0.05), x.clay("#c88a1a", { shininess: 40 }), tg), R(new THREE.PlaneGeometry(0.92 * s, 0.92 * s), x.world(16777215, { map: glyphTex(seed) }), tg, [0, 0, 0.026]);
-    };
-    tile(body, [0, 0.8, 0.68], [-0.15, 0, 0.1], 5, 0.26);
-    // glyph tiles set down the back like plates
-    for (let k = 0; k < 5; k++) {
-      const yy = 1.85 - 0.3 * k,
-        rr = profileR(glyP, yy) + 0.015,
-        slope = Math.atan2(profileR(glyP, yy + 0.05) - profileR(glyP, yy - 0.05), 0.1);
-      tile(body, [0, yy, -rr], [-slope, Math.PI, (k % 2 ? 1 : -1) * 0.12], 11 + k, 0.3);
-    }
-    // arms, white feet, GIGGLYPH's tail
-    const arms = [-1, 1].map((sx) => {
-      const a = new THREE.Group();
-      a.position.set(0.62 * sx, 1.45, 0.05), body.add(a);
-      const am = KIT.surf("soft", sx < 0 ? "#b898b8" : "#c09aa8", { rep: 1, bump: 0.02, shine: 45 });
-      R(T.sphere(1, 14, 10), am, a, [0.12 * sx, -0.05, 0], [0, 0, -0.6 * sx], [0.22, 0.1, 0.12]);
-      // three stubby fingers
-      for (let k = 0; k < 3; k++) R(T.sphere(1, 8, 6), am, a, [0.3 * sx, -0.16 + 0.02 * k, 0.06 * (k - 1)], [0, 0, -0.9 * sx], [0.06, 0.035, 0.035]);
-      return a;
-    });
-    const footM = KIT.surf("soft", "#fbf8f0", { rep: 1, bump: 0.02, shine: 35 });
-    [-1, 1].forEach((sx) => {
-      R(T.sphere(1, 16, 10), footM, root, [0.26 * sx, 0.1, 0.18], null, [0.22, 0.1, 0.3]);
-      for (let k = 0; k < 3; k++) R(T.sphere(1, 8, 6), footM, root, [0.26 * sx + 0.09 * (k - 1), 0.07, 0.46], null, [0.05, 0.05, 0.06]);
-    });
+    const rs = srand(7171),
+      // engraved swirls in neutral greys (tinted by the material), seamless
+      swirl = (c, S, n, lw, ink, dots, seed) => {
+        const r = srand(seed);
+        for (let k = 0; k < n; k++) {
+          const cx = S * r(),
+            cy = S * r(),
+            R0 = 6 + 14 * r(),
+            turns = 1.4 + r(),
+            dir = r() < 0.5 ? 1 : -1,
+            a0 = r() * l;
+          for (const ox of [-S, 0, S])
+            for (const oy of [-S, 0, S]) {
+              (c.strokeStyle = ink), (c.lineWidth = lw), c.beginPath();
+              for (let j = 0; j <= 40; j++) {
+                const u = j / 40,
+                  a = a0 + dir * u * turns * l,
+                  rr = R0 * (1 - 0.85 * u);
+                j ? c.lineTo(cx + ox + rr * Math.cos(a), cy + oy + rr * Math.sin(a)) : c.moveTo(cx + ox + rr * Math.cos(a), cy + oy + rr * Math.sin(a));
+              }
+              c.stroke();
+              dots && ((c.fillStyle = dots[k % dots.length]), c.beginPath(), c.arc(cx + ox + R0 * 1.2 * Math.cos(a0 + 2), cy + oy + R0 * 1.2 * Math.sin(a0 + 2), 2.2, 0, l), c.fill());
+            }
+        }
+      },
+      skinTex = b(256, 256, (c) => ((c.fillStyle = "#e8e8e8"), c.fillRect(0, 0, 256, 256), swirl(c, 256, 26, 2.2, "#a0a0a0", null, 3), swirl(c, 256, 18, 1.4, "#c4c4c4", null, 9)), { smooth: !0 }),
+      plateTex = b(
+        256,
+        256,
+        (c) => {
+          (c.fillStyle = "#2c4a7c"), c.fillRect(0, 0, 256, 256);
+          const gr = c.createRadialGradient(128, 110, 20, 128, 128, 170);
+          gr.addColorStop(0, "rgba(120,160,210,0.35)"), gr.addColorStop(1, "rgba(10,20,50,0.35)"), (c.fillStyle = gr), c.fillRect(0, 0, 256, 256);
+          swirl(c, 256, 16, 3, "#d8b048", ["#ffd84a", "#e83a3a", "#3ad0c8"], 21), swirl(c, 256, 12, 2, "#48c0c0", null, 33);
+          (c.strokeStyle = "#5a80b0"), (c.lineWidth = 10), c.strokeRect(0, 0, 256, 256);
+        },
+        { smooth: !0 },
+      );
+    skinTex.wrapS = skinTex.wrapT = THREE.RepeatWrapping;
+    skinTex.repeat.set(5, 5);
+    const skinM = new THREE.MeshPhongMaterial({ map: skinTex, bumpMap: skinTex, bumpScale: 0.03, vertexColors: !0, shininess: 55, specular: 4473924 }),
+      plateM = new THREE.MeshPhongMaterial({ map: plateTex, bumpMap: plateTex, bumpScale: 0.02, shininess: 80, specular: 6710886 }),
+      blueM = new THREE.MeshPhongMaterial({ map: skinTex, bumpMap: skinTex, bumpScale: 0.03, color: "#4896d4", shininess: 55, specular: 4473924 }),
+      gold = KIT.surf("metal", "#e0b03a", { rep: 1, bump: 0.01, shine: 110, spec: 16777215 }),
+      ivory = x.clay("#efe2c0", { shininess: 70, specular: 16777215 });
+    // the body: a crouching trunk leaning forward, a deep chest, the round head and snout, the hips
+    // and the root of the tail, all one smooth piece
+    const C = [0, 1.25, 0.12],
+      bb = blobBody(
+        [
+          [0, 1.05, -0.05, 0.58, 0.72, 0.6, 0.35],
+          [0, 0.82, 0.16, 0.5, 0.5, 0.46],
+          [0, 1.58, 0.24, 0.38, 0.38, 0.38],
+          [0, 1.98, 0.4, 0.36, 0.33, 0.38],
+          [0, 1.86, 0.82, 0.25, 0.2, 0.36, 0.12],
+          [-0.38, 0.62, -0.04, 0.31, 0.36, 0.4],
+          [0.38, 0.62, -0.04, 0.31, 0.36, 0.4],
+          [0, 0.62, -0.62, 0.38, 0.34, 0.46, -0.3],
+        ],
+        C,
+        {
+          k: 0.2,
+          uvLen: 1.2,
+          col: (p, fold, cc) => cc.set("#4a9ad8").offsetHSL(0, 0, 0.05 * Math.min(1, Math.max(-1, p.y - 1.2)) - 0.12 * fold),
+        },
+      ),
+      hit = bb.hit;
+    keepR(bb.geo, skinM, body);
+    // the heavy tail, swinging round to one side along the ground
     const tail = new THREE.Group();
-    tail.position.set(0, 0.6, -0.5), body.add(tail);
-    R(ao([[0, 0, 0], [0, -0.2, -0.35], [0.08, -0.4, -0.75], [0.15, -0.48, -1.05]], 0.22, 0.05, 20, 12), KIT.surf("scale", "#3aa8d8", { rep: 2, bump: 0.02, shine: 60 }), tail);
-    [0.25, 0.5, 0.72].forEach((f, k) => R(T.cone(0.045 - 0.008 * k, 0.14, 6), x.clay("#3ad8e8", { shininess: 60 }), tail, [0.03 * f, -0.2 * f * 1.9 + 0.15 - 0.04 * k, -0.35 - 0.7 * f], [-0.7, 0, 0]));
+    tail.position.set(0, 0.55, -0.85), body.add(tail);
+    const tp = [[0, 0.02, 0.1], [0, -0.12, -0.35], [0.18, -0.3, -0.85], [0.6, -0.38, -1.22], [1.08, -0.4, -1.35]],
+      tcv = new THREE.CatmullRomCurve3(tp.map((q) => new c0(...q)));
+    R(ao(tp, 0.34, 0.07, 40, 14), blueM, tail);
+    // the head's little bumps
+    const head = [0, 1.98, 0.4];
+    for (let k = 0; k < 26; k++) {
+      const a = (rs() - 0.5) * 2.6,
+        e = 0.15 + 0.7 * rs(),
+        d = [Math.sin(a) * Math.cos(e), Math.sin(e), Math.cos(a) * Math.cos(e) - 0.35],
+        { p, n } = hit(head, d);
+      if (Math.abs(p.x) > 0.2 && p.z > 0.5 && p.y < 2.1) continue;
+      R(T.sphere(0.022 + 0.025 * rs(), 8, 6), blueM, body, [p.x + n.x * 0.005, p.y + n.y * 0.005, p.z + n.z * 0.005]);
+    }
+    // great glowing orange eyes in dark rims, with heavy lids for the blink
+    const lids = [];
+    [-1, 1].forEach((sx) => {
+      const { p, n } = hit(head, [sx * 0.86, 0.42, 0.42]),
+        e = faceTo(new THREE.Group(), n);
+      e.position.copy(p).addScaledVector(n, -0.045), body.add(e);
+      R(T.sphere(0.105, 22, 16), x.clay("#ff5a14", { emissive: "#a82808", shininess: 150, specular: 16777215 }), e);
+      R(T.sphere(1, 16, 12), x.clay("#ffc040", { emissive: "#c06010" }), e, [0, 0, 0.06], null, [0.06, 0.06, 0.05]);
+      R(T.sphere(1, 12, 10), x.basic("#1a0604"), e, [0, 0, 0.095], null, [0.028, 0.034, 0.016]);
+      R(T.sphere(0.02, 8, 6), x.basic("#ffffff"), e, [-0.035 * sx, 0.045, 0.092]);
+      R(T.torus(0.108, 0.026, 8, 28), x.clay("#24385a", { shininess: 40 }), e, [0, 0, 0.02]);
+      const lid = new THREE.Group();
+      e.add(lid), R(new THREE.SphereGeometry(0.118, 18, 8, 0, l, 0, Math.PI / 2), blueM, lid);
+      (lid.userData.open = -0.45), (lid.rotation.x = -0.45), lids.push(lid);
+      // a ridge of brow over each eye
+      R(T.sphere(1, 14, 8), blueM, e, [0, 0.105, 0.0], [0.4, 0, 0], [0.13, 0.04, 0.09]);
+    });
+    // nostrils, and a closed mouth line along the snout
+    [-1, 1].forEach((sx) => {
+      const { p, n } = hit([0, 1.86, 0.82], [sx * 0.3, 0.4, 1]);
+      R(T.sphere(1, 8, 6), x.clay("#1a2a40"), body, [p.x, p.y, p.z], null, [0.022, 0.016, 0.02]);
+      const ml = [];
+      for (let k = 0; k <= 8; k++) {
+        const u = k / 8,
+          q = hit([0, 1.8, 0.62], [sx * Math.sin(0.12 + 1.15 * u), -0.1 - 0.06 * u, Math.cos(0.12 + 1.15 * u)]);
+        ml.push(q.p.addScaledVector(q.n, 0.003));
+      }
+      R(ao(ml, 0.009, 0.007, 14, 5), x.clay("#1c2c44", { shininess: 20 }), body);
+    });
+    // two gold horns coiling back off the top of the head
+    [-1, 1].forEach((sx) => {
+      const { p } = hit(head, [sx * 0.35, 1, -0.25]),
+        pts = [[p.x, p.y - 0.03, p.z], [p.x + 0.04 * sx, p.y + 0.12, p.z - 0.04]];
+      for (let k = 0; k <= 12; k++) {
+        const u = k / 12,
+          a = -0.3 + u * 1.7 * l,
+          r = 0.11 * (1 - 0.65 * u);
+        pts.push([p.x + 0.06 * sx + 0.02 * sx * u, p.y + 0.22 + r * Math.sin(a), p.z - 0.15 + r * Math.cos(a) - 0.04]);
+      }
+      R(ridgedTube(pts, 0.045, 0.016, 60, 9, 0.22), gold, body);
+    });
+    // short arms held up in front, with three ivory claws
+    const arms = [-1, 1].map((sx) => {
+      const a = KIT.arm(body, [0.36 * sx, 1.38, 0.44], { len: 0.56, r: 0.105, mat: blueM, hand: "claw3", nailMat: ivory, rot: [-0.55, 0, -0.08 * sx] });
+      return (a.el.rotation.x = -0.85), a;
+    });
+    // thick legs with big clawed feet
+    const legs = [-1, 1].map((sx) => KIT.leg(body, [0.38 * sx, 0.58, 0.02], { len: 0.52, r: 0.17, mat: blueM, thigh: 1.2, foot: "claw", footMat: blueM, nailMat: ivory }));
+    // armour plates: rounded hexagons with filigree, shingled over the back and down the tail
+    const plate = (() => {
+      const s = new THREE.Shape(),
+        n = 6;
+      for (let k = 0; k <= n; k++) {
+        const a = Math.PI / 2 + (k / n) * l,
+          q = [Math.cos(a), Math.sin(a) * 0.92];
+        k ? s.lineTo(q[0], q[1]) : s.moveTo(q[0], q[1]);
+      }
+      const gq = new THREE.ExtrudeGeometry(s, { depth: 0.18, bevelEnabled: !0, bevelThickness: 0.12, bevelSize: 0.12, bevelSegments: 2, curveSegments: 1 }).translate(0, 0, -0.09),
+        P = gq.attributes.position,
+        U = gq.attributes.uv;
+      for (let k = 0; k < P.count; k++) U.setXY(k, 0.5 + 0.45 * P.getX(k), 0.5 + 0.45 * P.getY(k));
+      return gq.computeVertexNormals(), gq;
+    })();
+    const putPlate = (p, n, sz, tilt, twist = 0) => {
+      const pg = faceTo(new THREE.Group(), n);
+      pg.position.copy(p).addScaledVector(n, 0.03), body.add(pg);
+      R(plate, plateM, pg, [0, 0, 0], [tilt, 0, twist], [sz, sz, sz * 0.45]);
+    };
+    for (let row = 0; row < 4; row++)
+      for (let j = 0; j < 5 - (row % 2); j++) {
+        const th = 0.28 + 0.15 * row,
+          ph = Math.PI + (j - (4 - (row % 2)) / 2) * 0.68,
+          { p, n } = hit(C, [Math.sin(th * Math.PI) * Math.sin(ph), Math.cos(th * Math.PI), Math.sin(th * Math.PI) * Math.cos(ph)]);
+        if (p.y < 0.45) continue;
+        putPlate(p, n, 0.27 - 0.012 * row + 0.02 * rs(), -0.32, 0.15 * (rs() - 0.5));
+      }
+    for (let k = 0; k < 7; k++) {
+      const u = 0.06 + 0.13 * k,
+        q = tcv.getPointAt(u),
+        tng = tcv.getTangentAt(u),
+        rr0 = 0.34 + (0.07 - 0.34) * u,
+        side = new c0().crossVectors(tng, new c0(0, 1, 0)).normalize(),
+        up = new c0().crossVectors(side, tng).normalize();
+      [-1, 0, 1].forEach((sd) => {
+        if (sd && k > 4) return;
+        const n = up.clone().multiplyScalar(Math.cos(0.75 * sd)).addScaledVector(side, Math.sin(0.75 * sd)).normalize(),
+          wp = q.clone().add(tail.position).addScaledVector(n, rr0 * 0.95);
+        putPlate(wp, n, (0.2 - 0.016 * k) * (sd ? 0.85 : 1), -0.3);
+      });
+    }
+    // the gold shield on his left flank, bearing his red glyph
+    {
+      const { p, n } = hit(C, [-0.9, -0.05, 0.42]),
+        sg = faceTo(new THREE.Group(), n);
+      sg.position.copy(p).addScaledVector(n, 0.07), (sg.rotation.z += 0.0), body.add(sg);
+      const s = new THREE.Shape();
+      s.moveTo(-0.24, 0.27), s.lineTo(0.24, 0.27), s.lineTo(0.27, 0.22), s.lineTo(0.27, -0.02), s.quadraticCurveTo(0.24, -0.2, 0, -0.32), s.quadraticCurveTo(-0.24, -0.2, -0.27, -0.02), s.lineTo(-0.27, 0.22), s.lineTo(-0.24, 0.27);
+      R(new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: !0, bevelThickness: 0.025, bevelSize: 0.025, bevelSegments: 2, curveSegments: 6 }), gold, sg, [0, 0, -0.04]);
+      const face = b(
+        256,
+        256,
+        (c) => {
+          const gr = c.createLinearGradient(0, 0, 256, 256);
+          gr.addColorStop(0, "#f6d870"), gr.addColorStop(0.5, "#e4b440"), gr.addColorStop(1, "#c08a20"), (c.fillStyle = gr), c.fillRect(0, 0, 256, 256);
+          swirl(c, 256, 14, 2, "rgba(150,100,20,0.6)", null, 55);
+          (c.strokeStyle = "#a87818"), (c.lineWidth = 6), c.strokeRect(14, 14, 228, 228);
+          (c.textAlign = "center"), (c.textBaseline = "middle"), (c.font = "bold 170px Georgia, 'Times New Roman', serif");
+          (c.fillStyle = "#5a1010"), c.fillText("R", 134, 140), (c.fillStyle = "#d0222a"), c.fillText("R", 128, 134);
+          (c.strokeStyle = "#ff8a7a"), (c.lineWidth = 2), c.strokeText("R", 126, 132);
+        },
+        { smooth: !0 },
+      );
+      const sh = new THREE.ShapeGeometry(s, 8),
+        P = sh.attributes.position,
+        U = sh.attributes.uv;
+      for (let k = 0; k < P.count; k++) U.setXY(k, (P.getX(k) + 0.27) / 0.54, (P.getY(k) + 0.32) / 0.59);
+      R(sh, x.clay("#ffffff", { map: face, shininess: 90, specular: 10066329 }), sg, [0, 0, 0.026]);
+      [[-0.2, 0.2], [0.2, 0.2], [-0.21, -0.03], [0.21, -0.03], [0, -0.24]].forEach(([gx, gy]) => R(T.sphere(0.028, 10, 8), x.clay("#3ad0d8", { shininess: 150, specular: 16777215 }), sg, [gx, gy, 0.035], null, [1, 1, 0.6]));
+    }
+    // GIGGLYPH's two purple tiles, each with a glowing power coin
+    const tileTex = b(
+        128,
+        128,
+        (c) => {
+          (c.fillStyle = "#8a2ab8"), c.fillRect(0, 0, 128, 128), (c.strokeStyle = "#c890f0"), (c.lineWidth = 10), c.strokeRect(5, 5, 118, 118);
+          const gr = c.createRadialGradient(64, 64, 6, 64, 64, 34);
+          gr.addColorStop(0, "#fff6a0"), gr.addColorStop(0.7, "#ffc030"), gr.addColorStop(1, "#e86a1a"), (c.fillStyle = gr), c.beginPath(), c.arc(64, 64, 32, 0, l), c.fill();
+          (c.strokeStyle = "#7ad8ff"), (c.lineWidth = 4), c.beginPath(), c.arc(64, 64, 38, 0, l), c.stroke();
+          (c.strokeStyle = "#c8202a"), (c.lineWidth = 6), (c.lineCap = "round"), c.beginPath(), c.arc(64, 67, 17, -0.3 * Math.PI, 1.3 * Math.PI), c.stroke();
+          c.beginPath(), c.moveTo(64, 42), c.lineTo(64, 66), c.stroke();
+        },
+        { smooth: !0 },
+      ),
+      tileGeo = (() => {
+        const sh = new THREE.Shape(),
+          w = 0.3,
+          r = 0.07;
+        sh.moveTo(-w + r, -w), sh.lineTo(w - r, -w), sh.quadraticCurveTo(w, -w, w, -w + r), sh.lineTo(w, w - r), sh.quadraticCurveTo(w, w, w - r, w), sh.lineTo(-w + r, w), sh.quadraticCurveTo(-w, w, -w, w - r), sh.lineTo(-w, -w + r), sh.quadraticCurveTo(-w, -w, -w + r, -w);
+        const gq = new THREE.ExtrudeGeometry(sh, { depth: 0.05, bevelEnabled: !0, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2, curveSegments: 4 }),
+          P = gq.attributes.position,
+          U = gq.attributes.uv;
+        for (let k = 0; k < P.count; k++) U.setXY(k, 0.5 + P.getX(k) / 0.64, 0.5 + P.getY(k) / 0.64);
+        return gq;
+      })(),
+      tileM = x.clay("#ffffff", { map: tileTex, emissive: "#3a1050", emissiveMap: tileTex, shininess: 80 });
+    // the two tiles are set into his back among the plates, one each side of his spine
+    [-1, 1].forEach((sx) => {
+      const { p, n } = hit(C, [sx * 0.62, 0.55, -0.7]),
+        tg = faceTo(new THREE.Group(), n);
+      tg.position.copy(p).addScaledVector(n, 0.02), body.add(tg), R(tileGeo, tileM, tg, [0, 0, 0], [0, 0, 0.15 * sx], [0.82, 0.82, 0.9]);
+    });
+    // two ribbed tubes, one orange and one grey, coming out of his back and coiling on the ground
+    const tube = (sx, col, ring, reach) => {
+      const { p, n } = hit(C, [sx * 0.45, -0.15, -1]),
+        q = p.clone().addScaledVector(n, -0.06),
+        pts = [[q.x, q.y, q.z]],
+        o = p.clone().addScaledVector(n, 0.32);
+      pts.push([o.x, o.y + 0.05, o.z], [o.x + 0.35 * sx, 0.35, o.z - 0.15], [o.x + 0.6 * sx, 0.09, o.z + 0.1]);
+      for (let k = 1; k <= 6; k++) {
+        const a = (k / 6) * 1.6 * l,
+          r = reach * (1 - 0.1 * k);
+        pts.push([o.x + 0.6 * sx + sx * r * Math.sin(a), 0.09, o.z + 0.1 + r * (1 - Math.cos(a))]);
+      }
+      R(ridgedTube(pts, 0.085, 0.07, 90, ring, 0.14, 10), x.clay(col, { shininess: 50 }), body);
+      const e = pts[pts.length - 1];
+      R(T.sphere(0.07, 10, 8), x.clay(col, { shininess: 50 }), body, e);
+    };
+    tube(-1, "#e8782a", 16, 0.45), tube(1, "#6a7280", 20, 0.55);
     return born(g, {
-      height: 3.1,
+      height: 2.5,
       lids,
-      step(t, dt, tk) {
-        (tail.rotation.y = 0.35 * Math.sin(2.2 * t)), (head.rotation.z = 0.07 * Math.sin(1.3 * t)), body.scale.set(1 + 0.015 * Math.sin(2.4 * t), 1 - 0.015 * Math.sin(2.4 * t), 1);
-        arms.forEach((a, k) => (a.rotation.z = (k ? -1 : 1) * 0.25 * Math.sin(2 * t + k)));
+      step(t, dt, tk, wk) {
+        // every few seconds he gives an excited little shake (and lifts his head to look about)
+        const ph = t % 5.3,
+          shake = ph < 0.8 ? 0.07 * Math.sin(ph * 42) * (1 - ph / 0.8) : 0;
+        (body.position.y = 0.02 * Math.sin(1.5 * t) + 0.04 * wk * Math.abs(Math.sin(7 * t))), (body.rotation.z = 0.025 * Math.sin(1.1 * t) + shake);
+        (body.rotation.y = 0.12 * Math.sin(0.45 * t) * Math.max(0, Math.sin(0.23 * t))), (body.rotation.x = -0.03 * Math.max(0, Math.sin(0.6 * t + 1)));
+        tail.rotation.y = 0.12 * Math.sin(1.0 * t) + 3 * shake;
+        arms.forEach((a, k) => (a.sh.rotation.x = -0.55 + 0.08 * Math.sin(1.6 * t + 2 * k) + 0.3 * wk * Math.sin(7 * t + k * Math.PI)));
+        legs.forEach((lg, k) => KIT.stride(lg, 7 * t + k * Math.PI, 0.45 * wk, 0.7 * wk));
       },
     });
   };
 
   // BACKPACKA standing in the line-up for testing: the event's model, hovering on his wings, half
   // full, his neck swaying and his legs dangling
+  // (BACKPACKA's model is final: keep it as it is.)
   BORN.backpacka = (g) => {
     const hold = new THREE.Group();
     (hold.position.y = 2.75), (hold.scale.setScalar(0.8)), g.add(hold);
@@ -11007,6 +12435,7 @@ const JGP = (() => {
         return { height: 2, anim() {} };
       }
     };
+  // (FORTIZMO's model, city_fortizmo, is final: keep it as it is.)
   // FORTIZMO sculpts her geometry after its bounds are computed (and bends her horn at runtime), so
   // taps on her outer body missed her and could select a creature behind her. Refresh the bounds
   // with some headroom so picking always finds her.
@@ -11021,6 +12450,7 @@ const JGP = (() => {
 
   // ANOMALEE lost her back-right leg in Greeblis City; here she stomps about on a wooden peg leg.
   // The empty hip still swings with her walk cycle, so the peg goes on that hip.
+  // (ANOMALEE's model, peg leg included, is final: keep it as it is.)
   so.anomaleePeg = (g, d, opts) => {
     const r = so.city_anomalee(g, d, opts);
     let hip = null;
@@ -11081,14 +12511,15 @@ const JGP = (() => {
     // MISSGUMMERY (jumper) is part of SIRGUMMERY and KOLLOD (orson) is part of ZOLLOD now
     delete o.jumper, delete n.orson;
     // removed from the game: CHERUBI (wanderer), SUNNY (kingdino), SIRGUMMERY (mont), PATCHOOLEE (hopper),
-    // SLUGWERTH and APPTERIX
-    ["wanderer", "kingdino", "mont", "hopper", "slugwerth", "appterix"].forEach((id) => (delete e[id], delete o[id], delete n[id]));
+    // SLUGWERTH and APPTERIX; the engine's REVEREND SPARK (sparky) is part of SHOPSTAR, who keeps the
+    // General Store
+    ["wanderer", "kingdino", "mont", "hopper", "slugwerth", "appterix", "sparky"].forEach((id) => (delete e[id], delete o[id], delete n[id]));
     t.creaturesRoaming = Object.keys(n).length;
     const all = Object.assign({}, e, o, n);
     for (const key in ROWS) {
       const row = ROWS[key];
       row.list.forEach(([id, name, builder, extra, at0]) => {
-        const at = "function" == typeof at0 ? at0() : at0;
+        const at = "function" == typeof at0 ? at0() : "string" == typeof at0 && /^kiosk:/.test(at0) ? KIOSK_AT.spot(at0.slice(6)) : "string" == typeof at0 && /^kiosk-desk:/.test(at0) ? KIOSK_AT.desk(at0.slice(11)) : at0;
         let d = all[id];
         if (!d) (d = o[id] = { emotes: ["!", "♥", "✿"] }), (Zt[id] = { g: [-0.8, 1.2, 0.45], c: [0.8, 1.0, 0.45] });
         // drop the engine's old model settings, then take the pulled model's own
@@ -11097,22 +12528,24 @@ const JGP = (() => {
           name,
           builder,
           at: at.slice(),
-          pattern: ["post", { face: "center" === row.face ? Math.atan2(-at[0], -at[1]) : "function" == typeof row.face ? row.face(at) : row.face }],
+          pattern: ["post", { face: "center" === row.face ? Math.atan2(-at[0], -at[1]) : "function" == typeof row.face ? row.face(at) : row.face, y: (extra && extra.standY) || 0 }],
           stationary: !0,
           // every creature has the same options (the test models of LARRY and NEXTESSA keep theirs)
           lines: /^t_/.test(id) ? L3() : ["Placeholder 1", "Placeholder 2", "Placeholder 3"],
           campfire: "Placeholder 1",
         });
+        "string" == typeof d.via && /^kiosk:/.test(d.via) && (d.via = KIOSK_AT.exit(d.via.slice(6)));
+        "string" == typeof d.via && /^kiosk-front:/.test(d.via) && (d.via = KIOSK_AT.front(d.via.slice(12)));
         // one Blossom option for everyone (no quest items for now)
         d.gift = /^t_/.test(id) ? "Placeholder blossom line" : "Placeholder 1";
       });
     }
     for (const id in BATTLES) all[id] && (Object.assign(all[id], BATTLES[id]), (all[id].danceGeneric = !0));
     t.noBlossoms.length = 0;
-    // pizza courier: NEXTESSA, as she is in Greeblis City
+    // pizza courier: NEXTESSA, as she is in Greeblis City. Her model is final: keep city_nextessa as it is
     (s.builder = "city_nextessa"), (s.modelScale = 1);
-    // shopkeeper: LARRY, merged from the Greeblis City shopkeeper and Greeblis Woods
-    i.name = "SHOPKEEPER LARRY";
+    // the General Store's shopkeeper: SHOPSTAR (LARRY is in the line-up)
+    i.name = "SHOPSTAR";
     i.shopLog = "Placeholder shop line";
     i.campfire = "Placeholder 1";
   }
@@ -11276,10 +12709,9 @@ const JGP = (() => {
     kioskGeo = {},
     cachedGeo = (key, mk) => kioskGeo[key] || (kioskGeo[key] = mk());
 
-  // The Post Office: navy walls, red roof, and comically too much mail: wobbling stacks on the
-  // counter that hold up the roof, more on the crates, two swaying letter towers taller than the
-  // kiosk out on the lawn, knee-high heaps on the deck, overflowing mail sacks, stuffed sorting
-  // cubbies, parcels and a blue collection box.
+  // The Post Office: navy walls, red roof, and a busy day's mail: short neat stacks on the counter
+  // and the crates, low scattered piles on the deck, mail sacks, stuffed sorting cubbies, parcels and
+  // a blue collection box.
   function buildPostOffice(o) {
     const fx = kioskFrame(o, { sign: "POST OFFICE", ink: "#22325a", wall: "#33508f", wall2: "#26407a", tin: [150, 42, 38] }),
       G = goods(),
@@ -11294,7 +12726,7 @@ const JGP = (() => {
       Q.add(Q.UBX, ENV[(rs() * ENV.length) | 0], mm.clone().multiply(S(0, 0, 0, 0, 0, 0, w, th, d)));
       rs() < stampP && Q.add(Q.UBX, rs() < 0.5 ? "#c8282a" : "#2a5aa8", mm.clone().multiply(S(0.36 * w, th / 2 + 0.001, -0.28 * d, 0, 0, 0, 0.035, 0.004, 0.04)));
     };
-    // a comically tall, wobbling stack h metres high: it sways in an S as it climbs
+    // a stack h metres high, a little uneven
     const SLAB = window.__jgpMobile ? 0.03 : 0.021,
       stack = (px, py, pz, h, sway = 0.12, Q = G) => {
         const n = Math.max(4, Math.round(h / SLAB)),
@@ -11322,29 +12754,17 @@ const JGP = (() => {
       G.box("#3a5a9a", px, 0.2 + 0.45 * s, pz + 0.31 * s, 0.22 * s, 0.12 * s, 0.01);
       for (let k = 0; k < 6; k++) letter(px + 0.12 * (rs() - 0.5), 0.2 + 0.95 * s + 0.03 * k, pz + 0.2 * lean + 0.1 * (rs() - 0.5), rs() * l, 1.4);
     };
-    // stacks on the counter: the tallest ones run all the way up and prop up the roof
-    stack(-1.32, 1.12, 0.6, 2.85, 0.16), stack(-0.62, 1.12, 0.66, 2.1, 0.2), stack(0.12, 1.12, 0.58, 3.2, 0.1), stack(0.85, 1.12, 0.64, 2.5, 0.18), stack(1.45, 1.12, 0.55, 1.6, 0.22);
+    // short stacks on the counter
+    stack(-1.32, 1.12, 0.62, 0.22, 0.02), stack(0.12, 1.12, 0.6, 0.3, 0.02), stack(1.4, 1.12, 0.6, 0.16, 0.02);
     // bundles tied with string at the front of the counter
     [-1.0, 0.5].forEach((px) => {
       for (let k = 0; k < 10; k++) letter(px, 1.127 + 0.0125 * k, 0.36, 0.02 * (k % 3), 0.01);
       G.box("#c8a060", px, 1.19, 0.36, 0.3, 0.13, 0.012), G.box("#c8a060", px, 1.19, 0.36, 0.012, 0.13, 0.17);
     });
-    // more towers on the crates, leaning every which way
-    [-1, 1].forEach((sx) => (stack(1.42 * sx, 1.0, -0.8, 2.4, 0.3), stack(1.42 * sx, 1.0, -0.1, 1.7, 0.26)));
-    // knee-high heaps on the deck and one spilling out onto the lawn
-    heap(-2.2, 0.2, 1.5, 0.85, 230, 0.95), heap(2.15, 0.2, 1.65, 0.7, 170, 0.8), heap(0, 0.2, -1.6, 1.0, 190, 0.9), heap(-2.9, 0, 2.9, 0.85, 130, 0.5);
-    // two swaying letter towers out on the lawn, taller than the kiosk itself
-    [
-      [-4.15, 0.6, 7.5],
-      [4.3, -0.7, 6.5],
-    ].forEach(([px, pz, h], k) => {
-      const tw = new THREE.Group(),
-        Q = goods();
-      tw.position.set(px, 0, pz), o.add(tw), stack(0, 0, 0, h, 0.35, Q), heap(0, 0, 0, 0.7, 60, 0.35, Q), Q.done(tw);
-      L.push((tt) => {
-        (tw.rotation.z = 0.035 * Math.sin(1.3 * tt + 2 * k)), (tw.rotation.x = 0.022 * Math.sin(0.9 * tt + k)), tw.updateMatrix();
-      });
-    });
+    // a stack on each crate
+    [-1, 1].forEach((sx) => stack(1.42 * sx, 1.0, -0.6, 0.18, 0.02));
+    // low scattered piles on the deck
+    heap(-2.2, 0.2, 1.5, 0.6, 70, 0.14), heap(2.15, 0.2, 1.65, 0.5, 50, 0.12), heap(0, 0.2, -1.6, 0.7, 70, 0.16);
     sack(-2.35, -1.75, 1, -0.15), sack(2.35, -1.85, 1.1, 0.12), sack(-1.85, -2.05, 0.8, 0.2);
     // sorting cubbies on the back wall, every slot stuffed
     const cw = 2.6,
@@ -11426,14 +12846,7 @@ const JGP = (() => {
     G.add(new THREE.ExtrudeGeometry(star, { depth: 0.06, bevelEnabled: !1 }), "#e8b830", G.m(0, 2.9, -2.33));
     for (let k = 0; k < 6; k++) G.add(T.sphere(0.06, 8, 6), "#f2c84a", G.m(0.55 * Math.cos((k / 6) * l + Math.PI / 2), 2.9 + 0.55 * Math.sin((k / 6) * l + Math.PI / 2), -2.27));
     // wanted posters (space aliens and their UFO) are textured planes, added below
-    // counter: cowboy hat, coffee mug, keys, a potted toadstool
-    G.add(T.cyl(0.3, 0.3, 0.02, 20), "#7a4a24", G.m(-1.0, 1.14, 0.6)), G.add(T.cyl(0.15, 0.17, 0.2, 16), "#7a4a24", G.m(-1.0, 1.25, 0.6)), G.add(T.cyl(0.172, 0.172, 0.04, 16), "#3a2414", G.m(-1.0, 1.19, 0.6));
-    G.add(T.cyl(0.06, 0.055, 0.13, 12), "#f4f0e6", G.m(0.2, 1.185, 0.7)), G.add(new THREE.TorusGeometry(0.035, 0.012, 6, 10), "#f4f0e6", G.m(0.27, 1.19, 0.7));
-    G.add(new THREE.TorusGeometry(0.06, 0.01, 6, 14), "#c8a040", G.m(0.6, 1.125, 0.5, Math.PI / 2, 0, 0));
-    [0.56, 0.64].forEach((px, k) => G.box("#c8a040", px + 0.04, 1.125, 0.42 - 0.04 * k, 0.03, 0.01, 0.12, 0, k));
-    // the potted toadstools on the desk: a tall red one and a small ochre one tucked beside it
-    G.add(T.cyl(0.13, 0.1, 0.2, 12), "#c0603a", G.m(-0.35, 1.22, 0.62)), G.add(T.cyl(0.12, 0.12, 0.01, 12), "#4a3424", G.m(-0.35, 1.32, 0.62));
-    shroom(-0.42, 1.32, 0.6, 0.85, "#c82a24", 0), shroom(-0.24, 1.32, 0.66, 0.42, "#b8862a", 0);
+    // (the desk itself is left clear: the sheriff, MUSHROOM, sits on top of it)
     // crates: a stack of papers and a lantern, a basket of mushrooms
     for (let k = 0; k < 8; k++) G.box(k % 2 ? "#f4ecd8" : "#fbf8f0", 1.42, 1.01 + 0.012 * k, -0.7, 0.3, 0.012, 0.22, 0, 0.1 * (k - 4));
     G.add(T.cyl(0.08, 0.1, 0.05, 10), "#2a2a2e", G.m(1.42, 1.03, -0.1)), G.add(T.cyl(0.07, 0.07, 0.18, 10), "#ffe08a", G.m(1.42, 1.15, -0.1)), G.add(T.cone(0.09, 0.08, 10), "#2a2a2e", G.m(1.42, 1.28, -0.1));
@@ -11891,6 +13304,53 @@ const JGP = (() => {
       at = (s, p = 0) => [x0 + ux * s - uz * p, z0 + uz * s + ux * p];
     const [x, z] = at(sFront + 4.7);
     return { ux, uz, D, sFront, at, x, z, ry: Math.atan2(-ux, -uz), tower: at(sFront + 1.5) };
+  })();
+  // THE KIOSKS: where each one stands (x, z) and its turn (ry, local +z faces the customer). The Post
+  // Office and the Sheriff's share the north-east corner, either side of its walk, Garden Supplies has
+  // the south-east and the General Store the north-west. Every kiosk has room for a worker behind its
+  // counter (spot) and a way out for them (exit): back past the crates, along the inside of a side
+  // wall and out through the gap between the counter and that wall. A worker in the ROWS takes
+  // "kiosk:<name>" as its position and its "via", and then leaves for the Garden event that way and
+  // comes back in the same way (as FORTIZMO does through the gap in the Juice Bar).
+  const KIOSK_AT = (() => {
+    const K = {},
+      diag = (dx, dz, side) => {
+        const r0 = GARDEN_R + 3.2,
+          x0 = (r0 * dx) / Math.SQRT2,
+          z0 = (r0 * dz) / Math.SQRT2,
+          cx = t.parkHalf * dx,
+          cz = dz > 0 ? t.parkSouth : -t.parkHalf,
+          len = Math.hypot(cx - x0, cz - z0),
+          ux = (cx - x0) / len,
+          uz = (cz - z0) / len,
+          x = cx - 18.17 * ux - side * uz,
+          z = cz - 18.17 * uz + side * ux;
+        return { x, z, ry: A(x, z) };
+      };
+    (K.post = diag(1, -1, 4.3)), (K.sheriff = diag(1, -1, -4.3)), (K.garden = diag(1, 1, 0)), (K.shop = { x: -24.75, z: -24.75, ry: A(-24.75, -24.75) });
+    const W = (k, lx, lz) => {
+      const c = Math.cos(k.ry),
+        sn = Math.sin(k.ry);
+      return [k.x + lx * c + lz * sn, k.z - lx * sn + lz * c];
+    };
+    return {
+      K,
+      spot: (name) => W(K[name], 0, -0.45),
+      // on top of the desk, and the way down off its front
+      desk: (name) => W(K[name], 0, 0.72),
+      front: (name) => [[0, 2.0], [0, 3.4]].map(([lx, lz]) => W(K[name], lx, lz)),
+      exit: (name, sd = 1) => [[0, -1.75], [2.4 * sd, -1.75], [2.4 * sd, 1.85], [2.4 * sd, 3.4]].map(([lx, lz]) => W(K[name], lx, lz)),
+      // the walls, counter and crates of the shared kiosk frame, and the box over all of it
+      hull: [-3.15, -2.62, 3.15, 2.45],
+      parts: [
+        [-3.15, -2.62, 3.15, -2.28],
+        [2.86, -2.62, 3.15, 2.3],
+        [-3.15, -2.62, -2.86, 2.3],
+        [-1.98, 0.48, 1.98, 1.2],
+        [1.05, -1.2, 1.8, 0.44],
+        [-1.8, -1.2, -1.05, 0.44],
+      ],
+    };
   })();
   // THE TRAVELER SAVES THE ORIGINATOR: the stained glass window of the cathedral in Greeblis City,
   // redrawn at twice the resolution with more detail (no words, and no face on the Traveler). The winged Traveler comes down a beam of light
@@ -12350,12 +13810,12 @@ const JGP = (() => {
       (ent.finaleSlot = spots[k]), (ent.plantNext = now + rr(2, 5)), (ent.watching = !1);
     });
   }
-  // FORTIZMO and the shopkeeper LARRY come into the garden but don't plant. Three line-up test
-  // models are away for the whole event: BACKPACKA (the event's own BACKPACKA flies in), LARRY (the
-  // shopkeeper LARRY leaves the General Store for the event instead) and NEXTESSA (she is not at
-  // the event; she only comes through the portal for the separate pizza delivery)
+  // FORTIZMO and the shopkeeper SHOPSTAR come into the garden but don't plant (LARRY, in the line-up,
+  // plants like everyone else). Two line-up test models are away for the whole event: BACKPACKA (the
+  // event's own BACKPACKA flies in) and NEXTESSA (she is not at the event; she only comes through
+  // the portal for the separate pizza delivery)
   const NO_PLANT = ["frog", "t_backpacka"],
-    NOT_AT_EVENT = ["t_backpacka", "t_larry", "t_nextessa"],
+    NOT_AT_EVENT = ["t_backpacka", "t_nextessa"],
     noPlant = (ent) => !!ent && NO_PLANT.includes(ent.id),
     eventActor = (ent) => !!ent && NOT_AT_EVENT.includes(ent.id);
   function plantTick(ent, now) {
@@ -12941,7 +14401,7 @@ const JGP = (() => {
       const en = It.all.find((q) => "t_backpacka" === q.id);
       en && (en.group.visible = vis);
     };
-    // the line-up's test models of BACKPACKA, LARRY and NEXTESSA are away for the whole event
+    // the line-up's test models of BACKPACKA and NEXTESSA are away for the whole event
     let awayNow = !1;
     L.push(() => {
       if (me.active === awayNow) return;
@@ -13007,7 +14467,7 @@ const JGP = (() => {
   // styles: 0 swap, 1 volley, 2 boomerang, 3 parade, 4 juggle, 5 orbit dance, 6 bounce, 7 bubble,
   // 8 zip, 9 confetti, 10 serenade, 11 tag
   const VIG = (() => {
-    const NAMES = { HN: "HENNRICK", MT: "MALTOE", MU: "MUSHROOM", AN: "ANOMALEE", KD: "KING DINO", GW: "GOWARD", SS: "SPARKSTAR", ZL: "ZOLLOD", SM: "SOMLET", FZ: "FORTIZMO", ET: "ETCHER", GT: "GEMTOE", GL: "GLYPH", LA: "LARRY", NX: "NEXTESSA", BP: "BACKPACKA" },
+    const NAMES = { HN: "HENNRICK", MT: "SPARKAKUS", MU: "MUSHROOM", AN: "ANOMALEE", KD: "KING DINO", GW: "GOWARD", SS: "SHOPSTAR", ZL: "ZOLLOD", SM: "SOMLET", FZ: "FORTIZMO", ET: "ETCHER", GT: "GEMTOE", GL: "GLYPH", LA: "LARRY", NX: "NEXTESSA", BP: "BACKPACKA" },
       PAIRS = [
       ["HN", "MT", 8, "SCAN COMPLETE. You are 41% mushroom.", "And 100% the law. Mind the sidewalk!"],
       ["HN", "MU", 7, "Your spore count is... adorable.", "P-please don't put me in a spreadsheet."],
@@ -13511,7 +14971,7 @@ const JGP = (() => {
   // an 18 m counter striped in fruit colours (with a gap and a raised flap where the bartender gets
   // in and out), a long row of stools, a back bar of shelves stacked with juice bottles and jars,
   // juice dispensers and blenders, the sign on two tall posts at the back with giant fruit on top,
-  // fruit bunting, a patio of cafe tables, a chalkboard menu, and fruit everywhere: pyramids and
+  // fruit bunting, a patio of cafe tables, and fruit everywhere: pyramids and
   // bowls on the counter, pineapples, bananas hanging from the posts, watermelons, crates and
   // coconuts at both ends. Built in local space: +x faces the garden, the counter runs along z and
   // FORTIZMO tends it from (-1.2, 0, 0), behind the counter.
@@ -13831,7 +15291,7 @@ const JGP = (() => {
     // a crate of oranges and a watermelon by the bartender's gap
     crate(-1.4, 0.04, GAP[1] + 1.2, 0, orange), watermelon(-1.6, 0.04, -1.6, 0.4);
 
-    // ---- the patio: cafe tables with chairs, and the chalkboard menu ----
+    // ---- the patio: cafe tables with chairs ----
     [
       [4.7, -7.4],
       [4.4, -4.0],
@@ -13872,34 +15332,6 @@ const JGP = (() => {
       }
       orange(px + 0.2, 0.6, pz - 0.1), orange(px - 0.15, 0.6, pz + 0.12);
     });
-    const menuTex = b(
-      256,
-      384,
-      (c) => {
-        (c.fillStyle = "#8a5a32"), c.fillRect(0, 0, 256, 384), (c.fillStyle = "#24322c"), c.fillRect(14, 14, 228, 356);
-        (c.textAlign = "center"), (c.fillStyle = "#f8f4e8"), (c.font = "bold 34px 'Trebuchet MS', Verdana, sans-serif"), c.fillText("FRESH", 128, 62), c.fillText("JUICE", 128, 100);
-        (c.font = "bold 24px 'Trebuchet MS', Verdana, sans-serif"), (c.textAlign = "left");
-        [
-          ["Orange", "#ffb03a"],
-          ["Watermelon", "#ff7a8a"],
-          ["Pineapple", "#ffe05a"],
-          ["Berry Blast", "#c88aff"],
-          ["Green Machine", "#9ae85a"],
-          ["Lemonade", "#fff07a"],
-        ].forEach(([t0, c0], k) => ((c.fillStyle = c0), c.fillText("* " + t0, 30, 152 + 36 * k)));
-      },
-      { smooth: !0 },
-    );
-    {
-      const mg = new THREE.Group();
-      mg.position.set(7.0, 0, -1.6), (mg.rotation.y = Math.PI / 2 - 0.35), o.add(mg);
-      const face = x.world(16777215, { map: menuTex });
-      [-1, 1].forEach((sd) => {
-        const pg = new THREE.Group();
-        pg.position.set(0, 0.96, 0), (pg.rotation.x = -0.2 * sd), mg.add(pg);
-        R(T.box(0.62, 0.92, 0.04), dark, pg, [0, -0.47, 0.02 * sd]), R(T.plane(0.56, 0.84), face, pg, [0, -0.47, 0.045 * sd], [0, sd > 0 ? 0 : Math.PI, 0]);
-      });
-    }
     G.done(o);
   }
 
@@ -14599,7 +16031,8 @@ const JGP = (() => {
         h = 8.5,
         wh = "#f6f4ee",
         roof = "#4a4a52";
-      B.box("stone", "#a89c8a", 0, 0.4, -D / 2, w + 0.4, 0.8, D + 0.4).box("siding", wh, 0, 0.8 + h / 2, -D / 2, w, h, D);
+      // the walls start just inside the stone base (a floor flush with its top flickered against it)
+      B.box("stone", "#a89c8a", 0, 0.4, -D / 2, w + 0.4, 0.8, D + 0.4).box("siding", wh, 0, 0.75 + h / 2 + 0.025, -D / 2, w, h + 0.05, D);
       B.geo("shingle", GABLE.slopes, roof, 0, 0.8 + h, -D / 2, D + 0.8, 5.5, w + 1.2, 0, Math.PI / 2, 0).geo("siding", GABLE.ends, wh, 0, 0.8 + h, -D / 2, D, 5.5, w, 0, Math.PI / 2, 0);
       const glassC = ["#7a2a3a", "#2a3a7a", "#7a6a2a", "#2a5a4a"];
       [-1, 1].forEach((sx) => {
@@ -14610,7 +16043,7 @@ const JGP = (() => {
         });
       });
       // steeple: tower, louvred belfry, cornice, tall spire, gilded finial
-      B.box("siding", wh, 0, 0.8 + 6.4, 1.0, 4.4, 12.8, 4.4);
+      B.box("siding", wh, 0, 6.8, 1.0, 4.4, 13.6, 4.4);
       B.box("plain", "#8a1e24", 0, 2.3, 3.24, 2.0, 3.0, 0.1).box("plain", wh, 0, 2.4, 3.22, 2.4, 3.3, 0.06).box("plain", "#2a2a2e", 0, 2.3, 3.3, 0.04, 3.0, 0.02);
       // over the door, the tall lancet of THE TRAVELER SAVES THE ORIGINATOR (from the cathedral in
       // Greeblis City) in a carved stone frame with a sill; the glass glows, brighter at night
@@ -15543,22 +16976,21 @@ const JGP = (() => {
     // ---- kiosks: the Post Office and the Sheriff's share the north-east corner (either side of its
     // walk), Garden Supplies has the south-east; the General Store is in the north-west and the
     // church in the south-west ----
-    [
-      [1, -1, JGP_K.post, 4.3],
-      [1, -1, JGP_K.sheriff, -4.3],
-      [1, 1, JGP_K.garden, 0],
-    ].forEach(([dx, dz, build, side]) => {
-      const d = DIAG(dx, dz),
-        X = d.cx - 18.17 * d.ux - side * d.uz,
-        Z = d.cz - 18.17 * d.uz + side * d.ux;
-      const k0 = new THREE.Group();
-      k0.position.set(X, 0, Z), (k0.rotation.y = A(X, Z)), (k0.userData.keepInFinale = !0), C.add(k0), build(k0), H(k0), E.add(X, Z, 4.4, "scenery"), keepAt.push([X, Z]);
+    ["post", "sheriff", "garden"].forEach((name) => {
+      const { x: X, z: Z, ry } = KIOSK_AT.K[name],
+        k0 = new THREE.Group();
+      k0.position.set(X, 0, Z), (k0.rotation.y = ry), (k0.userData.keepInFinale = !0), C.add(k0), JGP_K[name](k0);
+      H(k0), E.add(X, Z, 4.4, "scenery"), keepAt.push([X, Z]);
+      F.addBuilding(X, Z, ry, KIOSK_AT.hull, KIOSK_AT.parts, name);
     });
+    F.addBuilding(KIOSK_AT.K.shop.x, KIOSK_AT.K.shop.z, KIOSK_AT.K.shop.ry, KIOSK_AT.hull, KIOSK_AT.parts, "shop");
 
     // ---- the church in the south-west corner with the Traveler window over its door ------------
     {
       const CA = CHURCH_AT;
       CHURCH(CA.x, CA.z, CA.ry, CA.D);
+      // solid: the nave, the tower and the steps (creatures go round one box over all three)
+      F.addBuilding(CA.x, CA.z, CA.ry, [-6.2, -CA.D - 0.2, 6.2, 4.8], [[-6.2, -CA.D - 0.2, 6.2, 0.2], [-2.2, -1.2, 2.2, 3.5], [-2.05, 3.3, 2.05, 4.8]], "church");
       // no pickups or lawn tufts in its footprint
       for (let s = CA.sFront; s <= CA.sFront + CA.D + 5; s += 3) {
         const [ex, ez] = CA.at(s);
@@ -15575,6 +17007,8 @@ const JGP = (() => {
       const JX = -28,
         k0 = new THREE.Group();
       k0.position.set(JX, 0, 0), (k0.userData.keepInFinale = !0), C.add(k0), JGP_K.juice(k0), H(k0);
+      // solid: the counter either side of its gap and the back bar; the bartender works in between
+      F.addBuilding(JX, 0, 0, [-3.5, -9.45, 0.78, 9.45], [[-0.32, -9.45, 0.78, 1.0], [-0.32, 2.4, 0.78, 9.45], [-3.5, -9.2, -2.46, 9.2]], "juice");
       // no lawn tufts through its floors, and no pickups under it
       for (let zz = -10.5; zz <= 10.6; zz += 2.1) keepAt.push([JX - 2, zz], [JX + 1.5, zz], [JX + 5, zz]), E.add(JX + 1, zz, 3, "scenery");
     }
@@ -16667,11 +18101,11 @@ if (
                 (e.userData.keepInFinale = !0), t.add(e), e.position.set(0, 0.2, -0.45), e.scale.setScalar(0.85);
                 const o = new THREE.Group();
                 e.add(o), Se();
-                const a = so.born_larry(o, {}),
+                const a = so.born_shopstar(o, {}),
                   n = new THREE.Group(),
                   r = { moving: !1 };
                 n.position.set(0, a.crownY, 0.02), n.rotation.set(-0.08, 0, 0.1), (a.head || o).add(n);
-                // (no hat: LARRY wears his shopkeeper's apron instead; the empty group keeps his greeting nod)
+                // (no hat: SHOPSTAR wears his shopkeeper's apron instead; the empty group keeps his greeting nod)
                 t.updateMatrixWorld(!0);
                 const l = t.rotation.y,
                   h = new c();

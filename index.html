@@ -59,7 +59,7 @@ const t = {
     debug: !(!window.__gbGuard || !window.__gbGuard.DEBUG),
     clearingR: 36.5, // pickups, wanderers and line-ups stay inside this radius
     parkHalf: 37.6, // the iron fence around the town square (east, west and north); the player stays inside it
-    parkSouth: 49.6, // the square runs longer to the south so the whole line-up fits along the west side
+    parkSouth: 49.6, // the square runs longer to the south so the whole line-up fits along the east side
     chapel: { angle: Math.PI / 4, dist: 70 },
     spreadR: 13,
     personalSpace: 7,
@@ -6957,7 +6957,12 @@ const le = (() => {
               t.busy ||
                 t.gcNavHome ||
                 (function (t, e) {
-                  Be(t, t.home.x, t.home.z, e), (t.gcNavHome = !0);
+                  const via = t.def && t.def.via;
+                  // back behind a counter: to the front of its gap, through it, then home
+                  via
+                    ? (Be(t, via[via.length - 1][0], via[via.length - 1][1], e), t.gcNav.push(...via.slice(0, -1).reverse().map((w) => [w[0], w[1]]), [t.home.x, t.home.z]))
+                    : Be(t, t.home.x, t.home.z, e),
+                    (t.gcNavHome = !0);
                 })(t, a);
             });
         }
@@ -7003,7 +7008,7 @@ const le = (() => {
             (t) => !("companion" !== t.kind && "npc" !== t.kind && "creature" !== t.kind) && !JGP.eventActor(t),
           )),
           s.forEach((t) => {
-            t.busy && It.release(t, t.busy), (t.busy = e), (t.group.visible = !0);
+            t.busy && It.release(t, t.busy), (t.busy = e), (t.group.visible = !0), (t.viaK = 0);
           });
         const o = Gt(s.concat([null]), gcSinger.angle);
         st.join(o.larry),
@@ -7097,6 +7102,12 @@ const le = (() => {
           let s = a.x + r * Math.sin(0.5 * t + o.ph),
             i = a.z + r * Math.cos(0.4 * t + 1.3 * o.ph);
           const l = o.group.position;
+          // a creature working behind a counter (FORTIZMO at the Juice Bar) leaves by its gap first
+          const via = o.def && o.def.via;
+          if (via && (o.viaK || 0) < via.length) {
+            const w = via[o.viaK || 0];
+            (s = w[0]), (i = w[1]), Math.hypot(w[0] - l.x, w[1] - l.z) < 0.7 && (o.viaK = (o.viaK || 0) + 1);
+          }
           {
             const t = bt.live ? -1 : JGP.GARDEN_R + 0.4 + 0.6 * (o.bodyR || 1),
               e = l.x,
@@ -9142,30 +9153,35 @@ const JGP = (() => {
   // [id, name, builder, def fields, [x, z]]. Ids that already exist in the engine's defs keep their
   // engine role (companions, battles, quests); the rest are added as stationary NPCs.
   const ROWS = {
-    // everyone in one line-up along the west side of the square, facing in: the merged creatures,
-    // FORTIZMO (Greeblis City), the Greeblis Park NPCs, then the test models of the shopkeeper and
-    // the pizza courier
+    // everyone in one line-up along the east side of the square behind the duck pond, facing in:
+    // the merged creatures, the Greeblis Park NPCs, then the test models of the shopkeeper, the
+    // pizza courier and BACKPACKA
     lineup: {
-      face: Math.PI / 2,
+      face: -Math.PI / 2,
       list: [
-        ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [-34, -27.78]],
-        ["orbiter", "MALTOE", "born_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "talkR": 4.2}, [-34, -22.14]],
-        ["drifter", "MUSHROOM", "born_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [-34, -16.85]],
-        ["blinker", "ANOMALEE", "anomaleePeg", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2}, [-34, -11.91]],
-        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [-34, -7.67]],
-        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [-34, -2.04]],
-        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#2a9ccf", "bodyR": 1.1}, [-34, 3.12]],
-        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [-34, 7.08]],
-        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [-34, 11.27]],
-        ["frog", "FORTIZMO", "fortizmoPick", {"color": "#e8742a", "bodyR": 0.95, "modelScale": 0.78, "talkR": 4.2}, [-34, 16.17]],
-        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [-34, 21.11]],
-        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [-34, 26.73]],
-        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [-34, 31.99]],
-        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [-34, 36.24]],
-        ["t_nextessa", "NEXTESSA", "born_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [-34, 40.43]],
+        ["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [34, -27.78]],
+        ["orbiter", "MALTOE", "born_maltoe", {"color": "#6fa33a", "bodyR": 0.88, "talkR": 4.2}, [34, -22.14]],
+        ["drifter", "MUSHROOM", "born_mushroom", {"color": "#e8862a", "bodyR": 0.8, "talkR": 4.2}, [34, -16.85]],
+        ["blinker", "ANOMALEE", "anomaleePeg", {"color": "#2fd4e6", "bodyR": 0.95, "modelScale": 0.95, "talkR": 4.2}, [34, -11.91]],
+        ["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1}, [34, -7.67]],
+        ["gorbo", "GOWARD", "born_goward", {"color": "#30b4e4", "bodyR": 1.2}, [34, -2.04]],
+        ["sparky", "SPARKSTAR", "born_sparkstar", {"color": "#2a9ccf", "bodyR": 1.1}, [34, 3.12]],
+        ["cutebex", "ZOLLOD", "born_zollod", {"bodyR": 1.1}, [34, 7.08]],
+        ["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [34, 11.27]],
+        ["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [34, 16.17]],
+        ["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [34, 21.79]],
+        ["p_glyph", "GLYPH", "born_glyph", {"color": "#e88a8a", "bodyR": 1.0, "talkR": 3.6}, [34, 27.05]],
+        ["t_larry", "LARRY", "born_larry", {"color": "#2ac8b0", "bodyR": 0.9}, [34, 31.30]],
+        ["t_nextessa", "NEXTESSA", "born_nextessa", {"color": "#f2903a", "bodyR": 0.9}, [34, 35.49]],
         // for testing: the garden event's BACKPACKA
-        ["t_backpacka", "BACKPACKA", "born_backpacka", {"color": "#d48e64", "bodyR": 1.4}, [-34, 45.6]],
+        ["t_backpacka", "BACKPACKA", "born_backpacka", {"color": "#d48e64", "bodyR": 1.4}, [34, 40.66]],
       ],
+    },
+    // FORTIZMO tends the Juice Bar on the west side of the square. "via" is her way out through the
+    // gap in the counter (from behind the bar to the front), so she never walks through the bar
+    juicebar: {
+      face: Math.PI / 2,
+      list: [["frog", "FORTIZMO", "fortizmoPick", {"color": "#e8742a", "bodyR": 0.95, "modelScale": 0.78, "talkR": 4.2, "via": [[-29.2, 1.7], [-25.4, 1.7]]}, [-29.2, 0]]],
     },
   };
 
@@ -11965,7 +11981,6 @@ const JGP = (() => {
     p_gemtoe: ["scatter", 2.4, 1],
     p_glyph: ["dig", 2.3, 1],
     t_larry: ["scatter", 1.7, 0.9],
-    t_nextessa: ["pat", 2.6, 0.8],
     gorbo: ["pat", 1.6, 1.1],
     sparky: ["dig", 2.8, 1, 0.1],
     mont: ["dig", 1.8, 1],
@@ -12068,11 +12083,14 @@ const JGP = (() => {
       (ent.finaleSlot = spots[k]), (ent.plantNext = now + rr(2, 5)), (ent.watching = !1);
     });
   }
-  // LARRY, NEXTESSA and FORTIZMO come into the garden but don't plant; the line-up's BACKPACKA is
-  // the event's own actor and stays out of the gathering
-  const NO_PLANT = ["frog", "t_larry", "t_nextessa", "t_backpacka"],
+  // FORTIZMO and the shopkeeper LARRY come into the garden but don't plant. Three line-up test
+  // models are away for the whole event: BACKPACKA (the event's own BACKPACKA flies in), LARRY (the
+  // shopkeeper LARRY leaves the General Store for the event instead) and NEXTESSA (she is not at
+  // the event; she only comes through the portal for the separate pizza delivery)
+  const NO_PLANT = ["frog", "t_backpacka"],
+    NOT_AT_EVENT = ["t_backpacka", "t_larry", "t_nextessa"],
     noPlant = (ent) => !!ent && NO_PLANT.includes(ent.id),
-    eventActor = (ent) => !!ent && "t_backpacka" === ent.id;
+    eventActor = (ent) => !!ent && NOT_AT_EVENT.includes(ent.id);
   function plantTick(ent, now) {
     if (ent.moving || now < (ent.plantNext || 0) || ent.hornWant || ent.watching || noPlant(ent)) return;
     ent.plantNext = now + rr(5, 9);
@@ -12602,8 +12620,15 @@ const JGP = (() => {
       const en = It.all.find((q) => "t_backpacka" === q.id);
       en && (en.group.visible = vis);
     };
+    // the line-up's test models of BACKPACKA, LARRY and NEXTESSA are away for the whole event
+    let awayNow = !1;
+    L.push(() => {
+      if (me.active === awayNow) return;
+      awayNow = me.active;
+      NOT_AT_EVENT.forEach((id) => It.byId[id] && (It.byId[id].group.visible = !awayNow));
+    });
     function hideAll() {
-      lineupBP(!0), It.all.forEach((en) => (en.watching = !1));
+      lineupBP(!me.active), It.all.forEach((en) => (en.watching = !1));
       if (!made) return;
       const P = made;
       (P.root.visible = !1), P.ripples.forEach((m) => (m.visible = !1)), P.jets.forEach((J) => (J.m.visible = !1)), (P.rainbow.visible = !1), P.dlife.fill(0), P.dpos.fill(-200), (P.dgeo.attributes.position.needsUpdate = !0);
@@ -13158,7 +13183,403 @@ const JGP = (() => {
   })();
   const GAZEBO = [5, -31];
   let UFO_FLY = null; // set by the town: sends the UFO over right away (for testing)
-  const JGP_K = { post: (g) => buildPostOffice(g), garden: (g) => buildGardenSupplies(g), sheriff: (g) => buildSheriff(g) };
+  // THE JUICE BAR: a long open-air bar on the west side of the square, facing the garden. No roof:
+  // an 18 m counter striped in fruit colours (with a gap and a raised flap where the bartender gets
+  // in and out), a long row of stools, a back bar of shelves stacked with juice bottles and jars,
+  // juice dispensers and blenders, the sign on two tall posts at the back with giant fruit on top,
+  // fruit bunting, a patio of cafe tables, a chalkboard menu, and fruit everywhere: pyramids and
+  // bowls on the counter, pineapples, bananas hanging from the posts, watermelons, crates and
+  // coconuts at both ends. Built in local space: +x faces the garden, the counter runs along z and
+  // FORTIZMO tends it from (-1.2, 0, 0), behind the counter.
+  function buildJuiceBar(o) {
+    const G = goods(),
+      rs = srand(919),
+      LEN = 9, // half the counter's length
+      GAP = [1.0, 2.4], // the gap in the counter (z) where the bartender gets in and out
+      FX = 0.55, // the counter's front face
+      TOP = 1.1, // counter height
+      m = G.m,
+      SPH = T.sphere(1, 8, 6),
+      SPL = T.sphere(1, 6, 4),
+      SPB = T.sphere(1, 12, 9),
+      CONE = T.cone(1, 1, 6),
+      CYL = T.cyl(1, 1, 1, 8),
+      CYL6 = T.cyl(1, 1, 1, 6),
+      BOWL = cachedGeo("jbowl", () => new THREE.SphereGeometry(1, 12, 4, 0, l, 0, Math.PI / 2)),
+      tint = (c, k = 0.1) => {
+        const cc = new THREE.Color(c);
+        return cc.offsetHSL(0.015 * (rs() - 0.5), 0, k * (rs() - 0.5)), "#" + cc.getHexString();
+      },
+      pick = (a) => a[(rs() * a.length) | 0];
+    const JUICE = ["#ff8a12", "#f8d838", "#e8304a", "#8ad83a", "#9a3ad0", "#ff6a90", "#ffb02a"],
+      FRUITC = ["#ff8a1a", "#ffd23a", "#8ad83a", "#ff5a7a", "#9a5ae0"];
+    const wood = KIT.surf("wood", "#d0a46c", { rep: 3, bump: 0.03, shine: 16 }),
+      dark = KIT.surf("wood", "#7a5232", { rep: 2, bump: 0.03, shine: 10 }),
+      deck = KIT.surf("wood", "#b08a5c", { rep: 6, bump: 0.03, shine: 10 }),
+      pale = KIT.surf("wood", "#ead8b0", { rep: 3, bump: 0.02, shine: 10 }),
+      chrome = x.clay("#d8dce0", { shininess: 110, specular: 13421772 }),
+      white = x.clay("#f8f4ea", { shininess: 30 });
+
+    // ---- fruit (all merged into the one vertex-coloured mesh) ----
+    // each sits on the surface at height py
+    const orange = (px, py, pz, r = 0.05, lo) => {
+        G.add(lo ? SPL : SPH, tint("#f28a1a"), m(px, py + r, pz, 0, 0, 0, r, 0.96 * r, r));
+      },
+      apple = (px, py, pz, r = 0.048, lo) => {
+        G.add(lo ? SPL : SPH, tint(pick(["#d8202a", "#c81a24", "#8ac83a", "#e8402a"])), m(px, py + 0.9 * r, pz, 0, 0, 0, r, 0.9 * r, r));
+        lo || G.add(CYL6, "#5a3a1a", m(px, py + 1.9 * r, pz, 0.2, 0, 0.2, 0.006, 0.4 * r, 0.006));
+      },
+      lemon = (px, py, pz, r = 0.045, c = "#f4d82a", lo) => G.add(lo ? SPL : SPH, tint(c), m(px, py + 0.85 * r, pz, 0, rs() * l, 0, 1.35 * r, 0.85 * r, 0.85 * r)),
+      lime = (px, py, pz, r, lo) => lemon(px, py, pz, 0.036, "#6ac82a", lo),
+      coconut = (px, py, pz, r = 0.08) => {
+        G.add(SPH, tint("#6a4a2a"), m(px, py + r, pz, rs(), rs(), 0, r, 0.95 * r, r));
+        for (let k = 0; k < 3; k++) G.add(SPL, "#2a1a10", m(px + 0.3 * r * Math.cos(2.1 * k), py + 1.92 * r, pz + 0.3 * r * Math.sin(2.1 * k), 0, 0, 0, 0.12 * r, 0.06 * r, 0.12 * r));
+      },
+      // a grocer's pyramid of round fruit, levels high
+      pyramid = (px, py, pz, fn, r, levels) => {
+        for (let L0 = 0; L0 < levels; L0++) {
+          const n = levels - L0;
+          for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) fn(px + (i - (n - 1) / 2) * 2 * r, py + L0 * 1.41 * r, pz + (j - (n - 1) / 2) * 2 * r, r);
+        }
+      },
+      // a heaped mound of mixed fruit inside radius R
+      heap = (px, py, pz, R, n) => {
+        for (let k = 0; k < n; k++) {
+          const a = 2.4 * k,
+            rr2 = R * Math.sqrt((k + 0.5) / n),
+            y = py + 0.5 * (R - rr2),
+            q = rs();
+          (q < 0.35 ? orange : q < 0.6 ? apple : q < 0.8 ? lemon : lime)(px + rr2 * Math.cos(a), y, pz + rr2 * Math.sin(a));
+        }
+      },
+      bowl = (px, py, pz, R = 0.26, col = "#f8f4ea") => {
+        G.add(BOWL, col, m(px, py + 0.11, pz, Math.PI, 0, 0, R, 0.11, R)), G.add(T.torus(1, 0.04, 3, 12), col, m(px, py + 0.11, pz, Math.PI / 2, 0, 0, R, R, 0.3 * R));
+        G.add(CYL, "#c8781e", m(px, py + 0.07, pz, 0, 0, 0, 0.92 * R, 0.01, 0.92 * R)), heap(px, py + 0.05, pz, 0.8 * R, 7);
+      },
+      pineapple = (px, py, pz, s = 1) => {
+        G.add(SPH, tint("#d09a2a"), m(px, py + 0.17 * s, pz, 0, 0, 0, 0.11 * s, 0.17 * s, 0.11 * s));
+        [0.08, 0.15, 0.22, 0.28].forEach((y, k) => G.add(T.torus(1, 0.1, 3, 10), "#8a5a1a", m(px, py + y * s, pz, Math.PI / 2, 0, 0.4 * k, (0.075 + 0.04 * Math.sin((y / 0.34) * Math.PI)) * s, (0.075 + 0.04 * Math.sin((y / 0.34) * Math.PI)) * s, 0.012 * s)));
+        for (let k = 0; k < 9; k++) {
+          const a = 2.4 * k,
+            tilt = k < 4 ? 0.25 : 0.6;
+          G.add(CONE, tint(k % 2 ? "#3f8a2a" : "#5aa83a"), m(px + 0.02 * s * Math.cos(a), py + (0.4 + (k < 4 ? 0.08 : 0)) * s, pz + 0.02 * s * Math.sin(a), tilt * Math.sin(a), 0, -tilt * Math.cos(a), 0.025 * s, (k < 4 ? 0.22 : 0.16) * s, 0.012 * s));
+        }
+      },
+      // a bunch of bananas: five curving fingers from one stem. The bunch is turned by ry and hangs
+      // stem-up when hang is set
+      bananas = (px, py, pz, ry, hang = !1) => {
+        const cs = Math.cos(ry),
+          sn = Math.sin(ry),
+          P0 = (a, u, v) => [px + cs * a + sn * v, py + (hang ? -u : u), pz - sn * a + cs * v];
+        for (let k = 0; k < 5; k++) {
+          const v = 0.045 * (k - 2),
+            lift = 0.015 * Math.abs(k - 2),
+            pts = [P0(0, 0.02 + lift, v * 0.3), P0(0.07, 0.03 + lift, v * 0.8), P0(0.15, 0.06 + lift, v), P0(0.21, 0.12 + lift, v * 1.1)];
+          G.add(ao(pts, 0.026, 0.018, 6, 5), tint("#f2d23a", 0.08), m(0, 0, 0));
+          G.add(SPL, "#4a3a1a", m(pts[3][0], pts[3][1], pts[3][2], 0, 0, 0, 0.012, 0.012, 0.012));
+        }
+        G.add(CYL6, "#6a7a2a", m(px, py + (hang ? 0.05 : 0.04), pz, 0, 0, 0, 0.018, 0.1, 0.018));
+      },
+      watermelon = (px, py, pz, ry, s = 1) => {
+        const mm = m(px, py + 0.22 * s, pz, 0, ry, 0);
+        G.add(SPB, tint("#2f6a2a", 0.06), mm.clone().multiply(S(0, 0, 0, 0, 0, 0, 0.3 * s, 0.22 * s, 0.22 * s)));
+        for (let k = 0; k < 6; k++) G.add(SPH, "#6aa83a", mm.clone().multiply(S(0, 0, 0, (k * Math.PI) / 6, 0, 0, 0.306 * s, 0.231 * s, 0.035 * s)));
+      },
+      melonHalf = (px, py, pz, ry) => {
+        G.add(BOWL, "#2f6a2a", m(px, py + 0.16, pz, Math.PI, ry, 0, 0.22, 0.16, 0.22));
+        G.add(CYL, "#e8303a", m(px, py + 0.16, pz, 0, 0, 0, 0.2, 0.012, 0.2)), G.add(T.torus(1, 0.06, 4, 20), "#d8f0b0", m(px, py + 0.16, pz, Math.PI / 2, 0, 0, 0.205, 0.205, 0.2));
+        for (let k = 0; k < 9; k++) G.add(SPL, "#1a1a1a", m(px + 0.12 * Math.cos(2.4 * k) * Math.sqrt((k + 1) / 9), py + 0.168, pz + 0.12 * Math.sin(2.4 * k) * Math.sqrt((k + 1) / 9), 0, 2.4 * k, 0, 0.012, 0.004, 0.007));
+      },
+      grapes = (px, py, pz, c = "#6a2a8a") => {
+        for (let k = 0; k < 14; k++) {
+          const lv = k < 6 ? 0 : k < 10 ? 1 : k < 13 ? 2 : 3,
+            nInL = [6, 4, 3, 1][lv],
+            a = (k * l) / nInL + lv,
+            rr2 = [0.05, 0.038, 0.024, 0][lv];
+          G.add(SPL, tint(c, 0.12), m(px + rr2 * Math.cos(a), py + 0.12 - 0.03 * lv, pz + rr2 * Math.sin(a), 0, 0, 0, 0.022, 0.024, 0.022));
+        }
+        G.add(CYL6, "#5a4a2a", m(px, py + 0.15, pz, 0, 0, 0.3, 0.006, 0.05, 0.006));
+      },
+      strawberries = (px, py, pz) => {
+        G.add(CYL, "#b88a4a", m(px, py + 0.04, pz, 0, 0, 0, 0.13, 0.08, 0.13));
+        for (let k = 0; k < 9; k++) {
+          const a = 2.4 * k,
+            rr2 = 0.09 * Math.sqrt((k + 0.5) / 9);
+          G.add(CONE, tint("#e8202a"), m(px + rr2 * Math.cos(a), py + 0.1, pz + rr2 * Math.sin(a), Math.PI + 0.3 * Math.sin(a), 0, 0.3 * Math.cos(a), 0.024, 0.045, 0.024));
+          G.add(CONE, "#3f8a2a", m(px + rr2 * Math.cos(a), py + 0.125, pz + rr2 * Math.sin(a), 0, a, 0, 0.022, 0.008, 0.022));
+        }
+      },
+      // a wooden fruit crate, filled to the top
+      crate = (px, py, pz, ry, fill) => {
+        const mm = m(px, py, pz, 0, ry, 0),
+          at = (x0, y0, z0, sx, sy, sz) => mm.clone().multiply(S(x0, y0, z0, 0, 0, 0, sx, sy, sz));
+        G.add(G.UBX, tint("#c8a070", 0.06), at(0, 0.15, 0, 0.6, 0.3, 0.42));
+        [0.06, 0.24].forEach((y) => [-1, 1].forEach((sd) => G.add(G.UBX, "#8a6a40", at(0, y, 0.212 * sd, 0.61, 0.035, 0.01))));
+        for (let i = 0; i < 5; i++)
+          for (let j = 0; j < 3; j++) {
+            const lx = -0.22 + 0.11 * i,
+              lz = -0.12 + 0.12 * j,
+              wx = px + Math.cos(ry) * lx + Math.sin(ry) * lz,
+              wz = pz - Math.sin(ry) * lx + Math.cos(ry) * lz;
+            fill(wx, py + 0.26, wz, 0.052, !0);
+          }
+      },
+      // a juice cup on the counter: tapered, with a striped straw and a slice on the rim
+      cup = (px, py, pz, c) => {
+        G.add(CYL, c, m(px, py + 0.08, pz, 0, 0, 0, 0.05, 0.16, 0.05)), G.add(T.torus(1, 0.1, 4, 14), "#f8f8f8", m(px, py + 0.16, pz, Math.PI / 2, 0, 0, 0.05, 0.05, 0.05));
+        G.add(CYL6, pick(["#e8303a", "#2a9ae8", "#3ac85a"]), m(px + 0.015, py + 0.24, pz, 0, 0, 0.25, 0.007, 0.22, 0.007));
+        G.add(CYL, pick(["#ff9a1a", "#f4d82a", "#8ad83a"]), m(px - 0.05, py + 0.16, pz, 0, 0, Math.PI / 2, 0.035, 0.008, 0.035));
+      };
+
+    // ---- floors: boards behind the bar, tiles for the patio ----
+    R(T.box(3.9, 0.04, 2 * LEN + 1.2), deck, o, [-1.9, 0.02, 0]);
+    // the patio: terracotta tiles in warm, uneven tones with pale grout
+    const tileTex = b(256, 256, (c) => {
+      (c.fillStyle = "#e8dcc4"), c.fillRect(0, 0, 256, 256);
+      const tr = srand(77);
+      for (let i = 0; i < 4; i++)
+        for (let j = 0; j < 4; j++) {
+          const v2 = tr();
+          (c.fillStyle = `rgb(${(196 + 30 * v2) | 0},${(112 + 30 * v2) | 0},${(72 + 20 * v2) | 0})`), c.fillRect(64 * i + 3, 64 * j + 3, 58, 58);
+          (c.fillStyle = "rgba(255,240,220,.18)"), c.fillRect(64 * i + 3, 64 * j + 3, 58, 6);
+        }
+    });
+    (tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping), tileTex.repeat.set(3.6, 10.2);
+    R(T.box(7.2, 0.03, 2 * LEN + 2.4), new THREE.MeshLambertMaterial({ map: tileTex }), o, [3.65, 0.015, 0]);
+
+    // ---- the counter: two sections either side of the gap ----
+    [
+      [-LEN, GAP[0]],
+      [GAP[1], LEN],
+    ].forEach(([z0, z1], si) => {
+      const len = z1 - z0,
+        cz = (z0 + z1) / 2;
+      R(T.box(0.6, 0.98, len), dark, o, [0.22, 0.51, cz]);
+      R(T.box(1.0, 0.08, len), wood, o, [0.2, TOP - 0.04, cz]);
+      R(T.box(0.03, 0.09, len), chrome, o, [0.715, TOP - 0.04, cz]);
+      R(T.box(0.06, 0.14, len), white, o, [FX + 0.01, 0.09, cz]);
+      // the front: bands of vertical slats in fruit colours
+      for (let z = z0 + 0.08; z < z1 - 0.05; z += 0.16) {
+        const band = Math.floor((z + LEN) / 1.12) % FRUITC.length;
+        G.box(tint(FRUITC[band], 0.05), FX + 0.01, 0.6, z, 0.04, 0.82, 0.13);
+      }
+      // brass foot rail on little brackets
+      R(T.cyl(0.028, 0.028, len - 0.1, 8), chrome, o, [FX + 0.3, 0.24, cz], [Math.PI / 2, 0, 0]);
+      for (let z = z0 + 0.3; z < z1; z += 1.5) G.box("#c8ccd0", FX + 0.15, 0.24, z, 0.3, 0.03, 0.03);
+      // under-counter shelf on the bartender's side, with cups and fruit
+      R(T.box(0.34, 0.03, len - 0.1), pale, o, [-0.26, 0.55, cz]);
+      for (let z = z0 + 0.3; z < z1 - 0.2; z += 0.55) (rs() < 0.5 ? orange : lemon)(-0.26, 0.565, z);
+    });
+    // the rounded far ends of the counter
+    [-LEN, LEN].forEach((z) => {
+      R(T.cyl(0.5, 0.5, 0.08, 24), wood, o, [0.2, TOP - 0.04, z]), R(T.cyl(0.3, 0.3, 0.98, 18), dark, o, [0.22, 0.51, z]);
+    });
+    // the flap, lifted up at the gap
+    R(T.box(1.0, 1.36, 0.06), wood, o, [0.2, TOP + 0.66, GAP[1] - 0.03]);
+
+    // ---- stools along the whole bar (none in front of the gap) ----
+    let si = 0;
+    for (let z = -LEN + 0.55; z <= LEN - 0.5; z += 1.15) {
+      if (z > GAP[0] - 0.6 && z < GAP[1] + 0.6) continue;
+      const sx = FX + 0.78,
+        col = FRUITC[si++ % FRUITC.length];
+      G.add(CYL, "#c8ccd0", m(sx, 0.02, z, 0, 0, 0, 0.22, 0.03, 0.22)), G.add(CYL6, "#c8ccd0", m(sx, 0.4, z, 0, 0, 0, 0.035, 0.76, 0.035));
+      G.add(T.torus(1, 0.1, 4, 16), "#c8ccd0", m(sx, 0.32, z, Math.PI / 2, 0, 0, 0.17, 0.17, 0.17));
+      G.add(CYL, tint(col, 0.05), m(sx, 0.8, z, 0, 0, 0, 0.21, 0.08, 0.21)), G.add(SPH, tint(col, 0.05), m(sx, 0.84, z, 0, 0, 0, 0.21, 0.05, 0.21));
+    }
+
+    // ---- on the counter: juice for the customers, bowls, pyramids, pineapples, bananas ----
+    for (let z = -LEN + 0.55; z <= LEN - 0.5; z += 2.3) (z < GAP[0] - 0.4 || z > GAP[1] + 0.4) && cup(0.42, TOP, z + 0.15, pick(JUICE));
+    [-7.4, -3.6, 4.6, 7.2].forEach((z) => bowl(0.08, TOP, z, 0.26, pick(["#f8f4ea", "#7ac8e8", "#ffd8a8"])));
+    pyramid(0.2, TOP, -LEN, orange, 0.05, 4), pyramid(0.2, TOP, LEN, (px, py, pz, r) => lemon(px, py, pz, r), 0.048, 4);
+    pineapple(0.05, TOP, -5.4, 1.1), pineapple(0.1, TOP, 3.2, 0.95), pineapple(0.05, TOP, 6.0, 1.15);
+    bananas(0.0, TOP, -1.6, 0.8), bananas(0.05, TOP, 8.2, -0.6), grapes(0.1, TOP, -2.4), grapes(0.05, TOP, 5.5, "#8ac83a");
+    strawberries(0.1, TOP, -6.5), strawberries(0.05, TOP, 3.9);
+
+    // ---- the back bar: cabinets, three shelves of bottles and jars, dispensers and blenders ----
+    R(T.box(0.7, 0.95, 2 * LEN), dark, o, [-2.85, 0.475, 0]), R(T.box(0.8, 0.06, 2 * LEN + 0.1), wood, o, [-2.85, 0.98, 0]);
+    for (let z = -LEN + 0.6; z < LEN; z += 1.2) G.box("#f8f4ea", -2.495, 0.5, z, 0.02, 0.72, 1.0), G.box("#c8ccd0", -2.48, 0.62, z + 0.38, 0.03, 0.12, 0.03);
+    R(T.box(0.05, 2.1, 2 * LEN), pale, o, [-3.18, 2.03, 0]);
+    for (let z = -LEN; z <= LEN + 0.01; z += 3) R(T.box(0.08, 2.1, 0.08), dark, o, [-3.12, 2.03, z]);
+    [1.55, 2.12, 2.7].forEach((y, k) => {
+      R(T.box(0.4, 0.04, 2 * LEN + 0.1), wood, o, [-2.98, y, 0]);
+      for (let z = -LEN + 0.15; z < LEN - 0.1; z += 0.34 + 0.1 * rs()) {
+        const q = rs(),
+          c = pick(JUICE);
+        if (k === 2 && q < 0.3) (rs() < 0.5 ? orange : lemon)(-2.98, y + 0.02, z);
+        else if (q < 0.55) G.add(CYL6, c, m(-2.98, y + 0.15, z, 0, 0, 0, 0.045, 0.26, 0.045)), G.add(CYL6, c, m(-2.98, y + 0.31, z, 0, 0, 0, 0.018, 0.08, 0.018)), G.add(CYL6, "#f8f8f8", m(-2.98, y + 0.36, z, 0, 0, 0, 0.022, 0.025, 0.022));
+        else G.add(CYL, c, m(-2.98, y + 0.09, z, 0, 0, 0, 0.075, 0.16, 0.075)), G.add(CYL6, "#c8ccd0", m(-2.98, y + 0.18, z, 0, 0, 0, 0.078, 0.025, 0.078));
+      }
+    });
+    // big juice dispensers with taps and slices floating against the glass
+    [-7.6, -5.2, 4.8, 7.4].forEach((z, k) => {
+      const c = JUICE[k % JUICE.length];
+      G.box("#f8f4ea", -2.8, 1.06, z, 0.34, 0.1, 0.34), G.add(CYL, c, m(-2.8, 1.36, z, 0, 0, 0, 0.16, 0.5, 0.16));
+      G.add(CYL, "#c8ccd0", m(-2.8, 1.63, z, 0, 0, 0, 0.17, 0.05, 0.17)), G.add(SPL, "#c8ccd0", m(-2.8, 1.67, z, 0, 0, 0, 0.05, 0.03, 0.05));
+      G.box("#c8ccd0", -2.62, 1.18, z, 0.08, 0.05, 0.05), G.box("#c8ccd0", -2.6, 1.15, z, 0.03, 0.05, 0.03);
+      for (let j = 0; j < 3; j++) G.add(CYL, j % 2 ? "#f4d82a" : "#ff9a1a", m(-2.64, 1.24 + 0.13 * j, z - 0.06 + 0.06 * j, 0, 0, Math.PI / 2, 0.045, 0.01, 0.045));
+    });
+    // blenders and a citrus press
+    [-2.6, 2.9].forEach((z, k) => {
+      G.box(k ? "#e8303a" : "#2a9ae8", -2.8, 1.09, z, 0.2, 0.16, 0.2), G.add(T.cyl(0.07, 0.09, 1, 10), k ? "#8ad83a" : "#ff6a90", m(-2.8, 1.31, z, 0, 0, 0, 1, 0.28, 1));
+      G.add(CYL, "#2a2a2a", m(-2.8, 1.46, z, 0, 0, 0, 0.075, 0.03, 0.075));
+    });
+    G.add(CYL, "#c8ccd0", m(-2.8, 1.08, -0.6, 0, 0, 0, 0.12, 0.1, 0.12)), G.add(T.cone(1, 1, 10), "#c8ccd0", m(-2.8, 1.18, -0.6, 0, 0, 0, 0.06, 0.08, 0.06));
+    G.box("#c8ccd0", -2.8, 1.36, -0.6, 0.04, 0.3, 0.04), G.box("#2a2a2a", -2.68, 1.5, -0.6, 0.28, 0.04, 0.04);
+    // fruit waiting to be juiced on the back bar
+    [-8.4, -6.4, -1.4, 1.4, 6.2, 8.4].forEach((z, k) => (k % 2 ? bowl(-2.8, 1.01, z, 0.24, "#ffd8a8") : melonHalf(-2.8, 1.01, z, k)));
+    pyramid(-2.8, 1.01, -3.8, orange, 0.05, 3), pyramid(-2.8, 1.01, 3.9, apple, 0.05, 3);
+
+    // ---- the sign on two tall posts at the back, giant fruit on top ----
+    const signTex = b(
+      1024,
+      192,
+      (c) => {
+        const gr = c.createLinearGradient(0, 0, 0, 192);
+        gr.addColorStop(0, "#ffd84a"), gr.addColorStop(1, "#ff9a1a"), (c.fillStyle = gr), c.fillRect(0, 0, 1024, 192);
+        (c.lineWidth = 10), (c.strokeStyle = "#e8402a"), c.strokeRect(8, 8, 1008, 176);
+        // fruit slices at either end
+        const slice = (cx, cy, r, rim, flesh) => {
+          (c.fillStyle = rim), c.beginPath(), c.arc(cx, cy, r, 0, l), c.fill(), (c.fillStyle = flesh), c.beginPath(), c.arc(cx, cy, 0.84 * r, 0, l), c.fill();
+          (c.strokeStyle = "rgba(255,255,255,.8)"), (c.lineWidth = 4);
+          for (let k = 0; k < 8; k++) c.beginPath(), c.moveTo(cx, cy), c.lineTo(cx + 0.8 * r * Math.cos((k * l) / 8), cy + 0.8 * r * Math.sin((k * l) / 8)), c.stroke();
+        };
+        slice(96, 96, 62, "#f08a1a", "#ffb84a"), slice(928, 96, 62, "#6ab82a", "#c8f07a");
+        (c.font = "bold 128px 'Trebuchet MS', Verdana, sans-serif"), (c.textAlign = "center"), (c.textBaseline = "middle");
+        (c.lineWidth = 14), (c.strokeStyle = "#c8381a"), c.strokeText("JUICE BAR", 512, 102), (c.fillStyle = "#ffffff"), c.fillText("JUICE BAR", 512, 102);
+      },
+      { smooth: !0 },
+    );
+    [-3.9, 3.9].forEach((z) => R(T.box(0.2, 4.7, 0.2), dark, o, [-3.38, 2.35, z]));
+    R(T.box(0.12, 1.5, 8.3), white, o, [-3.38, 4.05, 0]), R(T.plane(8.1, 1.4), x.world(16777215, { map: signTex }), o, [-3.31, 4.05, 0], [0, Math.PI / 2, 0]);
+    const BIG = T.sphere(1, 18, 14);
+    G.add(BIG, "#f08a1a", m(-3.38, 5.2, -2.6, 0, 0, 0, 0.42, 0.42, 0.42)), G.add(SPL, "#4a7a2a", m(-3.38, 5.6, -2.6, 0, 0, 0, 0.07, 0.035, 0.07));
+    G.add(BIG, "#f4d82a", m(-3.38, 5.12, 0.4, 0, 0, 0, 0.49, 0.31, 0.31));
+    // a giant strawberry: a plump lathed berry with seeds and a crown of leaves
+    const BX = -3.38,
+      BY = 5.22,
+      BZ = 2.9;
+    G.add(latheGeo(smoothProfile([[0, -0.44], [0.12, -0.38], [0.26, -0.18], [0.33, 0.04], [0.3, 0.2], [0.16, 0.27], [0, 0.28]], 20), 18), "#e8202a", m(BX, BY, BZ));
+    for (let k = 0; k < 26; k++) {
+      const y = -0.36 + 0.58 * ((k + 0.5) / 26),
+        rr2 = 0.33 * Math.sin(Math.PI * (0.12 + 0.8 * ((y + 0.44) / 0.72))) + 0.005,
+        a = 2.4 * k;
+      G.add(SPL, "#f4e04a", m(BX + rr2 * Math.cos(a), BY + y, BZ + rr2 * Math.sin(a), 0, 0, 0, 0.018, 0.027, 0.018));
+    }
+    for (let k = 0; k < 7; k++) G.add(T.cone(0.07, 0.24, 4), "#3f8a2a", m(BX + 0.1 * Math.cos((k * l) / 7), BY + 0.29, BZ + 0.1 * Math.sin((k * l) / 7), 0.2 * Math.sin((k * l) / 7), 0, -1.35 * Math.cos((k * l) / 7), 1, 1, 0.3));
+    G.add(T.cyl(0.025, 0.035, 0.14, 6), "#4a6a2a", m(BX, BY + 0.36, BZ, 0.2, 0, 0.1));
+    // end posts with giant fruit, and fruit bunting strung along the back
+    [-LEN - 0.3, LEN + 0.3].forEach((z, k) => {
+      R(T.box(0.16, 3.3, 0.16), dark, o, [-3.38, 1.65, z]);
+      k ? G.add(BIG, "#2f6a2a", m(-3.38, 3.55, z, 0, 0, 0, 0.36, 0.27, 0.27)) : G.add(BIG, "#d8202a", m(-3.38, 3.55, z, 0, 0, 0, 0.28, 0.28, 0.28));
+    });
+    [
+      [-LEN - 0.3, -3.9, 3.25, 4.6],
+      [3.9, LEN + 0.3, 4.6, 3.25],
+    ].forEach(([za, zb, ya, yb]) => {
+      const n = Math.round((zb - za) / 0.42);
+      for (let k = 0; k <= n; k++) {
+        const u = k / n,
+          z = za + (zb - za) * u,
+          y = ya + (yb - ya) * u - 0.55 * Math.sin(Math.PI * u);
+        k < n && G.add(CYL6, "#5a4a3a", m(-3.36, y, z + (zb - za) / n / 2, Math.PI / 2, 0, 0, 0.016, (zb - za) / n + 0.02, 0.016));
+        k && k < n && G.add(CONE, FRUITC[k % FRUITC.length], m(-3.34, y - 0.13, z, Math.PI, 0, 0, 0.13, 0.24, 0.02));
+      }
+    });
+    // bananas hanging from hooks on the sign posts
+    [-3.9, 3.9].forEach((z) =>
+      [-1, 1].forEach((sd) => {
+        G.add(CYL6, "#8a8f96", m(-3.2, 3.02 + 0.3 * sd, z + 0.18 * sd, 0, 0, Math.PI / 2, 0.012, 0.3, 0.012)), G.add(T.torus(1, 0.2, 4, 10, Math.PI), "#8a8f96", m(-3.06, 2.99 + 0.3 * sd, z + 0.18 * sd, 0, 0, Math.PI, 0.03, 0.03, 0.03));
+        bananas(-3.06, 2.94 + 0.3 * sd, z + 0.18 * sd, Math.PI / 2 + 0.3 * sd, !0);
+      }),
+    );
+
+    // ---- fruit stacked at both ends: crates, watermelons, coconuts, a basket of pineapples ----
+    [-1, 1].forEach((sd) => {
+      const z0 = sd * (LEN + 1.3);
+      crate(0.4, 0, z0, 0.1 * sd, orange), crate(-0.3, 0, z0 + 0.5 * sd, -0.2 * sd, apple), crate(0.05, 0.3, z0 + 0.2 * sd, 0.15, sd > 0 ? (px, py, pz, r, lo) => lemon(px, py, pz, r, "#f4d82a", lo) : lime);
+      crate(-1.6, 0, z0 - 0.1 * sd, 0.3, (px, py, pz, r, lo) => (rs() < 0.5 ? orange : apple)(px, py, pz, r, lo));
+      for (let k = 0; k < 6; k++) watermelon(-1.0 + 0.62 * (k % 3), k < 3 ? 0 : 0.34, z0 + sd * (0.95 + 0.1 * (k % 2)), 0.3 * k);
+      for (let k = 0; k < 7; k++) coconut(1.4 + 0.17 * Math.cos(2.4 * k) * Math.sqrt(k), 0, z0 - 0.4 * sd + 0.17 * Math.sin(2.4 * k) * Math.sqrt(k));
+      G.add(CYL, "#b88a4a", m(1.5, 0.18, z0 + 0.6 * sd, 0, 0, 0, 0.32, 0.36, 0.32));
+      for (let k = 0; k < 4; k++) pineapple(1.5 + 0.13 * Math.cos(1.6 * k), 0.28, z0 + 0.6 * sd + 0.13 * Math.sin(1.6 * k), 0.95);
+    });
+    // a crate of oranges and a watermelon by the bartender's gap
+    crate(-1.4, 0.04, GAP[1] + 1.2, 0, orange), watermelon(-1.6, 0.04, -1.6, 0.4);
+
+    // ---- the patio: cafe tables with chairs, and the chalkboard menu ----
+    [
+      [4.7, -7.4],
+      [4.4, -4.0],
+      [4.6, 5.8],
+      [4.8, 9.0],
+    ].forEach(([px, pz], k) => {
+      G.add(CYL, "#c8ccd0", m(px, 0.02, pz, 0, 0, 0, 0.3, 0.03, 0.3)), G.add(CYL6, "#c8ccd0", m(px, 0.38, pz, 0, 0, 0, 0.04, 0.72, 0.04));
+      G.add(CYL, "#f8f4ea", m(px, 0.76, pz, 0, 0, 0, 0.5, 0.04, 0.5)), G.add(T.torus(1, 0.04, 4, 24), FRUITC[k % 5], m(px, 0.76, pz, Math.PI / 2, 0, 0, 0.5, 0.5, 0.5));
+      for (let j = 0; j < 3; j++) {
+        const a = (j * l) / 3 + k,
+          cx = px + 0.78 * Math.cos(a),
+          cz = pz + 0.78 * Math.sin(a),
+          face = Math.atan2(px - cx, pz - cz),
+          col = FRUITC[(k + j + 2) % 5];
+        G.add(CYL, col, m(cx, 0.46, cz, 0, 0, 0, 0.2, 0.05, 0.2));
+        [0, 1, 2, 3].forEach((q) => G.add(CYL6, "#c8ccd0", m(cx + 0.13 * Math.cos(0.8 + (q * l) / 4), 0.22, cz + 0.13 * Math.sin(0.8 + (q * l) / 4), 0, 0, 0, 0.015, 0.44, 0.015)));
+        G.add(G.UBX, col, m(cx - 0.2 * Math.sin(face), 0.72, cz - 0.2 * Math.cos(face), -0.15, face, 0, 0.34, 0.26, 0.04));
+      }
+      cup(px - 0.15, 0.78, pz + 0.1, pick(JUICE)), cup(px + 0.18, 0.78, pz - 0.12, pick(JUICE));
+      k % 2 ? bowl(px, 0.78, pz - 0.05, 0.18) : orange(px + 0.05, 0.78, pz + 0.22);
+    });
+    // potted orange trees at the corners of the patio, heavy with fruit
+    [
+      [6.9, -LEN - 0.4],
+      [6.9, LEN + 0.4],
+      [2.0, -LEN - 1.2],
+      [2.0, LEN + 1.2],
+    ].forEach(([px, pz], k) => {
+      G.add(T.cyl(0.36, 0.28, 1, 12), "#c8703e", m(px, 0.3, pz, 0, 0, 0, 1, 0.6, 1)), G.add(T.torus(1, 0.08, 3, 14), "#b8602e", m(px, 0.6, pz, Math.PI / 2, 0, 0, 0.37, 0.37, 0.37));
+      G.add(CYL, "#4a3424", m(px, 0.58, pz, 0, 0, 0, 0.33, 0.02, 0.33)), G.add(CYL6, "#6a4a2a", m(px, 1.1, pz, 0, 0, 0.05, 0.06, 1.1, 0.06));
+      for (let j = 0; j < 5; j++)
+        G.add(T.sphere(1, 9, 7), tint(j % 2 ? "#3f8a2a" : "#4f9a32", 0.08), m(px + 0.32 * Math.cos(1.3 * j + k) * (j ? 1 : 0), 1.95 + 0.18 * (j % 2), pz + 0.32 * Math.sin(1.3 * j + k) * (j ? 1 : 0), 0, j, 0, 0.55, 0.45, 0.55));
+      for (let j = 0; j < 16; j++) {
+        const a = 2.4 * j + k,
+          y = 1.68 + 0.7 * ((j + 0.5) / 16),
+          rr2 = 0.86 * Math.sqrt(Math.max(0.05, 1 - ((y - 2.02) / 0.6) ** 2)) + 0.02;
+        G.add(SPL, tint("#f28a1a"), m(px + rr2 * Math.cos(a), y, pz + rr2 * Math.sin(a), 0, 0, 0, 0.055, 0.055, 0.055));
+      }
+      orange(px + 0.2, 0.6, pz - 0.1), orange(px - 0.15, 0.6, pz + 0.12);
+    });
+    const menuTex = b(
+      256,
+      384,
+      (c) => {
+        (c.fillStyle = "#8a5a32"), c.fillRect(0, 0, 256, 384), (c.fillStyle = "#24322c"), c.fillRect(14, 14, 228, 356);
+        (c.textAlign = "center"), (c.fillStyle = "#f8f4e8"), (c.font = "bold 34px 'Trebuchet MS', Verdana, sans-serif"), c.fillText("FRESH", 128, 62), c.fillText("JUICE", 128, 100);
+        (c.font = "bold 24px 'Trebuchet MS', Verdana, sans-serif"), (c.textAlign = "left");
+        [
+          ["Orange", "#ffb03a"],
+          ["Watermelon", "#ff7a8a"],
+          ["Pineapple", "#ffe05a"],
+          ["Berry Blast", "#c88aff"],
+          ["Green Machine", "#9ae85a"],
+          ["Lemonade", "#fff07a"],
+        ].forEach(([t0, c0], k) => ((c.fillStyle = c0), c.fillText("* " + t0, 30, 152 + 36 * k)));
+      },
+      { smooth: !0 },
+    );
+    {
+      const mg = new THREE.Group();
+      mg.position.set(7.0, 0, -1.6), (mg.rotation.y = Math.PI / 2 - 0.35), o.add(mg);
+      const face = x.world(16777215, { map: menuTex });
+      [-1, 1].forEach((sd) => {
+        const pg = new THREE.Group();
+        pg.position.set(0, 0.96, 0), (pg.rotation.x = -0.2 * sd), mg.add(pg);
+        R(T.box(0.62, 0.92, 0.04), dark, pg, [0, -0.47, 0.02 * sd]), R(T.plane(0.56, 0.84), face, pg, [0, -0.47, 0.045 * sd], [0, sd > 0 ? 0 : Math.PI, 0]);
+      });
+    }
+    G.done(o);
+  }
+
+  const JGP_K = { post: (g) => buildPostOffice(g), garden: (g) => buildGardenSupplies(g), sheriff: (g) => buildSheriff(g), juice: (g) => buildJuiceBar(g) };
   function swapWorld() {
     // keep the working stations (garden, shop, pond, phone, sign, obelisk, portal) and
     // everything that is not scenery; drop the engine's own scenery, then build the town.
@@ -14419,8 +14840,8 @@ const JGP = (() => {
           len = Math.hypot(cx - x0, cz - z0);
         const ux = (cx - x0) / len,
           uz = (cz - z0) / len,
-          // the west walks stop short of the line-up instead of running through its ends
-          wl = dx < 0 ? (LINEUP_X + 2.6 - x0) / ux : len + 0.53;
+          // the walks on the line-up's side stop short of it instead of running through its ends
+          wl = dx === Math.sign(LINEUP_X) ? (LINEUP_X - 2.6 * dx - x0) / ux : len + 0.53;
         return { x0, z0, cx, cz, len, ux, uz, wl };
       };
     put("concrete", cached("ringwalk", () => new THREE.RingGeometry(GARDEN_R + 1.6, GARDEN_R + 3.4, 72).rotateX(-Math.PI / 2)), WALK, S(0, 0.02, 0));
@@ -14760,6 +15181,15 @@ const JGP = (() => {
       const k0 = new THREE.Group();
       k0.position.set(X, 0, Z), (k0.rotation.y = A(X, Z)), (k0.userData.keepInFinale = !0), C.add(k0), build(k0), H(k0), E.add(X, Z, 4.4, "scenery"), keepAt.push([X, Z]);
     });
+
+    // ---- the Juice Bar along the west side, facing the garden (FORTIZMO tends it) ---------------
+    {
+      const JX = -28,
+        k0 = new THREE.Group();
+      k0.position.set(JX, 0, 0), (k0.userData.keepInFinale = !0), C.add(k0), JGP_K.juice(k0), H(k0);
+      // no lawn tufts through its floors, and no pickups under it
+      for (let zz = -10.5; zz <= 10.6; zz += 2.1) keepAt.push([JX - 2, zz], [JX + 1.5, zz], [JX + 5, zz]), E.add(JX + 1, zz, 3, "scenery");
+    }
 
     // ---- the lawn: short tufts, clover and dandelions (off the walks, garden and stations) ------
     const onWalk = (X, Z) => {

@@ -6712,10 +6712,11 @@ const JGP = (() => {
 				["cutebex", "ZOLLOD", "born_zollod", {"color": "#3cbe94", "bodyR": 0.9, "talkR": 4.2}, [27, 29.5]],
 			],
 		},
-		// KING DINO plays his drum set on the Juice Bar's patio (he stands behind the kit, facing the garden)
+		// KING DINO plays his drum set centred at the back of the dance floor's extension, south of the
+		// Juice Bar (he stands behind the kit, facing out across the floor)
 		drums: {
 			face: Math.PI / 2,
-			list: [["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1, "talkR": 4.2}, [-30.25, 0.4]]],
+			list: [["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1, "talkR": 4.2}, [-30.25, 19.2]]],
 		},
 	};
 
@@ -14438,21 +14439,22 @@ const JGP = (() => {
 			F.addBuilding(JX, 0, 0, [-3.5, -9.45, 0.78, 9.45], [[-0.32, -9.45, 0.78, 1.0], [-0.32, 2.4, 0.78, 9.45], [-3.5, -9.2, -2.46, 9.2]], "juice");
 			// no lawn tufts through its floors, and no pickups under it
 			for (let zz = -10.5; zz <= 10.6; zz += 2.1) keepAt.push([JX - 2, zz], [JX + 1.5, zz], [JX + 5, zz]), E.add(JX + 1, zz, 3, "scenery");
-			// THE DANCE FLOOR: one rectangle of glossy black-and-white 1.2 m tiles in front of the bar's
-			// counter, from the bar's north end south for twice the bar's length, and reaching one tile
-			// past KING DINO (he reaches into the fourth row of tiles out from the counter, so the floor
-			// is five tiles deep)
+			// THE DANCE FLOOR: glossy black-and-white 1.2 m tiles in front of the bar's counter, from the
+			// bar's north end south for twice the bar's length. Along the bar it is five tiles deep; the
+			// extension south of the bar runs out twice as far (ten tiles), and KING DINO and his drum kit
+			// stand centred at the back of it, facing out across the floor.
 			{
 				const TS = 1.2,
 					X0 = JX + 0.9,
 					Z0 = -9.6,
-					NX = 5,
+					NX = 10,
 					NZ = 32,
+					on = (i, j) => j >= 16 || i < 5,
 					// one texel per tile (row j of the canvas is row j of tiles: the plane's top edge is north)
 					cv = document.createElement("canvas");
 				(cv.width = NX), (cv.height = NZ);
 				const cx2 = cv.getContext("2d");
-				for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) (cx2.fillStyle = (i + j) % 2 ? "#151517" : "#f4f4f2"), cx2.fillRect(i, j, 1, 1);
+				for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) on(i, j) && ((cx2.fillStyle = (i + j) % 2 ? "#151517" : "#f4f4f2"), cx2.fillRect(i, j, 1, 1));
 				const tex = new THREE.CanvasTexture(cv);
 				(tex.magFilter = THREE.NearestFilter), (tex.minFilter = THREE.NearestFilter), (tex.generateMipmaps = !1);
 				const floor = R(new THREE.PlaneGeometry(NX * TS, NZ * TS), new THREE.MeshPhongMaterial({ map: tex, alphaTest: 0.5, shininess: 70, specular: 3355443 }), C, [X0 + (NX * TS) / 2, 0.035, Z0 + (NZ * TS) / 2], [-Math.PI / 2, 0, 0]);
@@ -14461,19 +14463,19 @@ const JGP = (() => {
 				onDance = (X, Z) => {
 					const i = Math.floor((X - X0) / TS),
 						j = Math.floor((Z - Z0) / TS);
-					return i >= 0 && i < NX && j >= 0 && j < NZ;
+					return i >= 0 && i < NX && j >= 0 && j < NZ && on(i, j);
 				};
-				for (let i = 1; i < NX; i += 2) for (let j = 1; j < NZ; j += 2) E.add(X0 + (i + 0.5) * TS, Z0 + (j + 0.5) * TS, 1.3, "dance");
+				for (let i = 1; i < NX; i += 2) for (let j = 1; j < NZ; j += 2) on(i, j) && E.add(X0 + (i + 0.5) * TS, Z0 + (j + 0.5) * TS, 1.3, "dance");
 			}
-			// KING DINO's drum set from Greeblis Woods, on the patio facing the garden: red shells with
-			// white heads and chrome rims, his name on the bass drum, two rack toms, a snare, a floor tom,
+			// KING DINO's drum set from Greeblis Woods, at the back of the dance floor's extension, facing
+			// out across it: red shells with white heads and chrome rims, his name on the bass drum, two rack toms, a snare, a floor tom,
 			// a hi-hat and a crash. KING DINO stands behind it with his sticks and stays there through the
 			// Garden event. While he is at his kit and the player is anywhere near, he plays his 104 bpm
 			// groove (kick, snare, hi-hat, a tom fill every other bar and a crash every four), each drum
 			// jumping as it is hit; the drums are heard from around the bar. Each drum is one merged mesh.
 			{
 				const kit = new THREE.Group();
-				kit.position.set(JX + 5.3, 0, 0.4), (kit.rotation.y = Math.PI / 2), (kit.userData.keepInFinale = !0), C.add(kit);
+				kit.position.set(JX + 5.3, 0, 19.2), (kit.rotation.y = Math.PI / 2), (kit.userData.keepInFinale = !0), C.add(kit);
 				// sized for KING DINO standing behind it: a third bigger than the Woods kit, the toms and cymbals set lower
 				kit.scale.setScalar(1.35);
 				const RED = "#c23b3b",

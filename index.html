@@ -9909,10 +9909,10 @@ const JGP = (() => {
 	// The Library: an open reading ground, with no walls, roof or raised floor. Rows of freestanding
 	// double-sided bookcases full of books stand spaced out round the librarian SPARKAKUS: two rows
 	// behind him and a row down each side, with open aisles between them. The LIBRARY banner stands on
-	// two posts a little behind him, and a small reading table to his left holds the Ancient Artifacts
-	// once they are brought in. He stands on the ground at (0, 0, -0.45), at 1.16 scale (as tall as
-	// HENNRICK, so the banner stands high enough to show over his head), and walks straight out to the
-	// front for his speech. (LIB_LAYOUT gives the footprints, for the colliders.)
+	// two posts behind the back row of bookcases, high enough to show over them, and a small reading
+	// table to his left holds the Ancient Artifacts once they are brought in. He stands on the ground
+	// at (0, 0, -0.45), at 1.16 scale (as tall as HENNRICK), and walks straight out to the front for
+	// his speech. (LIB_LAYOUT gives the footprints, for the colliders.)
 	const LIB_LAYOUT = (() => {
 		// bookcases: [centre x, centre z, along z?]; each is 2.2 m long and 0.56 m deep
 		const cases = [
@@ -9929,9 +9929,9 @@ const JGP = (() => {
 		return {
 			cases,
 			table: [-1.75, 0.1],
-			posts: [-1.7, 1.7].map((px) => [px, -1.4]),
-			parts: [...cases.map(rect), [-2.18, -0.62, -1.32, 0.82], [-1.8, -1.5, -1.6, -1.3], [1.6, -1.5, 1.8, -1.3]],
-			hull: [-4.25, -4.65, 4.25, 0.85],
+			posts: [-1.7, 1.7].map((px) => [px, -5.0]),
+			parts: [...cases.map(rect), [-2.18, -0.62, -1.32, 0.82], [-1.8, -5.1, -1.6, -4.9], [1.6, -5.1, 1.8, -4.9]],
+			hull: [-4.25, -5.15, 4.25, 0.85],
 		};
 	})();
 	function buildLibrary(o) {
@@ -9977,11 +9977,12 @@ const JGP = (() => {
 			list.forEach(([color, px, py, pz, w, h, d, rx, ry2, rz]) => G.box(color, cx + px * cs + pz * sn, py, cz - px * sn + pz * cs, w, h, d, rx, ry + ry2, rz));
 		};
 		LIB_LAYOUT.cases.forEach(bookcase);
-		// the LIBRARY banner on two posts, a little behind SPARKAKUS, facing the square
+		// the LIBRARY banner on two posts behind the back row of bookcases, high enough to show over
+		// them, facing the square
 		const th = { sign: "LIBRARY", ink: "#2a3e6a" },
 			white = x.clay("#f6f2e8", { shininess: 30 });
 		LIB_LAYOUT.posts.forEach(([px, pz]) => R(T.box(0.14, 4.3, 0.14), white, o, [px, 2.15, pz]));
-		R(T.box(3.7, 0.95, 0.08), white, o, [0, 3.75, -1.4]), R(T.plane(3.5, 0.88), x.world(16777215, { map: kioskSignTex(th) }), o, [0, 3.75, -1.35]);
+		R(T.box(3.7, 0.95, 0.08), white, o, [0, 3.75, -5.0]), R(T.plane(3.5, 0.88), x.world(16777215, { map: kioskSignTex(th) }), o, [0, 3.75, -4.95]);
 		// the reading table that the Ancient Artifacts are shown on (top y = 0.82)
 		const [tx, tz] = LIB_LAYOUT.table;
 		G.box(wood, tx, 0.8, tz, 0.8, 0.05, 1.38);

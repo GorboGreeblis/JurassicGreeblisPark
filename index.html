@@ -3382,7 +3382,7 @@ function te(t, e) {
 	const o = t.def,
 		a = t.id;
 	let n;
-	if ((Kt.met.add(a), (xe.lastTarget = t), e)) Kt.blossoms--, G.heart(), (n = o.gift), ("gorbo" === a || "p_mamagorbo" === a) && Ie(t);
+	if ((Kt.met.add(a), (xe.lastTarget = t), e)) Kt.blossoms--, G.heart(), (n = o.gift), (t.giftAt = performance.now()), ("gorbo" === a || "p_mamagorbo" === a) && Ie(t);
 	else {
 		const t = a || o.__type || o.name,
 			e = Kt.talkState[t] || 0;
@@ -6659,7 +6659,11 @@ THREE.OctahedronGeometry||(THREE.OctahedronGeometry=function(t=1){const n=[1,0,0
  * come from the top-level names captured as $x aliases (locals in the original code shadow the one-letter engine names). */
 const JGP_WOODS=(()=>{const $R=R,$S=S,$T=T,$ao=ao,$b=b,$c=c,$l=l,$u=u,$v=v,$x=x;
 // (MONTGUMMERY's model, woods_mont, with its flat screen mouth, is final: keep it as it is.)
-return{mont:function(e,t){const o="#1d2a23",a="#3db2d6",n="#e2521f",r=(e,t,o,a,n,r,s,i,l)=>{let c=l;const h=()=>(c=16807*c%2147483647)/2147483647;e.font="bold "+r+"px 'Courier New', monospace",e.textBaseline="top";for(let l=o;l<o+n;l+=1.05*r){let o="";const n=Math.floor(a/(.6*r));for(let e=0;e<n;e++)o+=h()<.12?" ":"{}[]()<>;:'\"=,._/\\|abcdeforstuvgxinpl0123456789"[Math.floor(47*h())];e.globalAlpha=i*(.6+.4*h()),e.fillStyle=s[Math.floor(h()*s.length)],e.fillText(o,t,l)}e.globalAlpha=1},s=$b(512,512,(e=>{r(e,4,0,508,512,22,["#8fdcec","#d8f4ff","#6cc8e0"],.9,7)}));s.wrapS=s.wrapT=THREE.RepeatWrapping,s.repeat.set(2.5,1.6);const i=$b(512,512,(e=>{e.fillStyle=o,e.fillRect(0,0,512,512),r(e,4,0,508,512,22,["#8fdcec","#d8f4ff","#6cc8e0"],.85,11)}));i.wrapS=i.wrapT=THREE.RepeatWrapping,i.repeat.set(1.5,1.5);const l=new THREE.MeshPhongMaterial({color:o,specular:3355443,shininess:40}),c=new THREE.MeshPhongMaterial({map:i,specular:2763306,shininess:36}),h=new THREE.MeshPhongMaterial({map:s,transparent:!0,depthWrite:!1,specular:0,shininess:1}),p=new THREE.SphereGeometry(1,40,30);{const e=p.attributes.position,t=new $c;for(let o=0;o<e.count;o++){t.fromBufferAttribute(e,o);const a=t.y,n=Math.hypot(t.x,t.z),r=a>0?6:2.4,s=Math.pow(Math.max(0,1-Math.pow(Math.abs(a),r)),1/r),i=n>1e-6?s/n:0;e.setXYZ(o,t.x*i,a,t.z*i)}p.computeVertexNormals()}const u=(()=>{const e=p.attributes.position,t=p.attributes.uv;let o=-1,a=-9;for(let t=0;t<e.count;t++){const n=e.getY(t),r=e.getZ(t);Math.abs(n+.25)<.08&&r>a&&(a=r,o=t)}return{u:t.getX(o),v:t.getY(o)}})(),f=$b(512,256,(e=>{e.fillStyle=o,e.fillRect(0,0,512,256);const t=512*u.u,a=256*(1-u.v);e.fillStyle="#4cb6e0",e.beginPath(),e.ellipse(t,a,52,50,0,0,$l),e.fill()})),d=new THREE.Group;e.add(d);const m=$R(p,new THREE.MeshPhongMaterial({map:f,specular:3355443,shininess:40}),d,[0,1.5,0],null,[.7,.8,.54]);$R(p.clone().scale(1.012,1.012,1.012),h,m).renderOrder=1;const g=[-1,1].map((e=>{const t=new THREE.Group;t.position.set(.29*e,.86,.02),t.scale.setScalar(1.15),d.add(t),$R($T.cyl(.1,.1,.28,12),c,t,[0,-.1,0]);const o=[],r=(e,t,a)=>o.push({geo:e,matrix:t,color:a});r(new THREE.CylinderGeometry(.162,.15,.42,16),$S(0,-.42,0),a),r(new THREE.TorusGeometry(.158,.018,6,18),$S(0,-.21,0,Math.PI/2,0,0),"#46bede"),r($T.sphere(1,16,12),$S(0,-.62,.07,0,0,0,.16,.11,.25),a),r($T.sphere(1,14,10),$S(0,-.63,.24,0,0,0,.15,.1,.12),n),r($T.sphere(1,14,10),$S(0,-.72,.07,0,0,0,.175,.035,.3),"#c9441a"),r($T.sphere(1,12,8),$S(0,-.7,-.12,0,0,0,.15,.055,.11),n),[-1,1].forEach((e=>r($T.box(.016,.36,.012),$S(.04*e,-.42,.163),"#f0c23a")));for(let e=0;e<7;e++)r($T.box(.08,.014,.012),$S(0,-.27-.05*e,.165),"#f0c23a");return[-1,1].forEach((e=>r($T.box(.014,.012,.16),$S(.04*e,-.585,.2,-.75,0,0),"#f0c23a"))),$R($v(o),$x.clay("#ffffff",{vertexColors:!0,shininess:30,specular:2236962}),t),t})),y=new THREE.Group;y.position.set(-.22,1,-.36),d.add(y),$R($ao([[0,0,0],[-.25,-.25,-.12],[-.6,-.6,-.05],[-.92,-.84,.12],[-1.15,-.92,.3]],.085,.006,40,10),c,y);const b=$x.clay("#ffffff",{vertexColors:!0,shininess:30,specular:2236962}),M=(e,t,o,a,n,r)=>{const s=(new $c).subVectors(o,t),i=s.length(),l=(new $c).addVectors(t,o).multiplyScalar(.5),c=(new THREE.Quaternion).setFromUnitVectors(new $c(0,1,0),s.clone().normalize());e.push({geo:new THREE.CylinderGeometry(n,a,i,10),matrix:(new THREE.Matrix4).compose(l,c,new $c(1,1,1)),color:r}),e.push({geo:$T.sphere(1,10,8),matrix:(new THREE.Matrix4).compose(t,c,new $c(a,a,a)),color:r}),e.push({geo:$T.sphere(1,10,8),matrix:(new THREE.Matrix4).compose(o,c,new $c(n,n,n)),color:r})},w=(e,t)=>{const o=new THREE.Group;o.position.copy(t),d.add(o);const a=new $c(.12*e,-.34,.03),n=new $c(.14*e,-.66,.09);return $R($ao([[0,0,0],[.08*e,-.18,0],[a.x,a.y,a.z],[.14*e,-.5,.06],[n.x,n.y,n.z]],.13,.085,20,10),c,o),$R((e=>{const t=[],o="#7cc6ea",a="#6db8dc";t.push({geo:$T.box(.034,.1,.1),matrix:$S(0,-.08,0),color:o}),t.push({geo:$T.sphere(1,14,10),matrix:$S(0,-.08,0,0,0,0,.022,.055,.055),color:o}),[[-1,-1],[-1,1],[1,-1],[1,1]].forEach((([e,a])=>t.push({geo:$T.sphere(1,8,6),matrix:$S(0,.045*e-.08,.045*a,0,0,0,.017,.012,.012),color:o}))),t.push({geo:$T.sphere(1,12,10),matrix:$S(0,-.015,0,0,0,0,.022,.03,.04),color:o}),[[.036,.078,.0125],[.012,.088,.013],[-.012,.083,.0125],[-.035,.066,.0112]].forEach((([n,r,s],i)=>{const l=new $c(0,-.13-(3===i?-.006:0),n),c=l.clone().add(new $c(.012*e,.5*-r,.006+.001*i)),h=c.clone().add(new $c(.03*e,.45*-r,.004));M(t,l,c,s,.92*s,o),M(t,c,h,.92*s,.8*s,a)}));const n=new $c(.006*e,-.06,.05),r=n.clone().add(new $c(.012*e,-.04,.028)),s=r.clone().add(new $c(.016*e,-.036,.01));return M(t,n,r,.017,.015,o),M(t,r,s,.015,.012,a),$v(t)})(e),b,o,[n.x,n.y+.03,n.z],[.1,.25*e,-.08*e],[2.1,2.1,2.1]),o},E=w(-1,new $c(-.64,1.9,.02)),x=w(1,new $c(.66,1.9,.02)),T=new THREE.Group;T.position.set(0,2.62,.3),T.scale.setScalar(1.32),d.add(T);const R=(e,t,o,a,n=0)=>(a.moveTo(-e/2+o,n-t/2),a.lineTo(e/2-o,n-t/2),a.quadraticCurveTo(e/2,n-t/2,e/2,n-t/2+o),a.lineTo(e/2,n+t/2-o),a.quadraticCurveTo(e/2,n+t/2,e/2-o,n+t/2),a.lineTo(-e/2+o,n+t/2),a.quadraticCurveTo(-e/2,n+t/2,-e/2,n+t/2-o),a.lineTo(-e/2,n-t/2+o),a.quadraticCurveTo(-e/2,n-t/2,-e/2+o,n-t/2),a),A=new THREE.ExtrudeGeometry(R(1,.78,.12,new THREE.Shape),{depth:.52,bevelEnabled:!0,bevelThickness:.08,bevelSize:.06,bevelSegments:5,curveSegments:10,steps:6});A.translate(0,0,-.6);{const e=A.attributes.position,t=new $c;for(let o=0;o<e.count;o++){t.fromBufferAttribute(e,o);const a=$u(-t.z/.68,0,1),n=1-.42*Math.pow(a,1.3),r=Math.max(0,1-(t.x*t.x/.3+t.y*t.y/.2));e.setXYZ(o,t.x*n,t.y*n+.04*a,t.z-.26*a*a*r)}A.computeVertexNormals()}$R(A,l,T,[0,0,.2]),$R(new THREE.TorusGeometry(.035,.012,6,12),l,T,[0,.42,-.25]);const H=R(1.12,.9,.12,new THREE.Shape);H.holes.push(R(.9,.58,.06,new THREE.Path,.07)),$R(new THREE.ExtrudeGeometry(H,{depth:.05,bevelEnabled:!0,bevelThickness:.025,bevelSize:.012,bevelSegments:3,curveSegments:8}),new THREE.MeshPhongMaterial({color:"#55b8c6",specular:3355443,shininess:40}),T,[0,0,.2]);const z=$b(512,512,(e=>{const t=e.createRadialGradient(256,240,40,256,256,360);t.addColorStop(0,"#7f52c8"),t.addColorStop(1,"#5a33a0"),e.fillStyle=t,e.fillRect(0,0,512,512),e.save(),e.scale(.66,1),e.font="500 86px 'Segoe UI', Calibri, Arial, sans-serif",e.fillStyle="#f29043",e.textBaseline="top",e.fillText("gfxinfo gfxinfo",60,22),e.restore(),e.save(),e.scale(.66,1),r(e,50,130,330,290,17,["#c6d2ff","#e6ecff","#9fb4f0"],.85,3),r(e,50,425,690,70,17,["#c6d2ff","#e6ecff"],.85,5),e.restore(),e.fillStyle="#ffffff";const o=e=>256+.72*(e-346);e.fillRect(o(290),150,24,1.9*24),e.fillRect(o(398),150,24,1.9*24),[[298,322],[322,322],[346,322],[370,322],[394,322]].forEach((([t,a])=>e.fillRect(o(t),a,17.28,24)));const a=e.createLinearGradient(0,0,512,512);a.addColorStop(0,"rgba(255,255,255,0.14)"),a.addColorStop(.45,"rgba(255,255,255,0)"),a.addColorStop(1,"rgba(0,0,0,0.12)"),e.fillStyle=a,e.fillRect(0,0,512,512)}));$R($T.plane(.91,.6),$x.basic(16777215,{map:z}),T,[0,.07,.225]);const B=[];B.push({geo:$T.box(.3,.06,.02),matrix:$S(.03,-.335,.28),color:"#14201b"});for(let e=0;e<10;e++)B.push({geo:$T.box(.012,.04,.01),matrix:$S(.028*e-.1,-.335,.292),color:"#2c4a44"});B.push({geo:new THREE.CylinderGeometry(.035,.035,.03,16).rotateX(Math.PI/2),matrix:$S(-.32,-.335,.285),color:"#2a3a36"}),B.push({geo:new THREE.CylinderGeometry(.02,.02,.02,12).rotateX(Math.PI/2),matrix:$S(-.32,-.335,.3),color:"#08100e"}),B.push({geo:$T.box(.09,.016,.01),matrix:$S(-.02,-.265,.282),color:"#1c3a36"}),B.push({geo:$T.box(.03,.03,.01),matrix:$S(.24,-.265,.282),color:"#1c3a36"}),B.push({geo:new THREE.CylinderGeometry(.01,.01,.01,8).rotateX(Math.PI/2),matrix:$S(.33,-.265,.282),color:"#1c3a36"}),$R($v(B),$x.clay("#ffffff",{vertexColors:!0,shininess:30,specular:2236962}),T);let I=-1,P=0;const G=10*Math.random();return{height:3.3,onTalk(){I=0},anim(e,t,o){s.offset.y+=.05*t,i.offset.y+=.04*t;const a=o&&o.moving;P+=t*(a?7:0);const n=a?Math.sin(P):0;g[0].rotation.x=.45*n,g[1].rotation.x=-.45*n,d.position.y=a?.03*Math.abs(Math.sin(P)):0,m.scale.y=.8*(1+.01*Math.sin(1.7*e+G)),y.rotation.y=.18*Math.sin(1.1*e+G)+.1*n,y.rotation.z=.05*Math.sin(.8*e+G),x.rotation.x=.04*Math.sin(1.2*e+G)-.1*n,E.rotation.x=.1*n;let r=.03*Math.sin(.9*e+G),l=.04*Math.sin(.7*e+G);I>=0&&(I+=t,r+=.18*Math.sin(Math.min(1,I/.9)*Math.PI*2)*(1-I/.9),I>=.9&&(I=-1)),T.rotation.set(r,0,l)}}}};})();
+return{mont:function(e,t){const o="#1d2a23",a="#3db2d6",n="#e2521f",r=(e,t,o,a,n,r,s,i,l)=>{let c=l;const h=()=>(c=16807*c%2147483647)/2147483647;e.font="bold "+r+"px 'Courier New', monospace",e.textBaseline="top";for(let l=o;l<o+n;l+=1.05*r){let o="";const n=Math.floor(a/(.6*r));for(let e=0;e<n;e++)o+=h()<.12?" ":"{}[]()<>;:'\"=,._/\\|abcdeforstuvgxinpl0123456789"[Math.floor(47*h())];e.globalAlpha=i*(.6+.4*h()),e.fillStyle=s[Math.floor(h()*s.length)],e.fillText(o,t,l)}e.globalAlpha=1},s=$b(512,512,(e=>{r(e,4,0,508,512,22,["#8fdcec","#d8f4ff","#6cc8e0"],.9,7)}));s.wrapS=s.wrapT=THREE.RepeatWrapping,s.repeat.set(2.5,1.6);const i=$b(512,512,(e=>{e.fillStyle=o,e.fillRect(0,0,512,512),r(e,4,0,508,512,22,["#8fdcec","#d8f4ff","#6cc8e0"],.85,11)}));i.wrapS=i.wrapT=THREE.RepeatWrapping,i.repeat.set(1.5,1.5);const l=new THREE.MeshPhongMaterial({color:o,specular:3355443,shininess:40}),c=new THREE.MeshPhongMaterial({map:i,specular:2763306,shininess:36}),h=new THREE.MeshPhongMaterial({map:s,transparent:!0,depthWrite:!1,specular:0,shininess:1}),p=new THREE.SphereGeometry(1,40,30);{const e=p.attributes.position,t=new $c;for(let o=0;o<e.count;o++){t.fromBufferAttribute(e,o);const a=t.y,n=Math.hypot(t.x,t.z),r=a>0?6:2.4,s=Math.pow(Math.max(0,1-Math.pow(Math.abs(a),r)),1/r),i=n>1e-6?s/n:0;e.setXYZ(o,t.x*i,a,t.z*i)}p.computeVertexNormals()}const u=(()=>{const e=p.attributes.position,t=p.attributes.uv;let o=-1,a=-9;for(let t=0;t<e.count;t++){const n=e.getY(t),r=e.getZ(t);Math.abs(n+.25)<.08&&r>a&&(a=r,o=t)}return{u:t.getX(o),v:t.getY(o)}})(),f=$b(512,256,(e=>{e.fillStyle=o,e.fillRect(0,0,512,256);const t=512*u.u,a=256*(1-u.v);e.fillStyle="#4cb6e0",e.beginPath(),e.ellipse(t,a,52,50,0,0,$l),e.fill()})),d=new THREE.Group;e.add(d);const m=$R(p,new THREE.MeshPhongMaterial({map:f,specular:3355443,shininess:40}),d,[0,1.5,0],null,[.7,.8,.54]);$R(p.clone().scale(1.012,1.012,1.012),h,m).renderOrder=1;const g=[-1,1].map((e=>{const t=new THREE.Group;t.position.set(.29*e,.86,.02),t.scale.setScalar(1.15),d.add(t),$R($T.cyl(.1,.1,.28,12),c,t,[0,-.1,0]);const o=[],r=(e,t,a)=>o.push({geo:e,matrix:t,color:a});r(new THREE.CylinderGeometry(.162,.15,.42,16),$S(0,-.42,0),a),r(new THREE.TorusGeometry(.158,.018,6,18),$S(0,-.21,0,Math.PI/2,0,0),"#46bede"),r($T.sphere(1,16,12),$S(0,-.62,.07,0,0,0,.16,.11,.25),a),r($T.sphere(1,14,10),$S(0,-.63,.24,0,0,0,.15,.1,.12),n),r($T.sphere(1,14,10),$S(0,-.72,.07,0,0,0,.175,.035,.3),"#c9441a"),r($T.sphere(1,12,8),$S(0,-.7,-.12,0,0,0,.15,.055,.11),n),[-1,1].forEach((e=>r($T.box(.016,.36,.012),$S(.04*e,-.42,.163),"#f0c23a")));for(let e=0;e<7;e++)r($T.box(.08,.014,.012),$S(0,-.27-.05*e,.165),"#f0c23a");return[-1,1].forEach((e=>r($T.box(.014,.012,.16),$S(.04*e,-.585,.2,-.75,0,0),"#f0c23a"))),$R($v(o),$x.clay("#ffffff",{vertexColors:!0,shininess:30,specular:2236962}),t),t})),y=new THREE.Group;y.position.set(-.22,1,-.36),d.add(y),$R($ao([[0,0,0],[-.25,-.25,-.12],[-.6,-.6,-.05],[-.92,-.84,.12],[-1.15,-.92,.3]],.085,.006,40,10),c,y);const b=$x.clay("#ffffff",{vertexColors:!0,shininess:30,specular:2236962}),M=(e,t,o,a,n,r)=>{const s=(new $c).subVectors(o,t),i=s.length(),l=(new $c).addVectors(t,o).multiplyScalar(.5),c=(new THREE.Quaternion).setFromUnitVectors(new $c(0,1,0),s.clone().normalize());e.push({geo:new THREE.CylinderGeometry(n,a,i,10),matrix:(new THREE.Matrix4).compose(l,c,new $c(1,1,1)),color:r}),e.push({geo:$T.sphere(1,10,8),matrix:(new THREE.Matrix4).compose(t,c,new $c(a,a,a)),color:r}),e.push({geo:$T.sphere(1,10,8),matrix:(new THREE.Matrix4).compose(o,c,new $c(n,n,n)),color:r})},w=(e,t)=>{const o=new THREE.Group;o.position.copy(t),d.add(o);const a=new $c(.12*e,-.34,.03),n=new $c(.14*e,-.66,.09);return $R($ao([[0,0,0],[.08*e,-.18,0],[a.x,a.y,a.z],[.14*e,-.5,.06],[n.x,n.y,n.z]],.13,.085,20,10),c,o),$R((e=>{const t=[],o="#7cc6ea",a="#6db8dc";t.push({geo:$T.box(.034,.1,.1),matrix:$S(0,-.08,0),color:o}),t.push({geo:$T.sphere(1,14,10),matrix:$S(0,-.08,0,0,0,0,.022,.055,.055),color:o}),[[-1,-1],[-1,1],[1,-1],[1,1]].forEach((([e,a])=>t.push({geo:$T.sphere(1,8,6),matrix:$S(0,.045*e-.08,.045*a,0,0,0,.017,.012,.012),color:o}))),t.push({geo:$T.sphere(1,12,10),matrix:$S(0,-.015,0,0,0,0,.022,.03,.04),color:o}),[[.036,.078,.0125],[.012,.088,.013],[-.012,.083,.0125],[-.035,.066,.0112]].forEach((([n,r,s],i)=>{const l=new $c(0,-.13-(3===i?-.006:0),n),c=l.clone().add(new $c(.012*e,.5*-r,.006+.001*i)),h=c.clone().add(new $c(.03*e,.45*-r,.004));M(t,l,c,s,.92*s,o),M(t,c,h,.92*s,.8*s,a)}));const n=new $c(.006*e,-.06,.05),r=n.clone().add(new $c(.012*e,-.04,.028)),s=r.clone().add(new $c(.016*e,-.036,.01));return M(t,n,r,.017,.015,o),M(t,r,s,.015,.012,a),$v(t)})(e),b,o,[n.x,n.y+.03,n.z],[.1,.25*e,-.08*e],[2.1,2.1,2.1]),o},E=w(-1,new $c(-.64,1.9,.02)),x=w(1,new $c(.66,1.9,.02)),T=new THREE.Group;T.position.set(0,2.62,.3),T.scale.setScalar(1.32),d.add(T);const R=(e,t,o,a,n=0)=>(a.moveTo(-e/2+o,n-t/2),a.lineTo(e/2-o,n-t/2),a.quadraticCurveTo(e/2,n-t/2,e/2,n-t/2+o),a.lineTo(e/2,n+t/2-o),a.quadraticCurveTo(e/2,n+t/2,e/2-o,n+t/2),a.lineTo(-e/2+o,n+t/2),a.quadraticCurveTo(-e/2,n+t/2,-e/2,n+t/2-o),a.lineTo(-e/2,n-t/2+o),a.quadraticCurveTo(-e/2,n-t/2,-e/2+o,n-t/2),a),A=new THREE.ExtrudeGeometry(R(1,.78,.12,new THREE.Shape),{depth:.52,bevelEnabled:!0,bevelThickness:.08,bevelSize:.06,bevelSegments:5,curveSegments:10,steps:6});A.translate(0,0,-.6);{const e=A.attributes.position,t=new $c;for(let o=0;o<e.count;o++){t.fromBufferAttribute(e,o);const a=$u(-t.z/.68,0,1),n=1-.42*Math.pow(a,1.3),r=Math.max(0,1-(t.x*t.x/.3+t.y*t.y/.2));e.setXYZ(o,t.x*n,t.y*n+.04*a,t.z-.26*a*a*r)}A.computeVertexNormals()}$R(A,l,T,[0,0,.2]),$R(new THREE.TorusGeometry(.035,.012,6,12),l,T,[0,.42,-.25]);const H=R(1.12,.9,.12,new THREE.Shape);H.holes.push(R(.9,.58,.06,new THREE.Path,.07)),$R(new THREE.ExtrudeGeometry(H,{depth:.05,bevelEnabled:!0,bevelThickness:.025,bevelSize:.012,bevelSegments:3,curveSegments:8}),new THREE.MeshPhongMaterial({color:"#55b8c6",specular:3355443,shininess:40}),T,[0,0,.2]);const zB=document.createElement("canvas");zB.width=zB.height=512;{const e=zB.getContext("2d"),t=e.createRadialGradient(256,240,40,256,256,360);t.addColorStop(0,"#7f52c8"),t.addColorStop(1,"#5a33a0"),e.fillStyle=t,e.fillRect(0,0,512,512),e.save(),e.scale(.66,1),e.font="500 86px 'Segoe UI', Calibri, Arial, sans-serif",e.fillStyle="#f29043",e.textBaseline="top",e.fillText("gfxinfo gfxinfo",60,22),e.restore(),e.save(),e.scale(.66,1),r(e,50,130,330,290,17,["#c6d2ff","#e6ecff","#9fb4f0"],.85,3),r(e,50,425,690,70,17,["#c6d2ff","#e6ecff"],.85,5),e.restore()}
+// (MONTGUMMERY's screen face, redrawn only when it changes: his pixel eyes with a flat mouth; the mouth
+// opening and closing while he talks; a pixel smile for a while after he is given a Blossom; and a
+// pixel shovel in place of his face while he plants)
+const zF=(e,md,op)=>{e.drawImage(zB,0,0),e.fillStyle="#ffffff";const o=e=>256+.72*(e-346),px=(t,a)=>e.fillRect(o(t),a,17.28,24);if("shovel"===md){e.save(),e.translate(256,262),e.scale(.66,1),e.rotate(-.35);const q=22,B=(i,j,w,h)=>e.fillRect(i*q-q/2,j*q,w*q,h*q);B(-1,-7,3,1),B(0,-6,1,6),B(-2,0,5,3),B(-1,3,3,1),B(0,4,1,1),e.restore()}else{e.fillRect(o(290),150,24,1.9*24),e.fillRect(o(398),150,24,1.9*24);const X=[298,322,346,370,394];if("smile"===md)[[298,298],[322,322],[346,322],[370,322],[394,298]].forEach((([t,a])=>px(t,a)));else if(op>0){const h=18*op;X.forEach((t=>(px(t,322-h),px(t,322+h))));for(let a=322-h+24;a<322+h;a+=24)px(298,a),px(394,a)}else X.forEach((t=>px(t,322)))}const a=e.createLinearGradient(0,0,512,512);a.addColorStop(0,"rgba(255,255,255,0.14)"),a.addColorStop(.45,"rgba(255,255,255,0)"),a.addColorStop(1,"rgba(0,0,0,0.12)"),e.fillStyle=a,e.fillRect(0,0,512,512)},z=$b(512,512,(e=>zF(e,"idle",0)));let zK="idle0";$R($T.plane(.91,.6),$x.basic(16777215,{map:z}),T,[0,.07,.225]);const B=[];B.push({geo:$T.box(.3,.06,.02),matrix:$S(.03,-.335,.28),color:"#14201b"});for(let e=0;e<10;e++)B.push({geo:$T.box(.012,.04,.01),matrix:$S(.028*e-.1,-.335,.292),color:"#2c4a44"});B.push({geo:new THREE.CylinderGeometry(.035,.035,.03,16).rotateX(Math.PI/2),matrix:$S(-.32,-.335,.285),color:"#2a3a36"}),B.push({geo:new THREE.CylinderGeometry(.02,.02,.02,12).rotateX(Math.PI/2),matrix:$S(-.32,-.335,.3),color:"#08100e"}),B.push({geo:$T.box(.09,.016,.01),matrix:$S(-.02,-.265,.282),color:"#1c3a36"}),B.push({geo:$T.box(.03,.03,.01),matrix:$S(.24,-.265,.282),color:"#1c3a36"}),B.push({geo:new THREE.CylinderGeometry(.01,.01,.01,8).rotateX(Math.PI/2),matrix:$S(.33,-.265,.282),color:"#1c3a36"}),$R($v(B),$x.clay("#ffffff",{vertexColors:!0,shininess:30,specular:2236962}),T);let I=-1,P=0;const G=10*Math.random();return{height:3.3,onTalk(){I=0},anim(e,t,o){s.offset.y+=.05*t,i.offset.y+=.04*t;{const md=o&&o.planting?"shovel":o&&o.giftAt&&performance.now()-o.giftAt<5e3?"smile":"idle",op="idle"===md&&o&&o.tkK>.05?o.tkS>.55?2:o.tkS>.2?1:0:0,k=md+op;k!==zK&&(zK=k,zF(z.image.getContext("2d"),md,op),z.needsUpdate=!0)}const a=o&&o.moving;P+=t*(a?7:0);const n=a?Math.sin(P):0;g[0].rotation.x=.45*n,g[1].rotation.x=-.45*n,d.position.y=a?.03*Math.abs(Math.sin(P)):0,m.scale.y=.8*(1+.01*Math.sin(1.7*e+G)),y.rotation.y=.18*Math.sin(1.1*e+G)+.1*n,y.rotation.z=.05*Math.sin(.8*e+G),x.rotation.x=.04*Math.sin(1.2*e+G)-.1*n,E.rotation.x=.1*n;let r=.03*Math.sin(.9*e+G),l=.04*Math.sin(.7*e+G);I>=0&&(I+=t,r+=.18*Math.sin(Math.min(1,I/.9)*Math.PI*2)*(1-I/.9),I>=.9&&(I=-1)),T.rotation.set(r,0,l)}}}};})();
 /* PULLED-MODELS-END */
 /* =========================================================================
  * GREEBLIS TOWN USA LAYER
@@ -6687,7 +6691,8 @@ const JGP = (() => {
 			list: [
 				// (HENNRICK, MONTGUMMERY and ETCHER are final; the others here are still being worked on)
 				["gratelet", "HENNRICK", "city_hennrick", {"color": "#c85ac8", "bodyR": 1.25, "modelScale": 0.88}, [34, -12.00]],
-				["orbiter", "SPARKAKUS", "born_sparkakus", {"color": "#2c4cc0", "bodyR": 1.0, "talkR": 4.2}, [34, -6.23]],
+				// (SPARKAKUS, here and as the librarian, is scaled 1.16 to stand as tall as HENNRICK: 3.13 m)
+				["orbiter", "SPARKAKUS", "born_sparkakus", {"color": "#2c4cc0", "bodyR": 1.15, "talkR": 4.2, "modelScale": 1.16}, [34, -6.23]],
 				["m_somlet", "SOMLET", "born_somlet", {"color": "#ecd8b6", "bodyR": 1}, [34, -0.46]],
 				["p_etcher", "ETCHER", "born_etcher", {"color": "#9ee09a", "bodyR": 1.0, "talkR": 3.6}, [34, 5.31]],
 				["p_gemtoe", "GEMTOE", "born_gemtoe", {"color": "#c870d0", "bodyR": 1.1, "talkR": 3.8}, [34, 11.09]],
@@ -6712,11 +6717,11 @@ const JGP = (() => {
 				["cutebex", "ZOLLOD", "born_zollod", {"color": "#3cbe94", "bodyR": 0.9, "talkR": 4.2}, [27, 29.5]],
 			],
 		},
-		// KING DINO plays his drum set centred at the back of the dance floor's extension, south of the
-		// Juice Bar (he stands behind the kit, facing out across the floor)
+		// KING DINO plays his drum set on the strip of grass behind the dance floor's extension (between
+		// it and the fence), centred along it; he stands behind the kit, facing out across the floor
 		drums: {
 			face: Math.PI / 2,
-			list: [["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1, "talkR": 4.2}, [-30.25, 19.2]]],
+			list: [["m_kingdino", "KING DINO", "born_kingdino", {"color": "#e8c020", "bodyR": 1.1, "talkR": 4.2}, [-36.35, 19.2]]],
 		},
 	};
 
@@ -9908,9 +9913,10 @@ const JGP = (() => {
 	// The Library: an open reading ground, with no walls, roof or raised floor. Rows of freestanding
 	// double-sided bookcases full of books stand spaced out round the librarian SPARKAKUS: two rows
 	// behind him and a row down each side, with open aisles between them. The LIBRARY banner stands on
-	// two posts a little behind him, and a small reading table to his left holds the Ancient Artifacts
-	// once they are brought in. He stands on the ground at (0, 0, -0.45) and walks straight out to the
-	// front for his speech. (LIB_LAYOUT gives the footprints, for the colliders.)
+	// two posts behind the back row of bookcases, high enough to show over them, and a small reading
+	// table to his left holds the Ancient Artifacts once they are brought in. He stands on the ground
+	// at (0, 0, -0.45), at 1.16 scale (as tall as HENNRICK), and walks straight out to the front for
+	// his speech. (LIB_LAYOUT gives the footprints, for the colliders.)
 	const LIB_LAYOUT = (() => {
 		// bookcases: [centre x, centre z, along z?]; each is 2.2 m long and 0.56 m deep
 		const cases = [
@@ -9927,9 +9933,9 @@ const JGP = (() => {
 		return {
 			cases,
 			table: [-1.75, 0.1],
-			posts: [-1.7, 1.7].map((px) => [px, -1.4]),
-			parts: [...cases.map(rect), [-2.18, -0.62, -1.32, 0.82], [-1.8, -1.5, -1.6, -1.3], [1.6, -1.5, 1.8, -1.3]],
-			hull: [-4.25, -4.65, 4.25, 0.85],
+			posts: [-1.7, 1.7].map((px) => [px, -5.0]),
+			parts: [...cases.map(rect), [-2.18, -0.62, -1.32, 0.82], [-1.8, -5.1, -1.6, -4.9], [1.6, -5.1, 1.8, -4.9]],
+			hull: [-4.25, -5.15, 4.25, 0.85],
 		};
 	})();
 	function buildLibrary(o) {
@@ -9975,11 +9981,12 @@ const JGP = (() => {
 			list.forEach(([color, px, py, pz, w, h, d, rx, ry2, rz]) => G.box(color, cx + px * cs + pz * sn, py, cz - px * sn + pz * cs, w, h, d, rx, ry + ry2, rz));
 		};
 		LIB_LAYOUT.cases.forEach(bookcase);
-		// the LIBRARY banner on two posts, a little behind SPARKAKUS, facing the square
+		// the LIBRARY banner on two posts behind the back row of bookcases, high enough to show over
+		// them, facing the square
 		const th = { sign: "LIBRARY", ink: "#2a3e6a" },
 			white = x.clay("#f6f2e8", { shininess: 30 });
-		LIB_LAYOUT.posts.forEach(([px, pz]) => R(T.box(0.14, 3.3, 0.14), white, o, [px, 1.65, pz]));
-		R(T.box(3.7, 0.95, 0.08), white, o, [0, 2.75, -1.4]), R(T.plane(3.5, 0.88), x.world(16777215, { map: kioskSignTex(th) }), o, [0, 2.75, -1.35]);
+		LIB_LAYOUT.posts.forEach(([px, pz]) => R(T.box(0.14, 4.3, 0.14), white, o, [px, 2.15, pz]));
+		R(T.box(3.7, 0.95, 0.08), white, o, [0, 3.75, -5.0]), R(T.plane(3.5, 0.88), x.world(16777215, { map: kioskSignTex(th) }), o, [0, 3.75, -4.95]);
 		// the reading table that the Ancient Artifacts are shown on (top y = 0.82)
 		const [tx, tz] = LIB_LAYOUT.table;
 		G.box(wood, tx, 0.8, tz, 0.8, 0.05, 1.38);
@@ -14439,10 +14446,11 @@ const JGP = (() => {
 			F.addBuilding(JX, 0, 0, [-3.5, -9.45, 0.78, 9.45], [[-0.32, -9.45, 0.78, 1.0], [-0.32, 2.4, 0.78, 9.45], [-3.5, -9.2, -2.46, 9.2]], "juice");
 			// no lawn tufts through its floors, and no pickups under it
 			for (let zz = -10.5; zz <= 10.6; zz += 2.1) keepAt.push([JX - 2, zz], [JX + 1.5, zz], [JX + 5, zz]), E.add(JX + 1, zz, 3, "scenery");
-			// THE DANCE FLOOR: glossy black-and-white 1.2 m tiles in front of the bar's counter, from the
-			// bar's north end south for twice the bar's length. Along the bar it is five tiles deep; the
-			// extension south of the bar runs out twice as far (ten tiles), and KING DINO and his drum kit
-			// stand centred at the back of it, facing out across the floor.
+			// THE DANCE FLOOR: 1.2 m tiles, all the same dark purple, set in thin darker grout with a soft
+			// satin sheen (easy on the eyes, no glare), in front of the bar's counter, from the bar's north
+			// end south for twice the bar's length. Along the bar it is five tiles deep; the extension south
+			// of the bar runs out twice as far (ten tiles), and KING DINO and his drum kit stand on the grass
+			// behind it, centred along it, facing out across the floor.
 			{
 				const TS = 1.2,
 					X0 = JX + 0.9,
@@ -14450,14 +14458,27 @@ const JGP = (() => {
 					NX = 10,
 					NZ = 32,
 					on = (i, j) => j >= 16 || i < 5,
-					// one texel per tile (row j of the canvas is row j of tiles: the plane's top edge is north)
+					// 32 pixels per tile, transparent off the floor (row j of tiles is the canvas's row j: the
+					// plane's top edge is north). Each tile: dark grout round the edge, the purple face, and a
+					// faint lighter rim along its top and left edges so the tiles read as set pieces
+					PX = 32,
 					cv = document.createElement("canvas");
-				(cv.width = NX), (cv.height = NZ);
+				(cv.width = NX * PX), (cv.height = NZ * PX);
 				const cx2 = cv.getContext("2d");
-				for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) on(i, j) && ((cx2.fillStyle = (i + j) % 2 ? "#151517" : "#f4f4f2"), cx2.fillRect(i, j, 1, 1));
+				for (let i = 0; i < NX; i++)
+					for (let j = 0; j < NZ; j++) {
+						if (!on(i, j)) continue;
+						const x0 = i * PX,
+							y0 = j * PX;
+						(cx2.fillStyle = "#12081f"), cx2.fillRect(x0, y0, PX, PX);
+						(cx2.fillStyle = "#24103c"), cx2.fillRect(x0 + 1, y0 + 1, PX - 2, PX - 2);
+						(cx2.fillStyle = "#2c1549"), cx2.fillRect(x0 + 1, y0 + 1, PX - 2, 1), cx2.fillRect(x0 + 1, y0 + 1, 1, PX - 2);
+					}
 				const tex = new THREE.CanvasTexture(cv);
-				(tex.magFilter = THREE.NearestFilter), (tex.minFilter = THREE.NearestFilter), (tex.generateMipmaps = !1);
-				const floor = R(new THREE.PlaneGeometry(NX * TS, NZ * TS), new THREE.MeshPhongMaterial({ map: tex, alphaTest: 0.5, shininess: 70, specular: 3355443 }), C, [X0 + (NX * TS) / 2, 0.035, Z0 + (NZ * TS) / 2], [-Math.PI / 2, 0, 0]);
+				// (smooth filtering with mipmaps, so the grout lines don't shimmer in the distance or in VR)
+				(tex.magFilter = THREE.LinearFilter), (tex.minFilter = THREE.LinearMipmapLinearFilter), (tex.generateMipmaps = !0);
+				tex.anisotropy = Math.min(8, O.capabilities.getMaxAnisotropy ? O.capabilities.getMaxAnisotropy() : 1);
+				const floor = R(new THREE.PlaneGeometry(NX * TS, NZ * TS), new THREE.MeshPhongMaterial({ map: tex, alphaTest: 0.5, shininess: 18, specular: 1315860 }), C, [X0 + (NX * TS) / 2, 0.035, Z0 + (NZ * TS) / 2], [-Math.PI / 2, 0, 0]);
 				floor.userData.keepInFinale = !0;
 				// no lawn tufts through it, and no pickups on it
 				onDance = (X, Z) => {
@@ -14467,15 +14488,17 @@ const JGP = (() => {
 				};
 				for (let i = 1; i < NX; i += 2) for (let j = 1; j < NZ; j += 2) on(i, j) && E.add(X0 + (i + 0.5) * TS, Z0 + (j + 0.5) * TS, 1.3, "dance");
 			}
-			// KING DINO's drum set from Greeblis Woods, at the back of the dance floor's extension, facing
-			// out across it: red shells with white heads and chrome rims, his name on the bass drum, two rack toms, a snare, a floor tom,
+			// KING DINO's drum set from Greeblis Woods, on the grass behind the dance floor's extension
+			// (its rug and cymbals stop just short of the floor), facing out across it: red shells with white heads and chrome rims, his name on the bass drum, two rack toms, a snare, a floor tom,
 			// a hi-hat and a crash. KING DINO stands behind it with his sticks and stays there through the
 			// Garden event. While he is at his kit and the player is anywhere near, he plays his 104 bpm
 			// groove (kick, snare, hi-hat, a tom fill every other bar and a crash every four), each drum
 			// jumping as it is hit; the drums are heard from around the bar. Each drum is one merged mesh.
 			{
 				const kit = new THREE.Group();
-				kit.position.set(JX + 5.3, 0, 19.2), (kit.rotation.y = Math.PI / 2), (kit.userData.keepInFinale = !0), C.add(kit);
+				kit.position.set(-34.8, 0, 19.2), (kit.rotation.y = Math.PI / 2), (kit.userData.keepInFinale = !0), C.add(kit);
+				// (no lawn tufts or pickups under the kit's rug or round KING DINO)
+				keepAt.push([-35.05, 19.2], [-36.35, 19.2]), E.add(-35.35, 19.2, 2.6, "scenery");
 				// sized for KING DINO standing behind it: a third bigger than the Woods kit, the toms and cymbals set lower
 				kit.scale.setScalar(1.35);
 				const RED = "#c23b3b",
@@ -14522,23 +14545,27 @@ const JGP = (() => {
 					SNARE = [0, 0, 1, 0, 0, 0, 1, 0],
 					FILL = [0, 0, 0, 0, 0, 0, 0, 1],
 					hits = new Map(),
-					play = (snd) => G.near(kit.position.x, kit.position.z, 14, snd);
+					// the drums are heard anywhere on the dance floor (and on the strip where the kit stands),
+					// a little louder near the kit, and not at all off it (for VR, by where the head is)
+					hearAt = (P) => onDance(P.x, P.z) || (P.x < -33.1 && P.x > -37.6 && Math.abs(P.z - 19.2) < 2.6),
+					play = (snd) => G.near(kit.position.x, kit.position.z, 60, snd);
 				let last = -1;
 				L.push((tt, dt) => {
 					const P = we.presenting && we.headPos ? we.headPos : At.position,
 						kd = It.byId.m_kingdino,
 						at = kd && !kd.busy && !kd.moving && Math.hypot(kd.group.position.x - kd.home.x, kd.group.position.z - kd.home.z) < 0.4,
-						// he plays whenever someone is about (you hear it from the bar; the Event doesn't stop him)
+						// he plays whenever someone is about (the Event doesn't stop him); he is only heard on the floor
 						on = at && Math.hypot(P.x - kit.position.x, P.z - kit.position.z) < 45,
 						beat = Math.floor(((104 * tt) / 60) * 2),
 						bar = Math.floor(beat / 8);
 					if (((DRUMS.on = on), on && beat !== last)) {
 						last = beat;
+						const hear = hearAt(P);
 						const k = beat % 8;
 						(DRUMS.beat = beat), (DRUMS.k = k), (DRUMS.fill = !!(FILL[k] && bar % 2));
-						KICK[k] && (hits.set(kick, 1), play("drumKick")), SNARE[k] && (hits.set(snare, 1), play("drumSnare"));
-						FILL[k] && bar % 2 && (hits.set(toms[(bar >> 1) % 2], 1), hits.set(floor, 1), play("drumTom"));
-						hits.set(hat, 1), k % 2 == 0 && play("drumHat"), 0 === k && bar % 4 == 0 && hits.set(crash, 1.4);
+						KICK[k] && (hits.set(kick, 1), hear && play("drumKick")), SNARE[k] && (hits.set(snare, 1), hear && play("drumSnare"));
+						FILL[k] && bar % 2 && (hits.set(toms[(bar >> 1) % 2], 1), hits.set(floor, 1), hear && play("drumTom"));
+						hits.set(hat, 1), k % 2 == 0 && hear && play("drumHat"), 0 === k && bar % 4 == 0 && hits.set(crash, 1.4);
 					}
 					hits.forEach((v, o) => {
 						const n = Math.max(0, v - 6 * (dt || 0.016));
@@ -14813,7 +14840,7 @@ if (
 													H(o),
 							(function (t) {
 								const e = new THREE.Group();
-								(e.userData.keepInFinale = !0), t.add(e), e.position.set(0, 0, -0.45), e.scale.setScalar(0.85);
+								(e.userData.keepInFinale = !0), t.add(e), e.position.set(0, 0, -0.45), e.scale.setScalar(1.16);
 								const o = new THREE.Group();
 								e.add(o);
 								const a = so.born_sparkakus(o, {}),
@@ -14851,7 +14878,7 @@ if (
 									(st.away = () => !!H),
 									(st.pos = () => e.position),
 									(st.group = e),
-									(st.height = 3.6);
+									(st.height = 4.4);
 								const S = n,
 									P = a;
 								L.push((s, c) => {
@@ -15151,7 +15178,7 @@ if (
 							// (changing from one to the other eases out of the first before easing into the second)
 							const s = o.want && n.mv < 0.5 ? o.want : null;
 							s && n.mode !== s && n.k < 0.02 && (n.mode = s);
-							(n.k += ((s && s === n.mode ? 1 : 0) - n.k) * Math.min(1, 4 * e)), o.ent && (o.ent.concertDance = "dance" === n.mode && n.k > 0.02);
+							(n.k += ((s && s === n.mode ? 1 : 0) - n.k) * Math.min(1, 4 * e)), o.ent && ((o.ent.concertDance = "dance" === n.mode && n.k > 0.02), (o.ent.planting = "plant" === n.mode && n.k > 0.3));
 							const i = o.ent && "gratelet" === o.ent.id && "dance" === n.mode;
 							let c = o.grp.userData.gcW;
 							// (a creature without a move wrapper yet gets one, and the footprint that keeps its feet
